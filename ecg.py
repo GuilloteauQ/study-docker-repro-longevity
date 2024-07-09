@@ -18,7 +18,7 @@ HEREPATH = pathlib.Path(__file__).parent.absolute()
 PKGLISTS = "./pkglists/"
 
 # Commands to list installed packages along with their versions depending on the packages manager:
-pkgmgr_cmd = {"dpkg":"dpkg -l | awk 'NR>5 {print $2 \",\" $3}'", "pip":"pip freeze | sed 's/==/,/g'", "conda":"/root/.conda/bin/conda list"}
+pkgmgr_cmd = {"dpkg":"dpkg -l | awk 'NR>5 {print $2 \",\" $3}'", "rpm":"rpm -qa --queryformat '%\{NAME\},%\{VERSION\}\\n'", "pacman":"pacman -Q | sed 's/ /,/g'", "pip":"pip freeze | sed 's/==/,/g'", "conda":"/root/.conda/bin/conda list"}
 
 import logging
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -27,7 +27,7 @@ def download_sources(config):
     url = config["artifact_url"]
     logging.info(f"Downloading sources from {url}")
     temp_dir = tempfile.TemporaryDirectory()
-    req = requests.get(url) # FIXME: Pretty dangerous, but temporary
+    req = requests.get(url)
     if config["type"] == "zip":
         artefact = zipfile.ZipFile(io.BytesIO(req.content))
     elif config["type"] == "tgz":
