@@ -1,0 +1,9 @@
+artifact_url: "http://localhost/artifact.zip"
+type: "zip"
+doi: "XX.XXXX/XXXXXXX.XXXXXXX"
+dockerfiles:
+  - name: "prog:latest"
+    location: "./"
+    package_managers:
+      - "dpkg"
+      - "pip"

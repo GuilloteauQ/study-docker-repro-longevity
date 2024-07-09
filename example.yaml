@@ -1,0 +1,12 @@
+artefact_url: "https://example.com/artifact.zip"
+type: "zip" # Possible values: zip, tgz
+doi: "XX.XXXX/XXXXXXX.XXXXXXX"
+dockerfiles:
+  - name: "image1:version"
+    location: "path/to/docker/folder"
+    package_managers:
+      - "dpkg" # Possible values: dpkg, pip, conda
+  - name: "image2:version"
+    location: "path/to/docker/folder"
+    package_managers:
+      - "dpkg"
