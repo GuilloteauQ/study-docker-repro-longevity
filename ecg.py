@@ -27,13 +27,20 @@ HEREPATH = pathlib.Path(__file__).parent.absolute()
 PKGLISTS = "./pkglists/"
 
 # Commands to list installed packages along with their versions and the name
-# of the package manager, depending on the package managers:
+# of the package manager, depending on the package managers.
+# Each package manager is associated with a tuple, the first item being
+# the query command, and the second being the command that will format
+# the output of the query command (this one can be an empty string in case
+# the formatting part is already done using the options of the first command).
+# The first needs to be run on the container, and the second on the host,
+# to take into account container images that do not have the formatting
+# packages installed.
 pkgmgr_cmd = {
-    "dpkg":"dpkg -l | awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'", \
-    "rpm":"rpm -qa --queryformat '%{NAME},%{VERSION},rpm\\n'", \
-    "pacman":"pacman -Q | awk '{print $0 \",\" $1 \",pacman\"}'", \
-    "pip":"pip freeze | sed 's/==/,/g' | awk '{print $0 \",pip\"}'", \
-    "conda":"/root/.conda/bin/conda list -e | sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'"
+    "dpkg": ("dpkg -l", "awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'"), \
+    "rpm":("rpm -qa --queryformat '%{NAME},%{VERSION},rpm\\n'", ""), \
+    "pacman":("pacman -Q", "awk '{print $0 \",\" $1 \",pacman\"}'"), \
+    "pip":("pip freeze", "sed 's/==/,/g' | awk '{print $0 \",pip\"}'"), \
+    "conda":("/root/.conda/bin/conda list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'")
 }
 
 # Command to obtain the latest commit hash in a git repository:
@@ -122,8 +129,9 @@ def check_env(config, src_dir):
     path = os.path.join(src_dir, config["location"])
     for pkgmgr in config["package_managers"]:
         logging.info(f"Checking '{pkgmgr}'")
-        check_process = subprocess.run("docker run --rm " + config["name"] + " " + pkgmgr_cmd[pkgmgr], cwd=path, capture_output=True, shell=True)
-        pkglist = check_process.stdout.decode("utf-8")
+        check_process = subprocess.run(["docker", "run", "--rm", config["name"]] + pkgmgr_cmd[pkgmgr][0].split(" "), cwd=path, capture_output=True)
+        format_process = subprocess.run("cat << EOF | " + pkgmgr_cmd[pkgmgr][1] + "\n" + check_process.stdout.decode("utf-8") + "EOF", cwd=path, capture_output=True, shell=True)
+        pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
     if "git_packages" in config.keys():
         pkglist = ""
