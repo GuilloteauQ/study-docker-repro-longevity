@@ -60,19 +60,19 @@ def download_sources(config):
 
         Returns
         -------
-        tempdir: tempfile.TemporaryDirectory
+        temp_dir: tempfile.TemporaryDirectory
             The directory where the artifact is downloaded to.
     """
     url = config["artifact_url"]
-    logging.info(f"Downloading sources from {url}")
+    logging.info(f"Downloading artifact from {url}")
     temp_dir = tempfile.TemporaryDirectory()
     req = requests.get(url)
     if config["type"] == "zip":
-        artefact = zipfile.ZipFile(io.BytesIO(req.content))
+        artifact = zipfile.ZipFile(io.BytesIO(req.content))
     elif config["type"] == "tgz":
-        artefact = tarfile.open(fileobj=io.BytesIO(req.content))
-    artefact.extractall(temp_dir.name)
-    logging.info(f"Extracting sources at {temp_dir.name}")
+        artifact = tarfile.open(fileobj=io.BytesIO(req.content))
+    logging.info(f"Extracting artifact at {temp_dir.name}")
+    artifact.extractall(temp_dir.name)
     return temp_dir
 
 def build_image(config, src_dir):
@@ -98,10 +98,9 @@ def build_image(config, src_dir):
     path = os.path.join(src_dir, config["location"])
     build_command = "docker build -t " + config["name"] + " ."
     # subprocess.check_call(config["build_command"].split(" "), cwd=path)
-    build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
+    build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=False)
     return_code = build_process.returncode
-    stderr = build_process.stderr
-    logging.info(f"Command {build_command} exited with code {return_code} ({stderr})")
+    logging.info(f"Command '{build_command}' exited with code {return_code}")
     return return_code == 0
 
 def check_env(config, src_dir):
@@ -129,17 +128,26 @@ def check_env(config, src_dir):
     path = os.path.join(src_dir, config["location"])
     for pkgmgr in config["package_managers"]:
         logging.info(f"Checking '{pkgmgr}'")
-        check_process = subprocess.run(["docker", "run", "--rm", config["name"]] + pkgmgr_cmd[pkgmgr][0].split(" "), cwd=path, capture_output=True)
-        format_process = subprocess.run("cat << EOF | " + pkgmgr_cmd[pkgmgr][1] + "\n" + check_process.stdout.decode("utf-8") + "EOF", cwd=path, capture_output=True, shell=True)
+        pkglist_process = subprocess.run(["docker", "run", "--rm", config["name"]] + pkgmgr_cmd[pkgmgr][0].split(" "), cwd=path, capture_output=True)
+        format_process = subprocess.run("cat << EOF | " + pkgmgr_cmd[pkgmgr][1] + "\n" + pkglist_process.stdout.decode("utf-8") + "EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
     if "git_packages" in config.keys():
-        pkglist = ""
         logging.info("Checking Git packages")
         for repo in config["git_packages"]:
-            check_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], config["name"]] + gitcmd.split(" "), cwd=path, capture_output=True)
-            repo_row = repo["name"] + "," + check_process.stdout.decode("utf-8") + ",git"
-            pkglist_file.write(repo_row)
+            pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], config["name"]] + gitcmd.split(" "), cwd=path, capture_output=True)
+            repo_row = repo["name"] + "," + pkglist_process.stdout.decode("utf-8") + ",git"
+            pkglist_file.write(repo_row + "\n")
+    if "misc_packages" in config.keys():
+        logging.info("Checking packages obtained outside of a package manager or VCS")
+        for pkg in config["misc_packages"]:
+            logging.info(f"Downloading package {pkg["name"]} from {pkg["url"]}")
+            req = requests.get(pkg["url"])
+            pkg_file = tempfile.NamedTemporaryFile()
+            pkg_file.write(req.content)
+            pkglist_process = subprocess.run("sha256sum " + pkg_file.name + " | cut -zd ' ' -f 1", cwd=path, capture_output=True, shell=True)
+            pkg_row = pkg["name"] + "," + pkglist_process.stdout.decode("utf-8") + ",misc"
+            pkglist_file.write(pkg_row + "\n")
     pkglist_file.close()
 
 def remove_image(config):
