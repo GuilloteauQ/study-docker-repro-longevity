@@ -1,8 +1,8 @@
 #!/bin/python3
 
 """
-    ECG is program that automates software environment checking
-    in scientific artifacts.
+    ECG is a program that automates software environment checking
+    for scientific artifacts.
 
     It is meant to be executed periodically to analyze variations in the
     software environment of the artifact through time.
@@ -20,11 +20,11 @@ import io
 import tarfile
 import pathlib
 import logging
+import datetime
 
 # Paths:
-HEREPATH = pathlib.Path(__file__).parent.absolute()
-# Where to store list of installed packages:
-PKGLISTS = "./pkglists/"
+ROOTPATH = pathlib.Path(__file__).parent.absolute()
+output_path = "./output/"
 
 # Commands to list installed packages along with their versions and the name
 # of the package manager, depending on the package managers.
@@ -48,6 +48,22 @@ gitcmd = "git log -n 1 --pretty=format:%H"
 
 # Enables logging:
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+
+# TODO: This will be used to log both to stdout and to a file:
+class Logger(object):
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = open("log.txt", "w")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        # this flush method is needed for python 3 compatibility.
+        # this handles the flush command by doing nothing.
+        # you might want to specify some extra behavior here.
+        pass
 
 def download_sources(config):
     """
@@ -122,8 +138,7 @@ def check_env(config, src_dir):
         -------
         None
     """
-    pathlib.Path(PKGLISTS).mkdir(parents=True, exist_ok=True)
-    pkglist_file = open(PKGLISTS + "pkglist.csv", "w")
+    pkglist_file = open("pkglist.csv", "w")
     pkglist_file.write("Package,Version,Package manager\n")
     path = os.path.join(src_dir, config["location"])
     for pkgmgr in config["package_managers"]:
@@ -186,32 +201,82 @@ def build_images(config, src_dir):
         None
     """
     for image in config["dockerfiles"]:
+        # Creating an output directory for this specific container:
+        pathlib.Path(image["name"]).mkdir(parents=True, exist_ok=True)
+        os.chdir(image["name"])
+
         successful_build = build_image(image, src_dir)
         if successful_build:
             check_env(image, src_dir)
             remove_image(image)
 
 def main():
-    # Command line arguments parser:
+    global output_path
+
+    # Command line arguments parsing:
     parser = argparse.ArgumentParser(
-                    prog='ecg',
-                    description='Check if a dockerfile is still buildable')
-    parser.add_argument('config')
+        prog = "ecg",
+        description = "ECG is a program that automates software environment checking for scientific artifacts. "
+            "It is meant to be executed periodically to analyze variations in the software environment of the artifact through time."
+    )
+    parser.add_argument(
+        "config",
+        help = "The path to either a single configuration file, or a directory containing multiple configuration files if using '-d'. "
+            "Note that all YAML files in this directory must be artifact configuration files."
+    )
+    parser.add_argument(
+        "-d", "--directory",
+        action = "store_true",
+        help = "Set this option to specify the path of a directory containing multiple configuration files instead of a single file."
+    )
+    parser.add_argument(
+        "-o", "--output",
+        help = "Path to the output directory."
+    )
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
 
-    # Parsing the input YAML file including the configuration of the artifact:
-    config = None
-    with open(args.config, "r") as config_file:
-        config = yaml.safe_load(config_file)
-    verbose = args.verbose
+    # Parsing the input YAML file(s) including the configuration of the
+    # artifact(s):
+    configs = {}
+    # If args.config is a directory:
+    if args.directory:
+        for f in os.listdir(args.config):
+            if os.path.isfile(f) and f.endswith(".yaml"):
+                config_file = open(f, "r")
+                configs[f] = yaml.safe_load(config_file)
+                config_file.close()
+    # If args.config is a simple file:
+    else:
+        config_file = open(args.config, "r")
+        configs[args.config] = yaml.safe_load(config_file)
+        config_file.close()
 
-    # if verbose:
-    #    logging.info(f"Output will be stored in {output}")
+    # Configuring output directory:
+    if args.output != None:
+        output_path = args.output
+    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
+    os.chdir(output_path)
 
-    src_dir = download_sources(config)
-    build_images(config, src_dir.name)
-    return 0
+    for c in configs:
+        logging.info(f"Working on {c}")
+        verbose = args.verbose
+        config = configs[c]
+
+        # Creating an output folder for this artifact:
+        pathlib.Path(os.path.splitext(c)[0]).mkdir(parents=True, exist_ok=True)
+        os.chdir(os.path.splitext(c)[0])
+        # Creating an output folder for this specific runtime:
+        now = datetime.datetime.now()
+        timestamp = str(datetime.datetime.timestamp(now))
+        pathlib.Path(timestamp).mkdir(parents=True, exist_ok=True)
+        os.chdir(timestamp)
+
+        # if verbose:
+        #    logging.info(f"Output will be stored in {output}")
+
+        src_dir = download_sources(config)
+        build_images(config, src_dir.name)
 
 if __name__ == "__main__":
     main()
