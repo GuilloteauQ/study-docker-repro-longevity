@@ -33,9 +33,11 @@ pkgmgr_cmd = {
     "rpm":"rpm -qa --queryformat '%{NAME},%{VERSION},rpm\\n'", \
     "pacman":"pacman -Q | awk '{print $0 \",\" $1 \",pacman\"}'", \
     "pip":"pip freeze | sed 's/==/,/g' | awk '{print $0 \",pip\"}'", \
-    "conda":"/root/.conda/bin/conda list -e | sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'", \
-    "git":""
+    "conda":"/root/.conda/bin/conda list -e | sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'"
 }
+
+# Command to obtain the latest commit hash in a git repository:
+gitcmd = "git log -n 1 --pretty=format:%H"
 
 # Enables logging:
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -115,17 +117,21 @@ def check_env(config, src_dir):
         None
     """
     pathlib.Path(PKGLISTS).mkdir(parents=True, exist_ok=True)
-    path = os.path.join(src_dir, config["location"])
     pkglist_file = open(PKGLISTS + "pkglist.csv", "w")
     pkglist_file.write("Package,Version,Package manager\n")
+    path = os.path.join(src_dir, config["location"])
     for pkgmgr in config["package_managers"]:
         logging.info(f"Checking '{pkgmgr}'")
         check_process = subprocess.run("docker run --rm " + config["name"] + " " + pkgmgr_cmd[pkgmgr], cwd=path, capture_output=True, shell=True)
         pkglist = check_process.stdout.decode("utf-8")
-        print(pkglist)
         pkglist_file.write(pkglist)
     if "git_packages" in config.keys():
-        print(config["git_packages"])
+        pkglist = ""
+        logging.info("Checking Git packages")
+        for repo in config["git_packages"]:
+            check_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], config["name"]] + gitcmd.split(" "), cwd=path, capture_output=True)
+            repo_row = repo["name"] + "," + check_process.stdout.decode("utf-8") + ",git"
+            pkglist_file.write(repo_row)
     pkglist_file.close()
 
 def remove_image(config):

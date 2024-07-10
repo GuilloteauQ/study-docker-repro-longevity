@@ -9,4 +9,4 @@ dockerfiles:
       - "pip"
     git_packages:
       - name: "pkg1"
-        location: "./pkg1"
+        location: "/pkg1"
