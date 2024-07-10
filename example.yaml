@@ -5,7 +5,10 @@ dockerfiles:
   - name: "image1:version"
     location: "path/to/docker/folder"
     package_managers:
-      - "dpkg" # Possible values: dpkg, pip, conda
+      - "dpkg" # Possible values: dpkg, rpm, pacman, pip, conda
+    git_packages:
+      - name: "pkg1"
+        location: "path/to/git/package"
   - name: "image2:version"
     location: "path/to/docker/folder"
     package_managers:

@@ -7,3 +7,6 @@ dockerfiles:
     package_managers:
       - "dpkg"
       - "pip"
+    git_packages:
+      - name: "pkg1"
+        location: "./pkg1"
