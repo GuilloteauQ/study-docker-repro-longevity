@@ -17,8 +17,8 @@ HEREPATH = pathlib.Path(__file__).parent.absolute()
 # Where to store list of installed packages:
 PKGLISTS = "./pkglists/"
 
-# Commands to list installed packages along with their versions depending on the packages manager:
-pkgmgr_cmd = {"dpkg":"dpkg -l | awk 'NR>5 {print $2 \",\" $3}'", "rpm":"rpm -qa --queryformat '%\{NAME\},%\{VERSION\}\\n'", "pacman":"pacman -Q | sed 's/ /,/g'", "pip":"pip freeze | sed 's/==/,/g'", "conda":"/root/.conda/bin/conda list"}
+# Commands to list installed packages along with their versions and the name of the package manager, depending on the packages manager:
+pkgmgr_cmd = {"dpkg":"dpkg -l | awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'", "rpm":"rpm -qa --queryformat '%{NAME},%{VERSION},rpm\\n'", "pacman":"pacman -Q | awk '{print $0 \",\" $1 \",pacman\"}'", "pip":"pip freeze | sed 's/==/,/g' | awk '{print $0 \",pip\"}'", "conda":"/root/.conda/bin/conda list"}
 
 import logging
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -51,14 +51,15 @@ def build_image(config, src_dir):
 def check_env(config, src_dir):
     pathlib.Path(PKGLISTS).mkdir(parents=True, exist_ok=True)
     path = os.path.join(src_dir, config["location"])
+    pkglist_file = open(PKGLISTS + "pkglist.csv", "w")
+    pkglist_file.write("Package,Version,Package manager\n")
     for pkgmgr in config["package_managers"]:
         logging.info(f"Checking '{pkgmgr}'")
         check_process = subprocess.run("docker run --rm " + config["name"] + " " + pkgmgr_cmd[pkgmgr], cwd=path, capture_output=True, shell=True)
         pkglist = check_process.stdout.decode("utf-8")
         print(pkglist)
-        pkglist_file = open(PKGLISTS + pkgmgr + ".csv", "w")
-        pkglist_file.write("package,version\n" + pkglist)
-        pkglist_file.close()
+        pkglist_file.write(pkglist)
+    pkglist_file.close()
 
 def remove_image(config):
     name = config["name"]
