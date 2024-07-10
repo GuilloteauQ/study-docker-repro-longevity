@@ -18,7 +18,7 @@ HEREPATH = pathlib.Path(__file__).parent.absolute()
 PKGLISTS = "./pkglists/"
 
 # Commands to list installed packages along with their versions and the name of the package manager, depending on the packages manager:
-pkgmgr_cmd = {"dpkg":"dpkg -l | awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'", "rpm":"rpm -qa --queryformat '%{NAME},%{VERSION},rpm\\n'", "pacman":"pacman -Q | awk '{print $0 \",\" $1 \",pacman\"}'", "pip":"pip freeze | sed 's/==/,/g' | awk '{print $0 \",pip\"}'", "conda":"/root/.conda/bin/conda list"}
+pkgmgr_cmd = {"dpkg":"dpkg -l | awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'", "rpm":"rpm -qa --queryformat '%{NAME},%{VERSION},rpm\\n'", "pacman":"pacman -Q | awk '{print $0 \",\" $1 \",pacman\"}'", "pip":"pip freeze | sed 's/==/,/g' | awk '{print $0 \",pip\"}'", "conda":"/root/.conda/bin/conda list -e | sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'"}
 
 import logging
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
