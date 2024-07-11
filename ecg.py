@@ -21,10 +21,28 @@ import tarfile
 import pathlib
 import logging
 import datetime
+import sys
+
+class Logger(object):
+    """
+        Class to log Python output to both stdout and a file.
+    """
+    def __init__(self, path):
+        self.terminal = sys.stdout
+        self.log = open(path, "w")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        # For Python 3 compatibility:
+        pass
 
 # Paths:
-ROOTPATH = pathlib.Path(__file__).parent.absolute()
-output_path = "./output/"
+pkglist_path = "pkglist.csv" # Package list being generated
+log_path = "log.txt" # Output of the program
+buildstatus_path = "build_status.csv" # Summary of the build process of the image
 
 # Commands to list installed packages along with their versions and the name
 # of the package manager, depending on the package managers.
@@ -48,22 +66,6 @@ gitcmd = "git log -n 1 --pretty=format:%H"
 
 # Enables logging:
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-
-# TODO: This will be used to log both to stdout and to a file:
-class Logger(object):
-    def __init__(self):
-        self.terminal = sys.stdout
-        self.log = open("log.txt", "w")
-
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
-
-    def flush(self):
-        # this flush method is needed for python 3 compatibility.
-        # this handles the flush command by doing nothing.
-        # you might want to specify some extra behavior here.
-        pass
 
 def download_sources(config):
     """
@@ -98,8 +100,7 @@ def build_image(config, src_dir):
         Parameters
         ----------
         config: dict
-            Part of the parsed YAML config file concerning the Docker image
-            to build.
+            Parsed YAML config file.
 
         src_dir: tempfile.TemporaryDirectory
             The directory where the artifact is stored.
@@ -109,11 +110,10 @@ def build_image(config, src_dir):
         return_code: int
             Return code of the Docker 'build' command.
     """
-    name = config["name"]
+    name = config["image_name"]
     logging.info(f"Starting building image {name}")
-    path = os.path.join(src_dir, config["location"])
-    build_command = "docker build -t " + config["name"] + " ."
-    # subprocess.check_call(config["build_command"].split(" "), cwd=path)
+    path = os.path.join(src_dir, config["dockerfile_location"])
+    build_command = "docker build -t " + config["image_name"] + " ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=False)
     return_code = build_process.returncode
     logging.info(f"Command '{build_command}' exited with code {return_code}")
@@ -128,8 +128,7 @@ def check_env(config, src_dir):
         Parameters
         ----------
         config: dict
-            Part of the parsed YAML config file concerning the Docker image
-            where to check the environment.
+            Parsed YAML config file.
 
         src_dir: tempfile.TemporaryDirectory
             The directory where the artifact is stored.
@@ -138,19 +137,19 @@ def check_env(config, src_dir):
         -------
         None
     """
-    pkglist_file = open("pkglist.csv", "w")
+    pkglist_file = open(pkglist_path, "w")
     pkglist_file.write("Package,Version,Package manager\n")
-    path = os.path.join(src_dir, config["location"])
+    path = os.path.join(src_dir, config["dockerfile_location"])
     for pkgmgr in config["package_managers"]:
         logging.info(f"Checking '{pkgmgr}'")
-        pkglist_process = subprocess.run(["docker", "run", "--rm", config["name"]] + pkgmgr_cmd[pkgmgr][0].split(" "), cwd=path, capture_output=True)
+        pkglist_process = subprocess.run(["docker", "run", "--rm", config["image_name"]] + pkgmgr_cmd[pkgmgr][0].split(" "), cwd=path, capture_output=True)
         format_process = subprocess.run("cat << EOF | " + pkgmgr_cmd[pkgmgr][1] + "\n" + pkglist_process.stdout.decode("utf-8") + "EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
     if "git_packages" in config.keys():
         logging.info("Checking Git packages")
         for repo in config["git_packages"]:
-            pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], config["name"]] + gitcmd.split(" "), cwd=path, capture_output=True)
+            pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], config["image_name"]] + gitcmd.split(" "), cwd=path, capture_output=True)
             repo_row = repo["name"] + "," + pkglist_process.stdout.decode("utf-8") + ",git"
             pkglist_file.write(repo_row + "\n")
     if "misc_packages" in config.keys():
@@ -172,46 +171,18 @@ def remove_image(config):
         Parameters
         ----------
         config: dict
-            Part of the parsed YAML config file concerning the Docker image
-            to remove.
+            Parsed YAML config file.
 
         Returns
         -------
         None
     """
-    name = config["name"]
+    name = config["image_name"]
     logging.info(f"Removing image '{name}'")
     subprocess.run(["docker", "rmi", name])
 
-def build_images(config, src_dir):
-    """
-        Builds all Docker images specified in 'config', checks software
-        environment if build is successful, then removes the images.
-
-        Parameters
-        ----------
-        config: dict
-            Parsed YAML config file.
-
-        src_dir: tempfile.TemporaryDirectory
-            The directory where the artifact is stored.
-
-        Returns
-        -------
-        None
-    """
-    for image in config["dockerfiles"]:
-        # Creating an output directory for this specific container:
-        pathlib.Path(image["name"]).mkdir(parents=True, exist_ok=True)
-        os.chdir(image["name"])
-
-        successful_build = build_image(image, src_dir)
-        if successful_build:
-            check_env(image, src_dir)
-            remove_image(image)
-
 def main():
-    global output_path
+    global pkglist_path, log_path, buildstatus_path
 
     # Command line arguments parsing:
     parser = argparse.ArgumentParser(
@@ -221,62 +192,53 @@ def main():
     )
     parser.add_argument(
         "config",
-        help = "The path to either a single configuration file, or a directory containing multiple configuration files if using '-d'. "
-            "Note that all YAML files in this directory must be artifact configuration files."
+        help = "The path to the configuration file of the artifact's Docker image."
     )
     parser.add_argument(
-        "-d", "--directory",
-        action = "store_true",
-        help = "Set this option to specify the path of a directory containing multiple configuration files instead of a single file."
+        "-p", "--pkg-list",
+        help = "Path to the file where the package list generated by the program should be written."
     )
     parser.add_argument(
-        "-o", "--output",
-        help = "Path to the output directory."
+        "-l", "--log-path",
+        help = "Path to the file where to log the output of the program."
     )
-    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument(
+        "-b", "--build-summary",
+        help = "Path to the file where to write the build summary of the Docker image given in the configuration file."
+    )
+    parser.add_argument(
+        "-c", "--cache-dir",
+        help = "Path to the cache directory, where artifact that are downloaded will be stored for future usage."
+    )
+    parser.add_argument('-v', '--verbose',
+        action = 'store_true',
+        help = "Shows more details on what is being done.")
     args = parser.parse_args()
 
-    # Parsing the input YAML file(s) including the configuration of the
-    # artifact(s):
-    configs = {}
-    # If args.config is a directory:
-    if args.directory:
-        for f in os.listdir(args.config):
-            if os.path.isfile(f) and f.endswith(".yaml"):
-                config_file = open(f, "r")
-                configs[f] = yaml.safe_load(config_file)
-                config_file.close()
-    # If args.config is a simple file:
-    else:
-        config_file = open(args.config, "r")
-        configs[args.config] = yaml.safe_load(config_file)
-        config_file.close()
+    # Setting up the paths of the outputs:
+    if args.pkg_list != None:
+        pkglist_path = args.pkg_list
+    if args.log_path != None:
+        log_path = args.log_path
+    if args.build_summary != None:
+        buildstatus_path = args.build_summary
 
-    # Configuring output directory:
-    if args.output != None:
-        output_path = args.output
-    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
-    os.chdir(output_path)
+    # Parsing the input YAML file including the configuration of
+    # the artifact's image:
+    config_file = open(args.config, "r")
+    config = yaml.safe_load(config_file)
+    config_file.close()
 
-    for c in configs:
-        logging.info(f"Working on {c}")
-        verbose = args.verbose
-        config = configs[c]
+    verbose = args.verbose
 
-        # Creating an output folder for this artifact:
-        pathlib.Path(os.path.splitext(c)[0]).mkdir(parents=True, exist_ok=True)
-        os.chdir(os.path.splitext(c)[0])
-        # Creating an output folder for this specific runtime:
-        now = datetime.datetime.now()
-        timestamp = str(datetime.datetime.timestamp(now))
-        pathlib.Path(timestamp).mkdir(parents=True, exist_ok=True)
-        os.chdir(timestamp)
+    # if verbose:
+    #    logging.info(f"Output will be stored in {output}")
 
-        # if verbose:
-        #    logging.info(f"Output will be stored in {output}")
-
-        src_dir = download_sources(config)
-        build_images(config, src_dir.name)
+    src_dir = download_sources(config)
+    successful_build = build_image(config, src_dir.name)
+    if successful_build:
+        check_env(config, src_dir.name)
+        remove_image(config)
 
 if __name__ == "__main__":
     main()
