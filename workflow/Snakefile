@@ -1,0 +1,41 @@
+include: "utils.smk"
+
+import datetime
+DATE = datetime.datetime.now().strftime("%Y%m%d")
+
+ARTIFACTS_FOLDER = "artifacts"
+BLACKLIST_FOLDER = "blacklists"
+BLACKLIST = "blacklist.csv"
+EXTENSION = "yaml"
+
+ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER, BLACKLIST)
+
+rule all:
+  input:
+    expand("{folder}/{artifact}/{date}.csv",\
+           folder=["logs", "pkgs", "status"],\
+           artifact=ARTIFACTS,\
+           date=DATE),
+    f"{BLACKLIST_FOLDER}/{DATE}.csv"
+
+rule run_ecg:
+  input:
+    "flake.nix",
+    "flake.lock",
+    ecg="ecg.py",
+  output:
+    log    = "logs/{artifact}/{date}.csv",
+    pkg    = "pkgs/{artifact}/{date}.csv",
+    status = "status/{artifact}/{date}.csv",
+  shell:
+    f"python3 {{input.ecg}} --log {{output.log}} --pkg {{output.pkg}} --status {{output.pkg}} {ARTIFACTS_FOLDER}/{{wildcards.artifact}}.{EXTENSION}"
+
+rule update_blacklist:
+  input:
+    BLACKLIST,
+    status=expand("status/{artifact}/{{date}}.csv",\
+                  artifact=ARTIFACTS)
+  output:
+    f"{BLACKLIST_FOLDER}/{{date}}.csv"
+  shell:
+    f"cat {{input}} > {{output}} && ln -s {{output}} {BLACKLIST}"
