@@ -15,6 +15,7 @@
       devShells = {
         default = pkgs.mkShell {
           packages = with pkgs; [
+            nickel
             (python3.withPackages (ps: with ps; [
               requests
               pyyaml
