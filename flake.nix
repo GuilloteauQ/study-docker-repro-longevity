@@ -2,7 +2,7 @@
   description = "Flake study docker longevity";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/24.05";
+    nixpkgs.url = "github:nixos/nixpkgs/23.11";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -15,6 +15,8 @@
       devShells = {
         default = pkgs.mkShell {
           packages = with pkgs; [
+            snakemake
+            gawk
             (python3.withPackages (ps: with ps; [
               requests
               pyyaml
