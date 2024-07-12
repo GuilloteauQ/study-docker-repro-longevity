@@ -1,4 +1,4 @@
-artefact_url: "https://example.com/artifact.zip"
+artifact_url: "https://example.com/artifact.zip"
 type: "zip" # Possible values: zip, tgz
 doi: "XX.XXXX/XXXXXXX.XXXXXXX"
 image_name: "image1:version"

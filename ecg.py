@@ -45,6 +45,14 @@ pkgmgr_cmd = {
     "conda":("/root/.conda/bin/conda list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'")
 }
 
+# Possible error messages given by 'docker build' and their category.
+# The key is the category, the value is a tuple of error messages belonging to
+# to this category:
+build_errors = {
+    "package_unavailable":("Unable to locate package"),
+    "baseimage_unavailable":("manifest unknown: manifest unknown")
+}
+
 # Command to obtain the latest commit hash in a git repository:
 gitcmd = "git log -n 1 --pretty=format:%H"
 
@@ -101,6 +109,33 @@ def download_sources(config):
         logging.info(f"Cache found for {url}, skipping download")
     return artifact_dir
 
+def buildstatus_saver(output):
+    """
+    Parses the given 'output' to indentify the errors, then saves them to the
+    'build_status' file.
+
+    Parameters
+    ----------
+    output: str
+        The output of Docker.
+
+    Returns
+    -------
+    None
+    """
+    file_exists = os.path.exists(buildstatus_path)
+    buildstatus_file = open(buildstatus_path, "w+")
+    # Writing header in case file didn't exist:
+    if not file_exists:
+        buildstatus_file.write("yaml_path,timestamp,error")
+    for error_cat, errors_list in build_errors.items():
+        for error in errors_list:
+            if error in output:
+                now = datetime.datetime.now()
+                timestamp = str(datetime.datetime.timestamp(now))
+                buildstatus_file.write()
+    buildstatus_file.close()
+
 def build_image(config, src_dir):
     """
     Builds the given Docker image in 'config'.
@@ -115,18 +150,21 @@ def build_image(config, src_dir):
 
     Returns
     -------
-    return_code: int
-        Return code of the Docker 'build' command.
+    bool
+        'True' if build successful, 'False' otherwise.
     """
     name = config["image_name"]
     logging.info(f"Starting building image {name}")
     path = os.path.join(src_dir, config["dockerfile_location"])
     build_command = "docker build -t " + config["image_name"] + " ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
+    # build_output = "stdout:\n" + build_process.stdout.decode("utf-8") + "\nstderr:\n" + build_process.stderr.decode("utf-8")
+    build_output = build_process.stderr.decode("utf-8")
     logging.info(f"Output of '{build_command}':")
-    logging.info(build_process.stdout)
+    logging.info(build_output)
     return_code = build_process.returncode
     logging.info(f"Command '{build_command}' exited with code {return_code}")
+    buildstatus_saver(build_process.stderr.decode("utf-8"))
     return return_code == 0
 
 def check_env(config, src_dir):
@@ -149,7 +187,7 @@ def check_env(config, src_dir):
     """
     logging.info("Checking software environment")
     pkglist_file = open(pkglist_path, "w")
-    pkglist_file.write("Package,Version,Package manager\n")
+    pkglist_file.write("package,version,package_manager\n")
     path = os.path.join(src_dir, config["dockerfile_location"])
     for pkgmgr in config["package_managers"]:
         logging.info(f"Checking '{pkgmgr}'")

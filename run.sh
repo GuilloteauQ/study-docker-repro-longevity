@@ -2,7 +2,7 @@
 
 OUTPUT_PATH=output
 CACHE_DIR=cache
-TESTFILE=test.yaml
+TESTFILE=$1
 
 if [ ! -d $OUTPUT_PATH ]
 then
