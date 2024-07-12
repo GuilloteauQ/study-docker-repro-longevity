@@ -1,5 +1,6 @@
 pkglists/*
 output/*
+cache/*
 pkglist.csv
 log.txt
 build_status.csv

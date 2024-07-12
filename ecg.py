@@ -25,8 +25,8 @@ import sys
 
 # Paths:
 pkglist_path = "pkglist.csv" # Package list being generated
-log_path = "log.txt" # Output of the program
 buildstatus_path = "build_status.csv" # Summary of the build process of the image
+cachedir_path = "cache" # Artifact cache directory
 
 # Commands to list installed packages along with their versions and the name
 # of the package manager, depending on the package managers.
@@ -48,48 +48,75 @@ pkgmgr_cmd = {
 # Command to obtain the latest commit hash in a git repository:
 gitcmd = "git log -n 1 --pretty=format:%H"
 
+def trim(url) :
+    """
+    Trims given url for cache storage.
+
+    Parameters
+    ----------
+    url: str
+        URL to trim.
+
+    Returns
+    -------
+    str
+        Trimmed URL.
+    """
+    trimmed = ""
+    for c in url.lower():
+        if c not in "/:;\\'\" *?":
+            trimmed += c
+
+    return trimmed
+
 def download_sources(config):
     """
-        Downloads the source of the artifact in 'config'.
+    Downloads the source of the artifact in 'config'.
 
-        Parameters
-        ----------
-        config: dict
-            Parsed YAML config file.
+    Parameters
+    ----------
+    config: dict
+        Parsed YAML config file.
 
-        Returns
-        -------
-        temp_dir: tempfile.TemporaryDirectory
-            The directory where the artifact is downloaded to.
+    Returns
+    -------
+    temp_dir: tempfile.TemporaryDirectory
+        The directory where the artifact is downloaded to.
     """
     url = config["artifact_url"]
-    logging.info(f"Downloading artifact from {url}")
-    temp_dir = tempfile.TemporaryDirectory()
-    req = requests.get(url)
-    if config["type"] == "zip":
-        artifact = zipfile.ZipFile(io.BytesIO(req.content))
-    elif config["type"] == "tgz":
-        artifact = tarfile.open(fileobj=io.BytesIO(req.content))
-    logging.info(f"Extracting artifact at {temp_dir.name}")
-    artifact.extractall(temp_dir.name)
-    return temp_dir
+    artifact_name = trim(url)
+    artifact_dir = cachedir_path + "/" + artifact_name
+    # Checking if artifact in cache. Not downloading if it is:
+    if not os.path.exists(artifact_dir):
+        logging.info(f"Downloading artifact from {url}")
+        os.mkdir(artifact_dir)
+        req = requests.get(url)
+        if config["type"] == "zip":
+            artifact = zipfile.ZipFile(io.BytesIO(req.content))
+        elif config["type"] == "tgz":
+            artifact = tarfile.open(fileobj=io.BytesIO(req.content))
+        logging.info(f"Extracting artifact at {artifact_dir}")
+        artifact.extractall(artifact_dir)
+    else:
+        logging.info(f"Cache found for {url}, skipping download")
+    return artifact_dir
 
 def build_image(config, src_dir):
     """
-        Builds the given Docker image in 'config'.
+    Builds the given Docker image in 'config'.
 
-        Parameters
-        ----------
-        config: dict
-            Parsed YAML config file.
+    Parameters
+    ----------
+    config: dict
+        Parsed YAML config file.
 
-        src_dir: tempfile.TemporaryDirectory
-            The directory where the artifact is stored.
+    src_dir: tempfile.TemporaryDirectory
+        The directory where the artifact is stored.
 
-        Returns
-        -------
-        return_code: int
-            Return code of the Docker 'build' command.
+    Returns
+    -------
+    return_code: int
+        Return code of the Docker 'build' command.
     """
     name = config["image_name"]
     logging.info(f"Starting building image {name}")
@@ -104,22 +131,23 @@ def build_image(config, src_dir):
 
 def check_env(config, src_dir):
     """
-        Builds a list of all software packages installed in the
-        Docker image given in 'config', depending on the package managers
-        specified in the configuration, then stores it in a CSV file.
+    Builds a list of all software packages installed in the
+    Docker image given in 'config', depending on the package managers
+    specified in the configuration, then stores it in a CSV file.
 
-        Parameters
-        ----------
-        config: dict
-            Parsed YAML config file.
+    Parameters
+    ----------
+    config: dict
+        Parsed YAML config file.
 
-        src_dir: tempfile.TemporaryDirectory
-            The directory where the artifact is stored.
+    src_dir: tempfile.TemporaryDirectory
+        The directory where the artifact is stored.
 
-        Returns
-        -------
-        None
+    Returns
+    -------
+    None
     """
+    logging.info("Checking software environment")
     pkglist_file = open(pkglist_path, "w")
     pkglist_file.write("Package,Version,Package manager\n")
     path = os.path.join(src_dir, config["dockerfile_location"])
@@ -149,23 +177,23 @@ def check_env(config, src_dir):
 
 def remove_image(config):
     """
-        Removes the Docker image given in 'config'.
+    Removes the Docker image given in 'config'.
 
-        Parameters
-        ----------
-        config: dict
-            Parsed YAML config file.
+    Parameters
+    ----------
+    config: dict
+        Parsed YAML config file.
 
-        Returns
-        -------
-        None
+    Returns
+    -------
+    None
     """
     name = config["image_name"]
     logging.info(f"Removing image '{name}'")
     subprocess.run(["docker", "rmi", name], capture_output = True)
 
 def main():
-    global pkglist_path, log_path, buildstatus_path
+    global pkglist_path, buildstatus_path, cachedir_path
 
     # Command line arguments parsing:
     parser = argparse.ArgumentParser(
@@ -199,12 +227,15 @@ def main():
     args = parser.parse_args()
 
     # Setting up the paths of the outputs:
+    log_path = "log.txt" # Output of the program
     if args.pkg_list != None:
         pkglist_path = args.pkg_list
     if args.log_path != None:
         log_path = args.log_path
     if args.build_summary != None:
         buildstatus_path = args.build_summary
+    if args.cache_dir != None:
+        cachedir_path = args.cache_dir
 
     # Setting up the log: will be displayed both on stdout and to the specified
     # file:
@@ -223,9 +254,9 @@ def main():
     #    logging.info(f"Output will be stored in {output}")
 
     src_dir = download_sources(config)
-    successful_build = build_image(config, src_dir.name)
+    successful_build = build_image(config, src_dir)
     if successful_build:
-        check_env(config, src_dir.name)
+        check_env(config, src_dir)
         remove_image(config)
 
 if __name__ == "__main__":
