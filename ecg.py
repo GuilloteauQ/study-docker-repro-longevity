@@ -23,22 +23,6 @@ import logging
 import datetime
 import sys
 
-class Logger(object):
-    """
-        Class to log Python output to both stdout and a file.
-    """
-    def __init__(self, path):
-        self.terminal = sys.stdout
-        self.log = open(path, "w")
-
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
-
-    def flush(self):
-        # For Python 3 compatibility:
-        pass
-
 # Paths:
 pkglist_path = "pkglist.csv" # Package list being generated
 log_path = "log.txt" # Output of the program
@@ -63,9 +47,6 @@ pkgmgr_cmd = {
 
 # Command to obtain the latest commit hash in a git repository:
 gitcmd = "git log -n 1 --pretty=format:%H"
-
-# Enables logging:
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 def download_sources(config):
     """
@@ -114,7 +95,9 @@ def build_image(config, src_dir):
     logging.info(f"Starting building image {name}")
     path = os.path.join(src_dir, config["dockerfile_location"])
     build_command = "docker build -t " + config["image_name"] + " ."
-    build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=False)
+    build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
+    logging.info(f"Output of '{build_command}':")
+    logging.info(build_process.stdout)
     return_code = build_process.returncode
     logging.info(f"Command '{build_command}' exited with code {return_code}")
     return return_code == 0
@@ -179,7 +162,7 @@ def remove_image(config):
     """
     name = config["image_name"]
     logging.info(f"Removing image '{name}'")
-    subprocess.run(["docker", "rmi", name])
+    subprocess.run(["docker", "rmi", name], capture_output = True)
 
 def main():
     global pkglist_path, log_path, buildstatus_path
@@ -222,6 +205,11 @@ def main():
         log_path = args.log_path
     if args.build_summary != None:
         buildstatus_path = args.build_summary
+
+    # Setting up the log: will be displayed both on stdout and to the specified
+    # file:
+    logging.basicConfig(filename = log_path, filemode = "w", format = '%(levelname)s: %(message)s', level = logging.INFO)
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     # Parsing the input YAML file including the configuration of
     # the artifact's image:
