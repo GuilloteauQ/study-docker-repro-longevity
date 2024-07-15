@@ -24,6 +24,7 @@ import datetime
 import sys
 
 # Paths:
+config_path = ""
 pkglist_path = "pkglist.csv" # Package list being generated
 buildstatus_path = "build_status.csv" # Summary of the build process of the image
 cachedir_path = "cache" # Artifact cache directory
@@ -125,15 +126,15 @@ def buildstatus_saver(output):
     """
     file_exists = os.path.exists(buildstatus_path)
     buildstatus_file = open(buildstatus_path, "w+")
-    # Writing header in case file didn't exist:
-    if not file_exists:
-        buildstatus_file.write("yaml_path,timestamp,error")
+    # # Writing header in case file didn't exist:
+    # if not file_exists:
+    #     buildstatus_file.write("yaml_path,timestamp,error")
     for error_cat, errors_list in build_errors.items():
         for error in errors_list:
             if error in output:
                 now = datetime.datetime.now()
                 timestamp = str(datetime.datetime.timestamp(now))
-                buildstatus_file.write()
+                buildstatus_file.write(f"{config_path},{timestamp},{error_cat}")
     buildstatus_file.close()
 
 def build_image(config, src_dir):
@@ -187,7 +188,7 @@ def check_env(config, src_dir):
     """
     logging.info("Checking software environment")
     pkglist_file = open(pkglist_path, "w")
-    pkglist_file.write("package,version,package_manager\n")
+    # pkglist_file.write("package,version,package_manager\n")
     path = os.path.join(src_dir, config["dockerfile_location"])
     for pkgmgr in config["package_managers"]:
         logging.info(f"Checking '{pkgmgr}'")
@@ -231,7 +232,7 @@ def remove_image(config):
     subprocess.run(["docker", "rmi", name], capture_output = True)
 
 def main():
-    global pkglist_path, buildstatus_path, cachedir_path
+    global config_path, pkglist_path, buildstatus_path, cachedir_path
 
     # Command line arguments parsing:
     parser = argparse.ArgumentParser(
@@ -277,19 +278,19 @@ def main():
 
     # Setting up the log: will be displayed both on stdout and to the specified
     # file:
+    logging.info(f"Output will be stored in {log_path}")
     logging.basicConfig(filename = log_path, filemode = "w", format = '%(levelname)s: %(message)s', level = logging.INFO)
-    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     # Parsing the input YAML file including the configuration of
     # the artifact's image:
-    config_file = open(args.config, "r")
+    config_path = args.config
+    config_file = open(config_path, "r")
     config = yaml.safe_load(config_file)
     config_file.close()
-
     verbose = args.verbose
 
     # if verbose:
-    #    logging.info(f"Output will be stored in {output}")
+    #    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     src_dir = download_sources(config)
     successful_build = build_image(config, src_dir)
