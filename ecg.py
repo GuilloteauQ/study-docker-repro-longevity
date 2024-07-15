@@ -125,16 +125,15 @@ def buildstatus_saver(output):
     None
     """
     file_exists = os.path.exists(buildstatus_path)
-    buildstatus_file = open(buildstatus_path, "w+")
+    buildstatus_file = open(buildstatus_path, "a")
     # # Writing header in case file didn't exist:
     # if not file_exists:
     #     buildstatus_file.write("yaml_path,timestamp,error")
-    for error_cat, errors_list in build_errors.items():
-        for error in errors_list:
-            if error in output:
-                now = datetime.datetime.now()
-                timestamp = str(datetime.datetime.timestamp(now))
-                buildstatus_file.write(f"{config_path},{timestamp},{error_cat}")
+    for error_cat, error in build_errors.items():
+        if error in output:
+            now = datetime.datetime.now()
+            timestamp = str(datetime.datetime.timestamp(now))
+            buildstatus_file.write(f"{config_path},{timestamp},{error_cat}\n")
     buildstatus_file.close()
 
 def build_image(config, src_dir):
@@ -159,13 +158,13 @@ def build_image(config, src_dir):
     path = os.path.join(src_dir, config["dockerfile_location"])
     build_command = "docker build -t " + config["image_name"] + " ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
-    # build_output = "stdout:\n" + build_process.stdout.decode("utf-8") + "\nstderr:\n" + build_process.stderr.decode("utf-8")
-    build_output = build_process.stderr.decode("utf-8")
+    build_output = "stdout:\n" + build_process.stdout.decode("utf-8") + "\nstderr:\n" + build_process.stderr.decode("utf-8")
+    # build_output = build_process.stderr.decode("utf-8")
     logging.info(f"Output of '{build_command}':")
     logging.info(build_output)
     return_code = build_process.returncode
     logging.info(f"Command '{build_command}' exited with code {return_code}")
-    buildstatus_saver(build_process.stderr.decode("utf-8"))
+    buildstatus_saver(build_output)
     return return_code == 0
 
 def check_env(config, src_dir):
@@ -278,7 +277,7 @@ def main():
 
     # Setting up the log: will be displayed both on stdout and to the specified
     # file:
-    logging.info(f"Output will be stored in {log_path}")
+    print(f"Output will be stored in {log_path}")
     logging.basicConfig(filename = log_path, filemode = "w", format = '%(levelname)s: %(message)s', level = logging.INFO)
 
     # Parsing the input YAML file including the configuration of
@@ -289,8 +288,8 @@ def main():
     config_file.close()
     verbose = args.verbose
 
-    # if verbose:
-    #    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    if verbose:
+       logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     src_dir = download_sources(config)
     successful_build = build_image(config, src_dir)

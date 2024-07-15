@@ -13,4 +13,4 @@ then
     mkdir $CACHE_DIR
 fi
 
-./ecg.py $TESTFILE -p $OUTPUT_PATH/pkglist.csv -l $OUTPUT_PATH/log.txt -b $OUTPUT_PATH/build_status.csv -c $CACHE_DIR
+./ecg.py $TESTFILE -v -p $OUTPUT_PATH/pkglist.csv -l $OUTPUT_PATH/log.txt -b $OUTPUT_PATH/build_status.csv -c $CACHE_DIR
