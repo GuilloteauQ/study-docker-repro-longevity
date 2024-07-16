@@ -36,7 +36,7 @@ Where:
 - `<log_file>` is the path to the file where to log the output of the program.
 - `<build_status_file>` is the path to the file where to write the build summary of the Docker image given in the configuration file.
 - `<artifact_hash_log>` is the path to the file where to log the hash of the downloaded artifact.
-- `<cache_directory>` is the path to the cache directory, where downloaded artifacts will be stored for future usage.
+- `<cache_directory>` is the path to the cache directory, where downloaded artifacts will be stored for future usage. If not specified, cache is disabled.
 
 ## License
 
