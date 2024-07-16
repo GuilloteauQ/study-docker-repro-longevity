@@ -25,9 +25,9 @@ import sys
 
 # Paths:
 config_path = ""
-pkglist_path = "pkglist.csv" # Package list being generated
-buildstatus_path = "build_status.csv" # Summary of the build process of the image
-cachedir_path = "cache" # Artifact cache directory
+pkglist_path = "" # Package list being generated
+buildstatus_path = "" # Summary of the build process of the image
+cachedir_path = "" # Artifact cache directory
 
 # Commands to list installed packages along with their versions and the name
 # of the package manager, depending on the package managers.
@@ -94,7 +94,7 @@ def download_sources(config):
     """
     url = config["artifact_url"]
     artifact_name = trim(url)
-    artifact_dir = cachedir_path + "/" + artifact_name
+    artifact_dir = f"{cachedir_path}/{artifact_name}"
     # Checking if artifact in cache. Not downloading if it is:
     if not os.path.exists(artifact_dir):
         logging.info(f"Downloading artifact from {url}")
@@ -156,9 +156,9 @@ def build_image(config, src_dir):
     name = config["image_name"]
     logging.info(f"Starting building image {name}")
     path = os.path.join(src_dir, config["dockerfile_location"])
-    build_command = "docker build -t " + config["image_name"] + " ."
+    build_command = f"docker build -t {config["image_name"]} ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
-    build_output = "stdout:\n" + build_process.stdout.decode("utf-8") + "\nstderr:\n" + build_process.stderr.decode("utf-8")
+    build_output = f"stdout:\n{build_process.stdout.decode("utf-8")}\nstderr:\n{build_process.stderr.decode("utf-8")}"
     # build_output = build_process.stderr.decode("utf-8")
     logging.info(f"Output of '{build_command}':")
     logging.info(build_output)
@@ -190,17 +190,19 @@ def check_env(config, src_dir):
     # pkglist_file.write("package,version,package_manager\n")
     path = os.path.join(src_dir, config["dockerfile_location"])
     for pkgmgr in config["package_managers"]:
+        pkglist_cmd = pkgmgr_cmd[pkgmgr][0]
+        listformat_cmd = pkgmgr_cmd[pkgmgr][1]
         logging.info(f"Checking '{pkgmgr}'")
-        pkglist_process = subprocess.run(["docker", "run", "--rm", config["image_name"]] + pkgmgr_cmd[pkgmgr][0].split(" "), cwd=path, capture_output=True)
-        format_process = subprocess.run("cat << EOF | " + pkgmgr_cmd[pkgmgr][1] + "\n" + pkglist_process.stdout.decode("utf-8") + "EOF", cwd=path, capture_output=True, shell=True)
+        pkglist_process = subprocess.run(["docker", "run", "--rm", config["image_name"]] + pkglist_cmd.split(" "), cwd=path, capture_output=True)
+        format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode("utf-8")}EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
     if "git_packages" in config.keys():
         logging.info("Checking Git packages")
         for repo in config["git_packages"]:
             pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], config["image_name"]] + gitcmd.split(" "), cwd=path, capture_output=True)
-            repo_row = repo["name"] + "," + pkglist_process.stdout.decode("utf-8") + ",git"
-            pkglist_file.write(repo_row + "\n")
+            repo_row = f"{repo["name"]},{pkglist_process.stdout.decode("utf-8")},git"
+            pkglist_file.write(f"{repo_row}\n")
     if "misc_packages" in config.keys():
         logging.info("Checking packages obtained outside of a package manager or VCS")
         for pkg in config["misc_packages"]:
@@ -208,9 +210,9 @@ def check_env(config, src_dir):
             req = requests.get(pkg["url"])
             pkg_file = tempfile.NamedTemporaryFile()
             pkg_file.write(req.content)
-            pkglist_process = subprocess.run("sha256sum " + pkg_file.name + " | cut -zd ' ' -f 1", cwd=path, capture_output=True, shell=True)
-            pkg_row = pkg["name"] + "," + pkglist_process.stdout.decode("utf-8") + ",misc"
-            pkglist_file.write(pkg_row + "\n")
+            pkglist_process = subprocess.run(f"sha256sum {pkg_file.name} | cut -zd ' ' -f 1", cwd=path, capture_output=True, shell=True)
+            pkg_row = f"{pkg["name"]},{pkglist_process.stdout.decode("utf-8")},misc"
+            pkglist_file.write(f"{pkg_row}\n")
     pkglist_file.close()
 
 def remove_image(config):
@@ -239,41 +241,42 @@ def main():
         description = "ECG is a program that automates software environment checking for scientific artifacts. "
             "It is meant to be executed periodically to analyze variations in the software environment of the artifact through time."
     )
+    parser.add_argument('-v', '--verbose',
+        action = 'store_true',
+        help = "Shows more details on what is being done."
+    )
     parser.add_argument(
         "config",
         help = "The path to the configuration file of the artifact's Docker image."
     )
     parser.add_argument(
         "-p", "--pkg-list",
-        help = "Path to the file where the package list generated by the program should be written."
+        help = "Path to the file where the package list generated by the program should be written.",
+        required = True
     )
     parser.add_argument(
         "-l", "--log-path",
-        help = "Path to the file where to log the output of the program."
+        help = "Path to the file where to log the output of the program.",
+        required = True
     )
     parser.add_argument(
         "-b", "--build-summary",
-        help = "Path to the file where to write the build summary of the Docker image given in the configuration file."
+        help = "Path to the file where to write the build summary of the Docker image given in the configuration file.",
+        required = True
     )
     parser.add_argument(
         "-c", "--cache-dir",
-        help = "Path to the cache directory, where artifact that are downloaded will be stored for future usage."
+        help = "Path to the cache directory, where artifact that are downloaded will be stored for future usage.",
+        required = True
     )
-    parser.add_argument('-v', '--verbose',
-        action = 'store_true',
-        help = "Shows more details on what is being done.")
     args = parser.parse_args()
 
     # Setting up the paths of the outputs:
     log_path = "log.txt" # Output of the program
-    if args.pkg_list != None:
-        pkglist_path = args.pkg_list
-    if args.log_path != None:
-        log_path = args.log_path
-    if args.build_summary != None:
-        buildstatus_path = args.build_summary
-    if args.cache_dir != None:
-        cachedir_path = args.cache_dir
+    pkglist_path = args.pkg_list
+    log_path = args.log_path
+    buildstatus_path = args.build_summary
+    cachedir_path = args.cache_dir
 
     # Setting up the log: will be displayed both on stdout and to the specified
     # file:
