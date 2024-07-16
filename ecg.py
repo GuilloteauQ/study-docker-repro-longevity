@@ -27,6 +27,7 @@ import sys
 config_path = ""
 pkglist_path = "" # Package list being generated
 buildstatus_path = "" # Summary of the build process of the image
+arthashhist_path = "" # History of the hash of the downloaded artifact
 cachedir_path = "" # Artifact cache directory
 
 # Commands to list installed packages along with their versions and the name
@@ -78,6 +79,30 @@ def trim(url) :
 
     return trimmed
 
+def download_file(url, dest):
+    """
+    Downloads the file stored at the given URL and returns its hash
+    and location.
+
+    Parameters
+    ----------
+    url: str
+        URL to the file to download.
+    dest: str
+        Path to where the file should be stored.
+
+    Returns
+    -------
+    str
+       The hash of the downloaded file.
+    """
+    req = requests.get(url)
+    file = open(dest, "wb")
+    file.write(req.content)
+    file.close()
+    hash_process = subprocess.run(f"sha256sum {file.name} | cut -d ' ' -f 1 | tr -d '\n'", capture_output=True, shell=True)
+    return hash_process.stdout.decode("utf-8")
+
 def download_sources(config):
     """
     Downloads the source of the artifact in 'config'.
@@ -99,13 +124,21 @@ def download_sources(config):
     if not os.path.exists(artifact_dir):
         logging.info(f"Downloading artifact from {url}")
         os.mkdir(artifact_dir)
-        req = requests.get(url)
+        artifact_file = tempfile.NamedTemporaryFile()
+        artifact_path = artifact_file.name
+        artifact_hash = download_file(url, artifact_path)
         if config["type"] == "zip":
-            artifact = zipfile.ZipFile(io.BytesIO(req.content))
+            artifact = zipfile.ZipFile(artifact_path)
         elif config["type"] == "tgz":
-            artifact = tarfile.open(fileobj=io.BytesIO(req.content))
+            artifact = tarfile.open(artifact_path)
         logging.info(f"Extracting artifact at {artifact_dir}")
         artifact.extractall(artifact_dir)
+        # Saving the current hash of the artifact for the history:
+        arthashhist_file = open(arthashhist_path, "a")
+        now = datetime.datetime.now()
+        timestamp = str(datetime.datetime.timestamp(now))
+        arthashhist_file.write(f"{timestamp},{artifact_hash}\n")
+        arthashhist_file.close()
     else:
         logging.info(f"Cache found for {url}, skipping download")
     return artifact_dir
@@ -207,11 +240,10 @@ def check_env(config, src_dir):
         logging.info("Checking packages obtained outside of a package manager or VCS")
         for pkg in config["misc_packages"]:
             logging.info(f"Downloading package {pkg["name"]} from {pkg["url"]}")
-            req = requests.get(pkg["url"])
             pkg_file = tempfile.NamedTemporaryFile()
-            pkg_file.write(req.content)
-            pkglist_process = subprocess.run(f"sha256sum {pkg_file.name} | cut -zd ' ' -f 1", cwd=path, capture_output=True, shell=True)
-            pkg_row = f"{pkg["name"]},{pkglist_process.stdout.decode("utf-8")},misc"
+            pkg_path = pkg_file.name
+            pkg_hash = download_file(pkg["url"], pkg_path)
+            pkg_row = f"{pkg["name"]},{pkg_hash},misc"
             pkglist_file.write(f"{pkg_row}\n")
     pkglist_file.close()
 
@@ -233,7 +265,7 @@ def remove_image(config):
     subprocess.run(["docker", "rmi", name], capture_output = True)
 
 def main():
-    global config_path, pkglist_path, buildstatus_path, cachedir_path
+    global config_path, pkglist_path, buildstatus_path, arthashhist_path, cachedir_path
 
     # Command line arguments parsing:
     parser = argparse.ArgumentParser(
@@ -265,6 +297,11 @@ def main():
         required = True
     )
     parser.add_argument(
+        "-a", "--artifact-hash",
+        help = "Path to the file where to write the history of the hash of the downloaded artifact.",
+        required = True
+    )
+    parser.add_argument(
         "-c", "--cache-dir",
         help = "Path to the cache directory, where artifact that are downloaded will be stored for future usage.",
         required = True
@@ -276,6 +313,7 @@ def main():
     pkglist_path = args.pkg_list
     log_path = args.log_path
     buildstatus_path = args.build_summary
+    arthashhist_path = args.artifact_hash
     cachedir_path = args.cache_dir
 
     # Setting up the log: will be displayed both on stdout and to the specified
