@@ -30,6 +30,8 @@ buildstatus_path = "" # Summary of the build process of the image
 arthashlog_path = "" # Log of the hash of the downloaded artifact
 cachedir_path = "cache" # Artifact cache directory
 
+use_cache = False # Indicates whether cache should be enabled or not
+
 # Commands to list installed packages along with their versions and the name
 # of the package manager, depending on the package managers.
 # Each package manager is associated with a tuple, the first item being
@@ -121,8 +123,11 @@ def download_sources(config):
     artifact_name = trim(url)
     artifact_dir = os.path.join(cachedir_path, artifact_name)
     # Checking if artifact in cache. Not downloading if it is:
-    if not os.path.exists(artifact_dir):
+    if not os.path.exists(artifact_dir) or not use_cache:
         logging.info(f"Downloading artifact from {url}")
+        # In case cache was used before:
+        if not use_cache:
+            os.system(f"rm -rf {artifact_dir}")
         os.mkdir(artifact_dir)
         artifact_file = tempfile.NamedTemporaryFile()
         artifact_path = artifact_file.name
@@ -265,7 +270,7 @@ def remove_image(config):
     subprocess.run(["docker", "rmi", name], capture_output = True)
 
 def main():
-    global config_path, pkglist_path, buildstatus_path, arthashlog_path, cachedir_path
+    global config_path, pkglist_path, buildstatus_path, arthashlog_path, cachedir_path, use_cache
 
     # Command line arguments parsing:
     parser = argparse.ArgumentParser(
@@ -303,7 +308,8 @@ def main():
     )
     parser.add_argument(
         "-c", "--cache-dir",
-        help = "Path to the cache directory, where artifact that are downloaded will be stored for future usage.",
+        help = "Path to the cache directory, where artifacts that are downloaded will be stored for future usage. " \
+                "If not specified, cache is disabled.",
         required = False
     )
     args = parser.parse_args()
@@ -315,6 +321,7 @@ def main():
     buildstatus_path = args.build_summary
     arthashlog_path = args.artifact_hash
     if args.cache_dir != None:
+        use_cache = True
         cachedir_path = args.cache_dir
 
     # Setting up the log: will be displayed both on stdout and to the specified
@@ -339,6 +346,9 @@ def main():
     if successful_build:
         check_env(config, src_dir)
         remove_image(config)
+
+    if not use_cache:
+        os.system(f"rm -rf {os.path.join(cachedir_path, trim(config["artifact_url"]))}")
 
 if __name__ == "__main__":
     main()
