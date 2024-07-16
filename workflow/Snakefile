@@ -3,12 +3,13 @@ include: "utils.smk"
 import datetime
 DATE = datetime.datetime.now().strftime("%Y%m%d")
 
-ARTIFACTS_FOLDER = "artifacts"
+ARTIFACTS_FOLDER_NICKEL = "artifacts_nickel"
+ARTIFACTS_FOLDER_JSON   = "artifacts_json"
 BLACKLIST_FOLDER = "blacklists"
 BLACKLIST = "blacklist.csv"
-EXTENSION = "yaml"
+EXTENSION = "json"
 
-ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER, BLACKLIST)
+ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER_NICKEL, BLACKLIST)
 
 rule all:
   input:
@@ -18,17 +19,31 @@ rule all:
            date=DATE),
     f"{BLACKLIST_FOLDER}/{DATE}.csv"
 
+rule check_artifact:
+  input:
+    "flake.nix",
+    "flake.lock",
+    contract="workflow/nickel/artifact_contract.ncl",
+    artifact=f"{ARTIFACTS_FOLDER_NICKEL}/{{artifact}}.ncl"
+  output:
+    f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.json"
+  shell:
+    """
+    nickel export --format json --output {output} <<< 'let {{Artifact, ..}} = import "{input.contract}" in ((import "{input.artifact}") | Artifact)'
+    """
+
 rule run_ecg:
   input:
     "flake.nix",
     "flake.lock",
     ecg="ecg.py",
+    artifact=f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.{EXTENSION}"
   output:
     log    = "logs/{artifact}/{date}.csv",
     pkg    = "pkgs/{artifact}/{date}.csv",
     status = "status/{artifact}/{date}.csv",
   shell:
-    f"python3 {{input.ecg}} --log {{output.log}} --pkg {{output.pkg}} --status {{output.pkg}} {ARTIFACTS_FOLDER}/{{wildcards.artifact}}.{EXTENSION}"
+    f"python3 {{input.ecg}} --log {{output.log}} --pkg {{output.pkg}} --status {{output.pkg}} {ARTIFACTS_FOLDER_JSON}/{{wildcards.artifact}}.{EXTENSION}"
 
 rule update_blacklist:
   input:
