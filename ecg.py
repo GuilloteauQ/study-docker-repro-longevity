@@ -119,7 +119,7 @@ def download_sources(config):
     """
     url = config["artifact_url"]
     artifact_name = trim(url)
-    artifact_dir = f"{cachedir_path}/{artifact_name}"
+    artifact_dir = os.path.join(cachedir_path, artifact_name)
     # Checking if artifact in cache. Not downloading if it is:
     if not os.path.exists(artifact_dir):
         logging.info(f"Downloading artifact from {url}")
@@ -129,7 +129,7 @@ def download_sources(config):
         artifact_hash = download_file(url, artifact_path)
         if config["type"] == "zip":
             artifact = zipfile.ZipFile(artifact_path)
-        elif config["type"] == "tgz":
+        elif config["type"] == "tar":
             artifact = tarfile.open(artifact_path)
         logging.info(f"Extracting artifact at {artifact_dir}")
         artifact.extractall(artifact_dir)

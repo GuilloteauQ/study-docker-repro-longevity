@@ -1,7 +1,7 @@
 let
   conf = {
-    ARCHIVE_FORMATS = [ "zip", "tar" ],
-    PACKAGE_MANAGERS = [ "dpkg", "conda", "pip"] 
+    ARCHIVE_FORMATS = ["zip", "tar"],
+    PACKAGE_MANAGERS = ["dpkg", "rpm", "pacman", "pip", "conda"]
   }
 in
 {
@@ -10,7 +10,7 @@ in
   ),
   ArchiveType = std.contract.from_predicate (
       fun value => std.array.any (fun x => x == value) conf.ARCHIVE_FORMATS
-    ), 
+    ),
   GitPackage = {
     name
       | doc "Name of the package for future identification"

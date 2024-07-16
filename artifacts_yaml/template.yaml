@@ -1,5 +1,5 @@
 artifact_url: "https://example.com/artifact.zip"
-type: "zip" # Possible values: zip, tgz
+type: "zip" # Possible values: zip, tar
 doi: "XX.XXXX/XXXXXXX.XXXXXXX"
 image_name: "image1:version"
 dockerfile_location: "path/to/docker/folder"

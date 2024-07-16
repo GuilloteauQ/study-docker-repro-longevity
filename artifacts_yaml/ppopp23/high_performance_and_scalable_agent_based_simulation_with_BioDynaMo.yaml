@@ -1,5 +1,5 @@
 artifact_url: "https://zenodo.org/record/7544675/files/SF2-code.tar.gz"
-type: "tgz"
+type: "tar"
 doi: "10.1145/3572848.3577480"
 image_name: "bdm-publication-image-v7"
 dockerfile_location: "bdm-paper-examples/docker"
