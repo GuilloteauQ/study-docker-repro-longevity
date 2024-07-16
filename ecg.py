@@ -27,7 +27,7 @@ import sys
 config_path = ""
 pkglist_path = "" # Package list being generated
 buildstatus_path = "" # Summary of the build process of the image
-arthashhist_path = "" # History of the hash of the downloaded artifact
+arthashlog_path = "" # Log of the hash of the downloaded artifact
 cachedir_path = "" # Artifact cache directory
 
 # Commands to list installed packages along with their versions and the name
@@ -133,12 +133,12 @@ def download_sources(config):
             artifact = tarfile.open(artifact_path)
         logging.info(f"Extracting artifact at {artifact_dir}")
         artifact.extractall(artifact_dir)
-        # Saving the current hash of the artifact for the history:
-        arthashhist_file = open(arthashhist_path, "a")
+        # Logging the current hash of the artifact:
+        arthashlog_file = open(arthashlog_path, "a")
         now = datetime.datetime.now()
         timestamp = str(datetime.datetime.timestamp(now))
-        arthashhist_file.write(f"{timestamp},{artifact_hash}\n")
-        arthashhist_file.close()
+        arthashlog_file.write(f"{timestamp},{artifact_hash}\n")
+        arthashlog_file.close()
     else:
         logging.info(f"Cache found for {url}, skipping download")
     return artifact_dir
@@ -265,7 +265,7 @@ def remove_image(config):
     subprocess.run(["docker", "rmi", name], capture_output = True)
 
 def main():
-    global config_path, pkglist_path, buildstatus_path, arthashhist_path, cachedir_path
+    global config_path, pkglist_path, buildstatus_path, arthashlog_path, cachedir_path
 
     # Command line arguments parsing:
     parser = argparse.ArgumentParser(
@@ -298,7 +298,7 @@ def main():
     )
     parser.add_argument(
         "-a", "--artifact-hash",
-        help = "Path to the file where to write the history of the hash of the downloaded artifact.",
+        help = "Path to the file where to write the log of the hash of the downloaded artifact.",
         required = True
     )
     parser.add_argument(
@@ -313,7 +313,7 @@ def main():
     pkglist_path = args.pkg_list
     log_path = args.log_path
     buildstatus_path = args.build_summary
-    arthashhist_path = args.artifact_hash
+    arthashlog_path = args.artifact_hash
     cachedir_path = args.cache_dir
 
     # Setting up the log: will be displayed both on stdout and to the specified
