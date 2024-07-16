@@ -14,10 +14,15 @@ ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER_NICKEL, BLACKLIST)
 rule all:
   input:
     expand("{folder}/{artifact}/{date}.csv",\
-           folder=["logs", "pkgs", "build_status", "artifact_hash"],\
+           folder=["pkgs", "build_status", "artifact_hash"],\
            artifact=ARTIFACTS,\
            date=DATE
           ),
+    expand("{folder}/{artifact}/{date}.txt",\
+        folder=["logs"],\
+        artifact=ARTIFACTS,\
+        date=DATE
+      ),
     f"{BLACKLIST_FOLDER}/{DATE}.csv"
 
 rule check_artifact:

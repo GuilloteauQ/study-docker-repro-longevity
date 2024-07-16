@@ -1,0 +1,23 @@
+{
+  "artifact_url": "https://example.com/artifact.zip",
+  "dockerfile_location": "path/to/docker/folder",
+  "doi": "...",
+  "git_packages": [
+    {
+      "location": "path/to/git/repo",
+      "name": "pkg1"
+    }
+  ],
+  "image_name": "image:version",
+  "misc_packages": [
+    {
+      "name": "mpkg1",
+      "type": "zip",
+      "url": "https://"
+    }
+  ],
+  "package_managers": [
+    "dpkg"
+  ],
+  "type": "zip"
+}

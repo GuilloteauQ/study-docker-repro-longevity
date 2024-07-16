@@ -28,7 +28,7 @@ config_path = ""
 pkglist_path = "" # Package list being generated
 buildstatus_path = "" # Summary of the build process of the image
 arthashlog_path = "" # Log of the hash of the downloaded artifact
-cachedir_path = "" # Artifact cache directory
+cachedir_path = "cache" # Artifact cache directory
 
 # Commands to list installed packages along with their versions and the name
 # of the package manager, depending on the package managers.
@@ -189,9 +189,9 @@ def build_image(config, src_dir):
     name = config["image_name"]
     logging.info(f"Starting building image {name}")
     path = os.path.join(src_dir, config["dockerfile_location"])
-    build_command = f"docker build -t {config["image_name"]} ."
+    build_command = f"docker build -t {config['image_name']} ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
-    build_output = f"stdout:\n{build_process.stdout.decode("utf-8")}\nstderr:\n{build_process.stderr.decode("utf-8")}"
+    build_output = f"stdout:\n{build_process.stdout.decode('utf-8')}\nstderr:\n{build_process.stderr.decode('utf-8')}"
     # build_output = build_process.stderr.decode("utf-8")
     logging.info(f"Output of '{build_command}':")
     logging.info(build_output)
@@ -227,23 +227,23 @@ def check_env(config, src_dir):
         listformat_cmd = pkgmgr_cmd[pkgmgr][1]
         logging.info(f"Checking '{pkgmgr}'")
         pkglist_process = subprocess.run(["docker", "run", "--rm", config["image_name"]] + pkglist_cmd.split(" "), cwd=path, capture_output=True)
-        format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode("utf-8")}EOF", cwd=path, capture_output=True, shell=True)
+        format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
     if "git_packages" in config.keys():
         logging.info("Checking Git packages")
         for repo in config["git_packages"]:
             pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], config["image_name"]] + gitcmd.split(" "), cwd=path, capture_output=True)
-            repo_row = f"{repo["name"]},{pkglist_process.stdout.decode("utf-8")},git"
+            repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git"
             pkglist_file.write(f"{repo_row}\n")
     if "misc_packages" in config.keys():
         logging.info("Checking packages obtained outside of a package manager or VCS")
         for pkg in config["misc_packages"]:
-            logging.info(f"Downloading package {pkg["name"]} from {pkg["url"]}")
+            logging.info(f"Downloading package {pkg['name']} from {pkg['url']}")
             pkg_file = tempfile.NamedTemporaryFile()
             pkg_path = pkg_file.name
             pkg_hash = download_file(pkg["url"], pkg_path)
-            pkg_row = f"{pkg["name"]},{pkg_hash},misc"
+            pkg_row = f"{pkg['name']},{pkg_hash},misc"
             pkglist_file.write(f"{pkg_row}\n")
     pkglist_file.close()
 
@@ -304,7 +304,7 @@ def main():
     parser.add_argument(
         "-c", "--cache-dir",
         help = "Path to the cache directory, where artifact that are downloaded will be stored for future usage.",
-        required = True
+        required = False
     )
     args = parser.parse_args()
 
@@ -314,7 +314,8 @@ def main():
     log_path = args.log_path
     buildstatus_path = args.build_summary
     arthashlog_path = args.artifact_hash
-    cachedir_path = args.cache_dir
+    if args.cache_dir != None:
+        cachedir_path = args.cache_dir
 
     # Setting up the log: will be displayed both on stdout and to the specified
     # file:

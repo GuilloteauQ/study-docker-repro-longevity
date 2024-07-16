@@ -11,4 +11,4 @@ git_packages:
 misc_packages:
   - name: "mpkg1"
     url: "https://example.com/package1.zip"
-    type: "zip" # Possible values: zip, tgz
+    type: "zip" # Possible values: zip, tar

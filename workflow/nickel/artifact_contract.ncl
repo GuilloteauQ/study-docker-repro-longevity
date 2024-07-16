@@ -31,7 +31,7 @@ in
       | ArchiveType,
   },
   Artifact = {
-    artefact_url
+    artifact_url
       | doc "URL where to download the artifact"
       | String,
     type
@@ -43,7 +43,7 @@ in
     image_name
       | doc "Name to give the image when building"
       | String,
-    location
+    dockerfile_location
       | doc "Path to the dockerfile in the artifact"
       | String,
     package_managers

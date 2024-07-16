@@ -2,6 +2,7 @@ pkglists/*
 output/*
 cache/*
 examples/*
+.snakemake/*
 pkglist.csv
 log.txt
 build_status.csv
