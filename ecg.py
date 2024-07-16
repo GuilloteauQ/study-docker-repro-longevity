@@ -348,7 +348,7 @@ def main():
         remove_image(config)
 
     if not use_cache:
-        os.system(f"rm -rf {os.path.join(cachedir_path, trim(config["artifact_url"]))}")
+        os.system(f"rm -rf {os.path.join(cachedir_path, trim(config['artifact_url']))}")
 
 if __name__ == "__main__":
     main()
