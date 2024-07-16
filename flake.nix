@@ -15,8 +15,12 @@
       devShells = {
         default = pkgs.mkShell {
           packages = with pkgs; [
+<<<<<<< HEAD
             snakemake
             gawk
+=======
+            nickel
+>>>>>>> 127c5c5ef4d0e7d4d1826007cdc27c903eb59314
             (python3.withPackages (ps: with ps; [
               requests
               pyyaml
