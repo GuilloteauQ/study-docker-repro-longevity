@@ -10,7 +10,7 @@
 
 import subprocess
 import json
-import yaml
+# import yaml
 import argparse
 import tempfile
 import os
@@ -85,7 +85,7 @@ def download_sources(config):
     Parameters
     ----------
     config: dict
-        Parsed YAML config file.
+        Parsed config file.
 
     Returns
     -------
@@ -143,7 +143,7 @@ def build_image(config, src_dir):
     Parameters
     ----------
     config: dict
-        Parsed YAML config file.
+        Parsed config file.
 
     src_dir: tempfile.TemporaryDirectory
         The directory where the artifact is stored.
@@ -176,7 +176,7 @@ def check_env(config, src_dir):
     Parameters
     ----------
     config: dict
-        Parsed YAML config file.
+        Parsed config file.
 
     src_dir: tempfile.TemporaryDirectory
         The directory where the artifact is stored.
@@ -222,7 +222,7 @@ def remove_image(config):
     Parameters
     ----------
     config: dict
-        Parsed YAML config file.
+        Parsed config file.
 
     Returns
     -------
@@ -282,17 +282,18 @@ def main():
     # file:
     print(f"Output will be stored in {log_path}")
     logging.basicConfig(filename = log_path, filemode = "w", format = '%(levelname)s: %(message)s', level = logging.INFO)
-
-    # Parsing the input YAML file including the configuration of
-    # the artifact's image:
-    config_path = args.config
-    config_file = open(config_path, "r")
-    config = yaml.safe_load(config_file)
-    config_file.close()
     verbose = args.verbose
-
     if verbose:
        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+
+    # Parsing the input file including the configuration of the artifact's
+    # image:
+    config_path = args.config
+    config_file = open(config_path, "r")
+    config = json.loads(config_file.read())
+    # config = yaml.safe_load(config_file)
+    # print(config)
+    config_file.close()
 
     src_dir = download_sources(config)
     successful_build = build_image(config, src_dir)

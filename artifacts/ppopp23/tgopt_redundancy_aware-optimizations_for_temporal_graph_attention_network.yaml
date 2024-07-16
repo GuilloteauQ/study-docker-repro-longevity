@@ -1,0 +1,8 @@
+artifact_url: "https://zenodo.org/record/7328505/files/tgopt-artifact.tgz"
+type: "tgz"
+doi: "10.1145/3572848.3577490"
+image_name: "tgopt:artefact"
+dockerfile_location: "tgopt-artifact"
+package_managers:
+  - "dpkg"
+  - "conda"
