@@ -40,4 +40,4 @@ Where:
 
 ## License
 
-TBD
+This project is licensed under the GNU General Public License version 3. You can find the terms of the license in the file LICENSE.
