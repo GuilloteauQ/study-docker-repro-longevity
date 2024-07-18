@@ -167,11 +167,18 @@ def buildstatus_saver(output):
     # # Writing header in case file didn't exist:
     # if not file_exists:
     #     buildstatus_file.write("yaml_path,timestamp,error")
+    unknown_error = True
     for error_cat, error in build_errors.items():
         if error in output:
+            unknown_error = False
             now = datetime.datetime.now()
             timestamp = str(datetime.datetime.timestamp(now))
             buildstatus_file.write(f"{config_path},{timestamp},{error_cat}\n")
+    print(unknown_error)
+    if unknown_error:
+        now = datetime.datetime.now()
+        timestamp = str(datetime.datetime.timestamp(now))
+        buildstatus_file.write(f"{config_path},{timestamp},unknown_error\n")
     buildstatus_file.close()
 
 def build_image(config, src_dir):
@@ -188,8 +195,8 @@ def build_image(config, src_dir):
 
     Returns
     -------
-    bool
-        'True' if build successful, 'False' otherwise.
+    return_code: bool, build_output: str
+        Return code and output of Docker 'build'.
     """
     name = config["image_name"]
     logging.info(f"Starting building image {name}")
@@ -202,8 +209,7 @@ def build_image(config, src_dir):
     logging.info(build_output)
     return_code = build_process.returncode
     logging.info(f"Command '{build_command}' exited with code {return_code}")
-    buildstatus_saver(build_output)
-    return return_code == 0
+    return return_code, build_output
 
 def check_env(config, src_dir):
     """
@@ -342,10 +348,12 @@ def main():
     config_file.close()
 
     src_dir = download_sources(config)
-    successful_build = build_image(config, src_dir)
-    if successful_build:
+    return_code, build_output = build_image(config, src_dir)
+    if return_code == 0:
         check_env(config, src_dir)
         remove_image(config)
+    else:
+        buildstatus_saver(build_output)
 
     if not use_cache:
         os.system(f"rm -rf {os.path.join(cachedir_path, trim(config['artifact_url']))}")

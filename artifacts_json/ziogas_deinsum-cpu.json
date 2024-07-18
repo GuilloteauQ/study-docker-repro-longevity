@@ -1,0 +1,37 @@
+{
+  "artifact_url": "https://zenodo.org/record/7004393/files/deinsum/sc22-artifact-0.4.zip",
+  "dockerfile_location": "deinsum-sc22-artifact-7559901/docker_cpu",
+  "doi": "10.5555/3571885.3571918",
+  "git_packages": [
+    {
+      "location": "/dace",
+      "name": "dace"
+    },
+    {
+      "location": "/multilinear-algebra-sc22-artifact",
+      "name": "multilinear-algebra-sc22-artifact"
+    },
+    {
+      "location": "/ctf",
+      "name": "ctf"
+    }
+  ],
+  "image_name": "deinsum:artefact-cpu",
+  "misc_packages": [
+    {
+      "name": "mpich-3.1.4",
+      "type": "tar",
+      "url": "http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz"
+    },
+    {
+      "name": "Python-3.10.2",
+      "type": "tar",
+      "url": "https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz"
+    }
+  ],
+  "package_managers": [
+    "dpkg",
+    "pip"
+  ],
+  "type": "zip"
+}

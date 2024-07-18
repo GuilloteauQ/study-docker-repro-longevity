@@ -1,0 +1,13 @@
+{
+  "artifact_url": "https://zenodo.org/record/6632461/files/SC22_artifacts_submission.zip",
+  "dockerfile_location": "SC22_artifacts_submission",
+  "doi": "10.5555/3571885.3571906",
+  "git_packages": [],
+  "image_name": "taxo:artefact",
+  "misc_packages": [],
+  "package_managers": [
+    "dpkg",
+    "pip"
+  ],
+  "type": "zip"
+}
