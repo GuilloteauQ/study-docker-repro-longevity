@@ -1,4 +1,3 @@
-let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
 {
   artifact_url = "https://zenodo.org/record/6632461/files/SC22_artifacts_submission.zip",
   type = "zip",
@@ -8,4 +7,4 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
   package_managers = [ "dpkg", "pip" ],
   git_packages = [],
   misc_packages = [],
-} | Artifact
+}

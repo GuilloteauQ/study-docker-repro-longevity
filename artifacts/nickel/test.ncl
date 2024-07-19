@@ -1,4 +1,3 @@
-let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
 {
   artifact_url = "http://localhost/artifact.zip",
   type = "zip",
@@ -12,4 +11,4 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
   misc_packages = [
     { name = "mpkg1", url = "http://localhost/package1.zip" }
   ],
-} | Artifact
+}

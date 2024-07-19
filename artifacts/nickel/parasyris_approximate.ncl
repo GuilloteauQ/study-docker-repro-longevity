@@ -1,4 +1,3 @@
-let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
 {
   artifact_url = "https://zenodo.org/record/6926481/files/koparasy/HPAC-v0.0.0-Puppeteer.zip",
   type = "zip",
@@ -10,4 +9,4 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
   misc_packages = [
     { name = "HPAC", url = "https://github.com/koparasy/HPAC/archive/refs/heads/develop.zip" } # CMake also but not downloaded, so cannot add to list...
   ],
-} | Artifact
+}

@@ -1,4 +1,3 @@
-let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
 {
   artifact_url = "https://zenodo.org/record/7544675/files/SF2-code.tar.gz",
   type = "tar",
@@ -27,4 +26,4 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
       url = "http://biodynamo-lfs.web.cern.ch/biodynamo-lfs/third-party/paraview_v5.9.0_ubuntu-20.04_default.tar.gz"
     },
   ],
-} | Artifact
+}
