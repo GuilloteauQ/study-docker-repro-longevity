@@ -14,13 +14,11 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
   misc_packages = [
     {
       name = "mpich-3.1.4",
-      url = "http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz",
-      type = "tar"
+      url = "http://www.mpich.org/static/downloads/3.1.4/mpich-3.1.4.tar.gz"
     },
     {
       name = "Python-3.10.2",
-      url = "https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz",
-      type = "tar"
+      url = "https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz"
     }
   ],
 } | Artifact

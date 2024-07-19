@@ -7,11 +7,11 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
   dockerfile_location = "deinsum-sc22-artifact-7559901/docker_gpu",
   package_managers = [ "dpkg", "pip" ],
   git_packages = [
-    { name = "dace", location = "/dace"},
-    { name = "multilinear-algebra-sc22-artifact", location = "/multilinear-algebra-sc22-artifact"},
-    { name = "ctf", location = "/ctf"}
+    { name = "dace", location = "/dace" },
+    { name = "multilinear-algebra-sc22-artifact", location = "/multilinear-algebra-sc22-artifact" },
+    { name = "ctf", location = "/ctf" }
   ],
   misc_packages = [
-    { name = "pip", url = "https://bootstrap.pypa.io/get-pip.py", type = "zip"}
+    { name = "pip", url = "https://bootstrap.pypa.io/get-pip.py" }
   ],
 } | Artifact

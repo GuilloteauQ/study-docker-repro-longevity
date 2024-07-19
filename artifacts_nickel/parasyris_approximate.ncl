@@ -8,6 +8,6 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
   package_managers = [ "dpkg", "pip" ],
   git_packages = [],
   misc_packages = [
-    { name = "HPAC", url = "https://github.com/koparasy/HPAC/archive/refs/heads/develop.zip", type = "zip" } # CMake also but not downloaded, so cannot add to list...
+    { name = "HPAC", url = "https://github.com/koparasy/HPAC/archive/refs/heads/develop.zip" } # CMake also but not downloaded, so cannot add to list...
   ],
 } | Artifact

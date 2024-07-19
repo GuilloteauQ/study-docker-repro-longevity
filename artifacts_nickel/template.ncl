@@ -10,6 +10,6 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
     { name = "pkg1", location = "path/to/git/repo"}
   ],
   misc_packages = [
-    { name = "mpkg1", url = "http://example.com/package.zip", type = "zip" # Possible values: zip, tar }
+    { name = "mpkg1", url = "http://example.com/package.zip" }
   ]
 } | Artifact
