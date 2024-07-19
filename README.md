@@ -38,6 +38,41 @@ Where:
 - `<artifact_hash_log>` is the path to the file where to log the hash of the downloaded artifact.
 - `<cache_directory>` is the path to the cache directory, where downloaded artifacts will be stored for future usage. If not specified, cache is disabled.
 
+## Output
+
+### Package list
+
+The list of packages installed in the container, depending on the package managers, Git packages and other miscellaneous packages given in the config file, in the form of a CSV file, with the following columns in order:
+
+| Package name | Version | Package manager |
+
+For Git packages, the hash of the last commit is used as version number. For miscellaneous packages, the hash of the file that has been used to install the package is used as version number.
+
+### Log file
+
+Just a plain text file containing the output of the script.
+
+### Build status file
+
+The log of the failed attempts to build the Docker image, in the form of a CSV file, with the following columns in order:
+
+| Config file path | Timestamp | Reason category |
+
+The timestamp corresponds to when the error is being logged, not to when it happened.
+
+The following are the categories of reasons explaining why the building failed:
+- "package_unavailable": A command requested the installation of a package that is not available.
+- "baseimage_unavailable": The base image needed for this container is not available.
+- "unknown_error": Any other error.
+
+### Artifact hash log
+
+The log of the hash of the artifact archive file, in the form of a CSV file, with the following columns in order:
+
+| Timestamp | Hash |
+
+The timestamp corresponds to when the hash has been logged, not to when the artifact has been downloaded.
+
 ## License
 
 This project is licensed under the GNU General Public License version 3. You can find the terms of the license in the file LICENSE.

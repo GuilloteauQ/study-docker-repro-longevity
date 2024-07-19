@@ -37,10 +37,7 @@ in
       | String,
     url
       | doc "URL of the package. Will be used to compute the hash"
-      | URL,
-    type
-      | doc "Type of the archive (zip, tar, ...)"
-      | ArchiveType,
+      | URL
   },
   Artifact = {
     artifact_url
