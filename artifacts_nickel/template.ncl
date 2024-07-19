@@ -1,11 +1,12 @@
 let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
 {
   artifact_url = "https://example.com/artifact.zip",
-  type = "zip", # Possible values: zip, tar
+  type = "zip",
   doi = "...",
+  comment = "Template for artifact configuration.",
   image_name = "image:version",
   dockerfile_location = "path/to/docker/folder",
-  package_managers = [ "dpkg" ], # Possible values: dpkg, rpm, pacman, pip, conda
+  package_managers = [ "dpkg" ],
   git_packages = [
     { name = "pkg1", location = "path/to/git/repo"}
   ],

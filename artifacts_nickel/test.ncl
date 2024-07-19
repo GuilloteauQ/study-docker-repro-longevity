@@ -3,6 +3,7 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
   artifact_url = "http://localhost/artifact.zip",
   type = "zip",
   doi = "...",
+  comment = "",
   image_name = "prog:latest",
   dockerfile_location = "./",
   package_managers = [ "dpkg", "pip" ],

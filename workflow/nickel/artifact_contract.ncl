@@ -44,10 +44,13 @@ in
       | doc "URL where to download the artifact"
       | URL,
     type
-      | doc "Type of the archive (zip, tar, ...)"
+      | doc "Type of the archive. Possible values: zip, tar"
       | ArchiveType,
     doi
       | doc "DOI of the artifact"
+      | String,
+    comment
+      | doc "Additional comments on the artifact that couldn't be written elsewhere"
       | String,
     image_name
       | doc "Name to give the image when building"
@@ -56,7 +59,7 @@ in
       | doc "Path to the dockerfile in the artifact"
       | FilePath,
     package_managers
-      | doc "Package Managers used in the container"
+      | doc "Package Managers used in the container. Possible values: dpkg, rpm, pacman, pip, conda"
       | Array PackageManager,
     git_packages
       | doc "Git repositories cloned in the container"

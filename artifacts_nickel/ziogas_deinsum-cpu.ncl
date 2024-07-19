@@ -3,6 +3,7 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
   artifact_url = "https://zenodo.org/record/7004393/files/deinsum/sc22-artifact-0.4.zip",
   type = "zip",
   doi = "10.5555/3571885.3571918",
+  comment = "",
   image_name = "deinsum:artefact-cpu",
   dockerfile_location = "deinsum-sc22-artifact-7559901/docker_cpu",
   package_managers = [ "dpkg", "pip" ],
