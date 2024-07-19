@@ -1,0 +1,4 @@
+folder_artifacts_nickel: "artifacts_nickel"
+folder_artifacts_json: "artifacts_json"
+folder_blacklists: "blacklists"
+symlink_blacklist: "blacklist.csv"

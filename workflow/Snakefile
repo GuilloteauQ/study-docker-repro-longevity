@@ -1,12 +1,14 @@
+configfile: "config/config.yaml"
+
 include: "utils.smk"
 
 import datetime
 DATE = datetime.datetime.now().strftime("%Y%m%d")
 
-ARTIFACTS_FOLDER_NICKEL = "artifacts_nickel"
-ARTIFACTS_FOLDER_JSON   = "artifacts_json"
-BLACKLIST_FOLDER = "blacklists"
-BLACKLIST = "blacklist.csv"
+ARTIFACTS_FOLDER_NICKEL = config["folder_artifacts_nickel"]
+ARTIFACTS_FOLDER_JSON   = config["folder_artifacts_json"]
+BLACKLIST_FOLDER = config["folder_blacklists"]
+BLACKLIST = config["symlink_blacklist"]
 EXTENSION = "json"
 
 ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER_NICKEL, BLACKLIST)
@@ -24,6 +26,11 @@ rule all:
         date=DATE
       ),
     f"{BLACKLIST_FOLDER}/{DATE}.csv"
+
+rule check_all:
+  input:
+    expand(f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.json", artifact=ARTIFACTS)
+    
 
 rule check_artifact:
   input:
