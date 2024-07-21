@@ -2,7 +2,7 @@ from execo_g5k import oardel, oarsub, OarSubmission, wait_oar_job_start, get_oar
 import time
 import argparse
 
-def submit_job(cluster, site, maximum_duration_minutes, checkpoint_minutes, is_besteffort, path, script, command):
+def submit_job(cluster, site, maximum_duration_minutes, checkpoint_minutes, is_besteffort, path, script, command, build_status_file, artifact):
     reservation_duration = (maximum_duration_minutes + checkpoint_minutes) * 60
     checkpoint = checkpoint_minutes * 60
     job_type = []
@@ -13,7 +13,7 @@ def submit_job(cluster, site, maximum_duration_minutes, checkpoint_minutes, is_b
                                                 reservation_duration,\
                                                 job_type=job_type,\
                                                 additional_options=f"--checkpoint {checkpoint}",\
-                                                command=f"{path}/{script} {path} {command}"), site)])[0]
+                                                command=f"{path}/{script} {path} {build_status_file} {artifact} {command}"), site)])[0]
     return oar_job_id
 
 def wait_for_completion(oar_job_id, site, sleep_time):
@@ -33,11 +33,13 @@ def main():
     parser.add_argument("--path", required=True, help="Root of the project")
     parser.add_argument("--script", required=True, help="Path of the bash script to oarsub relative to the '--path'")
     parser.add_argument("--sleep_time", required=False, type=int, default=60, help="Time interval in seconds to check the termination of the job")
+    parser.add_argument("--build_status_file", required=True, help="File to write the build status to in the case of time exceeding")
+    parser.add_argument("--artifact", required=True, help="Name of the artifact")
     parser.add_argument("command", help="ECG Command")
 
     args = parser.parse_args()
 
-    oar_job_id = submit_job(args.cluster, args.site, args.max_duration, args.checkpoint, args.besteffort, args.path, args.script, args.command)
+    oar_job_id = submit_job(args.cluster, args.site, args.max_duration, args.checkpoint, args.besteffort, args.path, args.script, args.command, args.build_status_file, args.artifact)
     
     wait_oar_job_start(oar_job_id, args.site)
 

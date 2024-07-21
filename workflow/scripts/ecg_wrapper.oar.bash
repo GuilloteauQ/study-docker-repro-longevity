@@ -2,6 +2,13 @@
 
 set -xe
 
+DIRECTORY=$1
+shift
+BUILD_STATUS_FILE=$1
+shift
+ARTIFACT_FILE=$1
+shift
+
 # To "activate" nix on the node
 export PATH=~/.local/bin:$PATH
 
@@ -10,12 +17,9 @@ export PATH=~/.local/bin:$PATH
 g5k-setup-docker -t
 
 handler() {
-    echo "Caught checkpoint signal at: `date`"; echo "Terminating."; exit 0;
+    echo "${ARTIFACT_FILE}, `date +%s.%N`, exceeded_time" >> ${BUILD_STATUS_FILE}; exit 0;
 }
 trap handler SIGUSR2
 
-cd $1
-
-shift
-
+cd ${DIRECTORY}
 nix develop --command $@

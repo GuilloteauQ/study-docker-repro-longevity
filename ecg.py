@@ -164,6 +164,7 @@ def buildstatus_saver(output, buildstatus_path):
     """
     file_exists = os.path.exists(buildstatus_path)
     buildstatus_file = open(buildstatus_path, "a")
+    artifact_name = os.path.basename(config_path).split(".")[0]
     # # Writing header in case file didn't exist:
     # if not file_exists:
     #     buildstatus_file.write("yaml_path,timestamp,error")
@@ -173,12 +174,12 @@ def buildstatus_saver(output, buildstatus_path):
             unknown_error = False
             now = datetime.datetime.now()
             timestamp = str(datetime.datetime.timestamp(now))
-            buildstatus_file.write(f"{config_path},{timestamp},{error_cat}\n")
+            buildstatus_file.write(f"{artifact_name},{timestamp},{error_cat}\n")
     print(unknown_error)
     if unknown_error:
         now = datetime.datetime.now()
         timestamp = str(datetime.datetime.timestamp(now))
-        buildstatus_file.write(f"{config_path},{timestamp},unknown_error\n")
+        buildstatus_file.write(f"{artifact_name},{timestamp},unknown_error\n")
     buildstatus_file.close()
 
 def build_image(config, src_dir):

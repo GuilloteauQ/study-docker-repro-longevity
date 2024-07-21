@@ -50,7 +50,7 @@ rule check_artifact:
 
 SHELLS_ECG = {
   "local": f"python3 {{input.ecg}} -l {{output.log}} -p {{output.pkg}} -b {{output.build_status}} -a {{output.artifact_hash}} {ARTIFACTS_FOLDER_JSON}/{{wildcards.artifact}}.{EXTENSION}",
-  "g5k": f"python3 {{input.execo_wrapper}} --path {os.getcwd()} --script {{input.oar_wrapper}} --site {config['site']} --cluster {config['cluster']} --max-duration {config['max_duration']} --checkpoint {config['checkpoint']} {'--besteffort' if config['besteffort'] else ''} --sleep_time {config['sleep_time']} -- '"
+  "g5k": f"python3 {{input.execo_wrapper}} --path {os.getcwd()} --script {{input.oar_wrapper}} --site {config['site']} --cluster {config['cluster']} --max-duration {config['max_duration']} --checkpoint {config['checkpoint']} {'--besteffort' if config['besteffort'] else ''} --sleep_time {config['sleep_time']} --build_status_file {{output.build_status}} --artifact {{wildcards.artifact}} -- '"
 }
 
 rule run_ecg:
