@@ -105,7 +105,7 @@ def download_file(url, dest):
     hash_process = subprocess.run(f"sha256sum {file.name} | cut -d ' ' -f 1 | tr -d '\n'", capture_output=True, shell=True)
     return hash_process.stdout.decode("utf-8")
 
-def download_sources(config):
+def download_sources(config, tmp_dir):
     """
     Downloads the source of the artifact in 'config'.
 
@@ -121,7 +121,7 @@ def download_sources(config):
     """
     url = config["artifact_url"]
     artifact_name = trim(url)
-    artifact_dir = os.path.join(cachedir_path, artifact_name)
+    artifact_dir = os.path.join(tmp_dir, artifact_name)
     # Checking if artifact in cache. Not downloading if it is:
     if not os.path.exists(artifact_dir) or not use_cache:
         logging.info(f"Downloading artifact from {url}")
@@ -148,7 +148,7 @@ def download_sources(config):
         logging.info(f"Cache found for {url}, skipping download")
     return artifact_dir
 
-def buildstatus_saver(output):
+def buildstatus_saver(output, buildstatus_path):
     """
     Parses the given 'output' to indentify the errors, then saves them to the
     'build_status' file.
@@ -347,13 +347,16 @@ def main():
     # print(config)
     config_file.close()
 
-    src_dir = download_sources(config)
-    return_code, build_output = build_image(config, src_dir)
+    tmp_dir = tempfile.TemporaryDirectory()
+    artifact_dir = download_sources(config, tmp_dir.name)
+    return_code, build_output = build_image(config, artifact_dir)
     if return_code == 0:
-        check_env(config, src_dir)
+        check_env(config, artifact_dir)
         remove_image(config)
+        pathlib.Path(buildstatus_path).touch()
     else:
-        buildstatus_saver(build_output)
+        pathlib.Path(pkglist_path).touch()
+        buildstatus_saver(build_output, buildstatus_path)
 
     if not use_cache:
         os.system(f"rm -rf {os.path.join(cachedir_path, trim(config['artifact_url']))}")
