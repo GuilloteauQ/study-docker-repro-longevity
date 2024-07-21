@@ -2,7 +2,7 @@ from execo_g5k import oardel, oarsub, OarSubmission, wait_oar_job_start, get_oar
 import time
 import argparse
 
-def submit_job(cluster, site, maximum_duration_minutes, checkpoint_minutes, is_besteffort, path_to_script, command):
+def submit_job(cluster, site, maximum_duration_minutes, checkpoint_minutes, is_besteffort, path, script, command):
     reservation_duration = (maximum_duration_minutes + checkpoint_minutes) * 60
     checkpoint = checkpoint_minutes * 60
     job_type = []
@@ -30,13 +30,14 @@ def main():
     parser.add_argument("--max-duration", required=True, type=int, help="Max Duration in MINUTES of the docker build")
     parser.add_argument("--checkpoint", required=True, type=int, help="Duration in MINUTES before the end of the job to do the checkpoint")
     parser.add_argument("--besteffort", action='store_false', help="Submit the job as besteffort")
-    parser.add_argument("--path", required=True, help="Path to the bash script to oarsub")
-    parser.add_argument("--sleep_time", required=False, default=60, help="Time interval in seconds to check the termination of the job")
+    parser.add_argument("--path", required=True, help="Root of the project")
+    parser.add_argument("--script", required=True, help="Path of the bash script to oarsub relative to the '--path'")
+    parser.add_argument("--sleep_time", required=False, type=int, default=60, help="Time interval in seconds to check the termination of the job")
     parser.add_argument("command", help="ECG Command")
 
     args = parser.parse_args()
 
-    oar_job_id = submit_job(args.cluster, args.site, args.max_duration, args.checkpoint_minutes, args.besteffort, args.path, args.command)
+    oar_job_id = submit_job(args.cluster, args.site, args.max_duration, args.checkpoint, args.besteffort, args.path, args.script, args.command)
     
     wait_oar_job_start(oar_job_id, args.site)
 

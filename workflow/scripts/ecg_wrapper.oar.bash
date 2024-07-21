@@ -14,4 +14,8 @@ handler() {
 }
 trap handler SIGUSR2
 
+cd $1
+
+shift
+
 nix develop --command $@
