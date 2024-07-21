@@ -13,13 +13,13 @@ def submit_job(cluster, site, maximum_duration_minutes, checkpoint_minutes, is_b
                                                 reservation_duration,\
                                                 job_type=job_type,\
                                                 additional_options=f"--checkpoint {checkpoint}",\
-                                                command=f"{path_to_script} {command}"), site)])[0]
+                                                command=f"{path}/{script} {path} {command}"), site)])[0]
     return oar_job_id
 
 def wait_for_completion(oar_job_id, site, sleep_time):
     state = "Running"
     while state != "Terminated" and state != "Error":
-        time.sleep(sleeping_time)
+        time.sleep(sleep_time)
         info = get_oar_job_info(oar_job_id, site)
         state = info["state"]
 
