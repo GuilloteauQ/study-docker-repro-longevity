@@ -10,13 +10,11 @@
 
 import subprocess
 import json
-# import yaml
 import argparse
 import tempfile
 import os
 import requests
 import zipfile
-import io
 import tarfile
 import pathlib
 import logging
@@ -59,7 +57,7 @@ def download_file(url, dest):
     Returns
     -------
     str
-       The hash of the downloaded file.
+       Hash of the downloaded file.
     """
     req = requests.get(url)
     file = open(dest, "wb")
@@ -68,7 +66,7 @@ def download_file(url, dest):
     hash_process = subprocess.run(f"sha256sum {file.name} | cut -d ' ' -f 1 | tr -d '\n'", capture_output=True, shell=True)
     return hash_process.stdout.decode("utf-8")
 
-def download_sources(config, arthashlog_path, tmp_dir, use_cache):
+def download_sources(config, arthashlog_path, dl_dir, use_cache):
     """
     Downloads the source of the artifact in 'config'.
 
@@ -80,20 +78,20 @@ def download_sources(config, arthashlog_path, tmp_dir, use_cache):
     arthashlog_path: str
         Path to the artifact hash log file.
 
-    cachedir_path: str
-        Path to the cache directory.
+    dl_dir: str
+        Path to the directory where to download the artifact.
 
     use_cache: bool
-        Indicates whether the artifact should be cached or not.
+        Indicates whether the cache should be used or not.
 
     Returns
     -------
-    temp_dir: tempfile.TemporaryDirectory
-        The directory where the artifact is downloaded to.
+    temp_dir: str
+        Path to the directory where the artifact is downloaded to.
     """
     url = config["artifact_url"]
     artifact_name = trim(url)
-    artifact_dir = os.path.join(tmp_dir, artifact_name)
+    artifact_dir = os.path.join(dl_dir, artifact_name)
     # Checking if artifact in cache. Not downloading if it is:
     if not os.path.exists(artifact_dir) or not use_cache:
         logging.info(f"Downloading artifact from {url}")
@@ -128,7 +126,7 @@ def buildstatus_saver(output, buildstatus_path, config_path):
     Parameters
     ----------
     output: str
-        The output of Docker.
+        Output of Docker.
 
     buildstatus_path: str
         Path to the build status file.
@@ -161,7 +159,6 @@ def buildstatus_saver(output, buildstatus_path, config_path):
             now = datetime.datetime.now()
             timestamp = str(datetime.datetime.timestamp(now))
             buildstatus_file.write(f"{artifact_name},{timestamp},{error_cat}\n")
-    print(unknown_error)
     if unknown_error:
         now = datetime.datetime.now()
         timestamp = str(datetime.datetime.timestamp(now))
@@ -177,8 +174,8 @@ def build_image(config, src_dir):
     config: dict
         Parsed config file.
 
-    src_dir: tempfile.TemporaryDirectory
-        The directory where the artifact is stored.
+    src_dir: str
+        Path to the directory where the artifact is stored.
 
     Returns
     -------
@@ -209,8 +206,8 @@ def check_env(config, src_dir, pkglist_path):
     config: dict
         Parsed config file.
 
-    src_dir: tempfile.TemporaryDirectory
-        The directory where the artifact is stored.
+    src_dir: str
+        Path to the directory where the artifact is stored.
 
     pkglist_path: str
         Path to the package list file.
@@ -290,9 +287,8 @@ def main():
     pkglist_path = "" # Package list being generated
     buildstatus_path = "" # Summary of the build process of the image
     arthashlog_path = "" # Log of the hash of the downloaded artifact
-    cachedir_path = "cache" # Artifact cache directory
-
-    use_cache = False # Indicates whether cache should be enabled or not
+    cache_dir = "" # Artifact cache directory, when using one. 'None' value indicates no cache.
+    use_cache = False
 
     # Command line arguments parsing:
     parser = argparse.ArgumentParser(
@@ -342,9 +338,7 @@ def main():
     log_path = args.log_path
     buildstatus_path = args.build_summary
     arthashlog_path = args.artifact_hash
-    if args.cache_dir != None:
-        use_cache = True
-        cachedir_path = args.cache_dir
+    cache_dir = args.cache_dir
 
     # Setting up the log: will be displayed both on stdout and to the specified
     # file:
@@ -363,19 +357,25 @@ def main():
     # print(config)
     config_file.close()
 
-    tmp_dir = tempfile.TemporaryDirectory()
-    artifact_dir = download_sources(config, arthashlog_path, tmp_dir.name, use_cache)
+    dl_dir = None
+    # If not using cache, creates a temporary directory:
+    if cache_dir == None:
+        tmp_dir = tempfile.TemporaryDirectory()
+        dl_dir = tmp_dir.name
+    else:
+        use_cache = True
+        dl_dir = cache_dir
+    artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache)
     return_code, build_output = build_image(config, artifact_dir)
     if return_code == 0:
         check_env(config, artifact_dir, pkglist_path)
         remove_image(config)
+        # Creates file if not already:
         pathlib.Path(buildstatus_path).touch()
     else:
+        # Creates file if not already:
         pathlib.Path(pkglist_path).touch()
         buildstatus_saver(build_output, buildstatus_path, config_path)
-
-    if not use_cache:
-        os.system(f"rm -rf {os.path.join(cachedir_path, trim(config['artifact_url']))}")
 
 if __name__ == "__main__":
     main()
