@@ -23,43 +23,6 @@ import logging
 import datetime
 import sys
 
-# Paths:
-config_path = ""
-pkglist_path = "" # Package list being generated
-buildstatus_path = "" # Summary of the build process of the image
-arthashlog_path = "" # Log of the hash of the downloaded artifact
-cachedir_path = "cache" # Artifact cache directory
-
-use_cache = False # Indicates whether cache should be enabled or not
-
-# Commands to list installed packages along with their versions and the name
-# of the package manager, depending on the package managers.
-# Each package manager is associated with a tuple, the first item being
-# the query command, and the second being the command that will format
-# the output of the query command (this one can be an empty string in case
-# the formatting part is already done using the options of the first command).
-# The first needs to be run on the container, and the second on the host,
-# to take into account container images that do not have the formatting
-# packages installed.
-pkgmgr_cmd = {
-    "dpkg": ("dpkg -l", "awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'"), \
-    "rpm":("rpm -qa --queryformat '%{NAME},%{VERSION},rpm\\n'", ""), \
-    "pacman":("pacman -Q", "awk '{print $0 \",\" $1 \",pacman\"}'"), \
-    "pip":("pip freeze", "sed 's/==/,/g' | awk '{print $0 \",pip\"}'"), \
-    "conda":("/root/.conda/bin/conda list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'")
-}
-
-# Possible error messages given by 'docker build' and their category.
-# The key is the category, the value is a tuple of error messages belonging to
-# to this category:
-build_errors = {
-    "package_unavailable":("Unable to locate package"),
-    "baseimage_unavailable":("manifest unknown: manifest unknown")
-}
-
-# Command to obtain the latest commit hash in a git repository:
-gitcmd = "git log -n 1 --pretty=format:%H"
-
 def trim(url) :
     """
     Trims given url for cache storage.
@@ -105,7 +68,7 @@ def download_file(url, dest):
     hash_process = subprocess.run(f"sha256sum {file.name} | cut -d ' ' -f 1 | tr -d '\n'", capture_output=True, shell=True)
     return hash_process.stdout.decode("utf-8")
 
-def download_sources(config):
+def download_sources(config, arthashlog_path, cachedir_path, use_cache):
     """
     Downloads the source of the artifact in 'config'.
 
@@ -113,6 +76,15 @@ def download_sources(config):
     ----------
     config: dict
         Parsed config file.
+
+    arthashlog_path: str
+        Path to the artifact hash log file.
+
+    cachedir_path: str
+        Path to the cache directory.
+
+    use_cache: bool
+        Indicates whether the artifact should be cached or not.
 
     Returns
     -------
@@ -148,7 +120,7 @@ def download_sources(config):
         logging.info(f"Cache found for {url}, skipping download")
     return artifact_dir
 
-def buildstatus_saver(output):
+def buildstatus_saver(output, buildstatus_path, config_path):
     """
     Parses the given 'output' to indentify the errors, then saves them to the
     'build_status' file.
@@ -158,10 +130,24 @@ def buildstatus_saver(output):
     output: str
         The output of Docker.
 
+    buildstatus_path: str
+        Path to the build status file.
+
+    config_path: str
+        Path to the config file.
+
     Returns
     -------
     None
     """
+    # Possible error messages given by 'docker build' and their category.
+    # The key is the category, the value is a tuple of error messages belonging to
+    # to this category:
+    build_errors = {
+        "package_unavailable":("Unable to locate package"),
+        "baseimage_unavailable":("manifest unknown: manifest unknown")
+    }
+
     file_exists = os.path.exists(buildstatus_path)
     buildstatus_file = open(buildstatus_path, "a")
     # # Writing header in case file didn't exist:
@@ -174,7 +160,6 @@ def buildstatus_saver(output):
             now = datetime.datetime.now()
             timestamp = str(datetime.datetime.timestamp(now))
             buildstatus_file.write(f"{config_path},{timestamp},{error_cat}\n")
-    print(unknown_error)
     if unknown_error:
         now = datetime.datetime.now()
         timestamp = str(datetime.datetime.timestamp(now))
@@ -211,7 +196,7 @@ def build_image(config, src_dir):
     logging.info(f"Command '{build_command}' exited with code {return_code}")
     return return_code, build_output
 
-def check_env(config, src_dir):
+def check_env(config, src_dir, pkglist_path):
     """
     Builds a list of all software packages installed in the
     Docker image given in 'config', depending on the package managers
@@ -225,10 +210,32 @@ def check_env(config, src_dir):
     src_dir: tempfile.TemporaryDirectory
         The directory where the artifact is stored.
 
+    pkglist_path: str
+        Path to the package list file.
+
     Returns
     -------
     None
     """
+    # Commands to list installed packages along with their versions and the name
+    # of the package manager, depending on the package managers.
+    # Each package manager is associated with a tuple, the first item being
+    # the query command, and the second being the command that will format
+    # the output of the query command (this one can be an empty string in case
+    # the formatting part is already done using the options of the first command).
+    # The first needs to be run on the container, and the second on the host,
+    # to take into account container images that do not have the formatting
+    # packages installed.
+    pkgmgr_cmd = {
+        "dpkg": ("dpkg -l", "awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'"), \
+        "rpm":("rpm -qa --queryformat '%{NAME},%{VERSION},rpm\\n'", ""), \
+        "pacman":("pacman -Q", "awk '{print $0 \",\" $1 \",pacman\"}'"), \
+        "pip":("pip freeze", "sed 's/==/,/g' | awk '{print $0 \",pip\"}'"), \
+        "conda":("/root/.conda/bin/conda list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'")
+    }
+    # Command to obtain the latest commit hash in a git repository:
+    gitcmd = "git log -n 1 --pretty=format:%H"
+
     logging.info("Checking software environment")
     pkglist_file = open(pkglist_path, "w")
     # pkglist_file.write("package,version,package_manager\n")
@@ -276,7 +283,14 @@ def remove_image(config):
     subprocess.run(["docker", "rmi", name], capture_output = True)
 
 def main():
-    global config_path, pkglist_path, buildstatus_path, arthashlog_path, cachedir_path, use_cache
+    # Paths:
+    config_path = ""
+    pkglist_path = "" # Package list being generated
+    buildstatus_path = "" # Summary of the build process of the image
+    arthashlog_path = "" # Log of the hash of the downloaded artifact
+    cachedir_path = "cache" # Artifact cache directory
+
+    use_cache = False # Indicates whether cache should be enabled or not
 
     # Command line arguments parsing:
     parser = argparse.ArgumentParser(
@@ -347,13 +361,13 @@ def main():
     # print(config)
     config_file.close()
 
-    src_dir = download_sources(config)
+    src_dir = download_sources(config, arthashlog_path, cachedir_path, use_cache)
     return_code, build_output = build_image(config, src_dir)
     if return_code == 0:
-        check_env(config, src_dir)
+        check_env(config, src_dir, pkglist_path)
         remove_image(config)
     else:
-        buildstatus_saver(build_output)
+        buildstatus_saver(build_output, buildstatus_path, config_path)
 
     if not use_cache:
         os.system(f"rm -rf {os.path.join(cachedir_path, trim(config['artifact_url']))}")
