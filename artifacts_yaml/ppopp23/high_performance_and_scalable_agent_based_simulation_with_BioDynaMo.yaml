@@ -1,8 +1,0 @@
-artifact_url: "https://zenodo.org/record/7544675/files/SF2-code.tar.gz"
-type: "tar"
-doi: "10.1145/3572848.3577480"
-image_name: "bdm-publication-image-v7"
-dockerfile_location: "bdm-paper-examples/docker"
-package_managers:
-  - "dpkg"
-# Build done by running build.sh and not just docker build, but this is not implemented yet
