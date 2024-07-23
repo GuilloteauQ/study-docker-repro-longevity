@@ -1,4 +1,3 @@
-let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
 {
   artifact_url = "https://zenodo.org/record/7508499/files/wsmoses/PolygeistGPU-Docker-v0.2.1.zip",
   type = "zip",
@@ -13,4 +12,4 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
   misc_packages = [
     { name = "cmake-3.23.1", url = "https://github.com/Kitware/CMake/releases/download/v3.23.1/cmake-3.23.1.tar.gz" }
   ],
-} | Artifact
+}

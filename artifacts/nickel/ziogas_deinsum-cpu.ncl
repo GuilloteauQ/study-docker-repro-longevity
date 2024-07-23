@@ -1,4 +1,3 @@
-let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
 {
   artifact_url = "https://zenodo.org/record/7004393/files/deinsum/sc22-artifact-0.4.zip",
   type = "zip",
@@ -22,4 +21,4 @@ let { Artifact, .. } = import "../workflow/nickel/artifact_contract.ncl" in
       url = "https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz"
     }
   ],
-} | Artifact
+}

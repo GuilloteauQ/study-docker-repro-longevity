@@ -1,29 +1,39 @@
+configfile: "config/config.yaml"
+
 include: "utils.smk"
 
+import os
 import datetime
 DATE = datetime.datetime.now().strftime("%Y%m%d")
 
-ARTIFACTS_FOLDER_NICKEL = "artifacts_nickel"
-ARTIFACTS_FOLDER_JSON   = "artifacts_json"
-BLACKLIST_FOLDER = "blacklists"
-BLACKLIST = "blacklist.csv"
+ARTIFACTS_FOLDER_NICKEL = config["folder_artifacts_nickel"]
+ARTIFACTS_FOLDER_JSON   = config["folder_artifacts_json"]
+BLACKLIST_FOLDER = config["folder_blacklists"]
+BLACKLIST = config["symlink_blacklist"]
 EXTENSION = "json"
+SYSTEM = config["system"]
+PREFIX = config["prefix"]
 
 ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER_NICKEL, BLACKLIST)
 
 rule all:
   input:
-    expand("{folder}/{artifact}/{date}.csv",\
+    expand(f"{PREFIX}/{{folder}}/{{artifact}}/{{date}}.csv",\
            folder=["pkgs", "build_status", "artifact_hash"],\
            artifact=ARTIFACTS,\
            date=DATE
           ),
-    expand("{folder}/{artifact}/{date}.txt",\
+    expand(f"{PREFIX}/{{folder}}/{{artifact}}/{{date}}.txt",\
         folder=["logs"],\
         artifact=ARTIFACTS,\
         date=DATE
       ),
     f"{BLACKLIST_FOLDER}/{DATE}.csv"
+
+rule check_all:
+  input:
+    expand(f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.json", artifact=ARTIFACTS)
+    
 
 rule check_artifact:
   input:
@@ -38,26 +48,33 @@ rule check_artifact:
     nickel export --format json --output {output} <<< 'let {{Artifact, ..}} = import "{input.contract}" in ((import "{input.artifact}") | Artifact)'
     """
 
+SHELLS_ECG = {
+  "local": f"python3 {{input.ecg}} -l {{output.log}} -p {{output.pkg}} -b {{output.build_status}} -a {{output.artifact_hash}} {ARTIFACTS_FOLDER_JSON}/{{wildcards.artifact}}.{EXTENSION}",
+  "g5k": f"python3 {{input.execo_wrapper}} --path {os.getcwd()} --script {{input.oar_wrapper}} --site {config['site']} --cluster {config['cluster']} --max-duration {config['max_duration']} --checkpoint {config['checkpoint']} {'--besteffort' if config['besteffort'] else ''} --sleep_time {config['sleep_time']} --build_status_file {{output.build_status}} --artifact {{wildcards.artifact}} -- '"
+}
+
 rule run_ecg:
   input:
     "flake.nix",
     "flake.lock",
     ecg="ecg.py",
+    execo_wrapper="workflow/scripts/submission_g5k.py",
+    oar_wrapper="workflow/scripts/ecg_wrapper.oar.bash",
     artifact=f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.{EXTENSION}"
   output:
-    log    = "logs/{artifact}/{date}.txt",
-    pkg    = "pkgs/{artifact}/{date}.csv",
-    build_status = "build_status/{artifact}/{date}.csv",
-    artifact_hash = "artifact_hash/{artifact}/{date}.csv"
+    log           = f"{PREFIX}/logs/{{artifact}}/{{date}}.txt",
+    pkg           = f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",
+    build_status  = f"{PREFIX}/build_status/{{artifact}}/{{date}}.csv",
+    artifact_hash = f"{PREFIX}/artifact_hash/{{artifact}}/{{date}}.csv"
   shell:
-    f"python3 {{input.ecg}} -l {{output.log}} -p {{output.pkg}} -b {{output.build_status}} -a {{output.artifact_hash}} {ARTIFACTS_FOLDER_JSON}/{{wildcards.artifact}}.{EXTENSION}"
+    (SHELLS_ECG["g5k"] if SYSTEM == "g5k" else "") + SHELLS_ECG["local"] + ("'" if SYSTEM == "g5k" else "")
 
 rule update_blacklist:
   input:
     BLACKLIST,
-    build_status=expand("build_status/{artifact}/{{date}}.csv",\
+    build_status=expand(f"{PREFIX}/build_status/{{artifact}}/{{{{date}}}}.csv",\
                   artifact=ARTIFACTS)
   output:
     f"{BLACKLIST_FOLDER}/{{date}}.csv"
   shell:
-    f"cat {{input}} > {{output}} && ln -s {{output}} {BLACKLIST}"
+    f"cat {{input}} > {{output}} && rm -rf {BLACKLIST} && ln -s {{output}} {BLACKLIST}"

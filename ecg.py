@@ -68,7 +68,7 @@ def download_file(url, dest):
     hash_process = subprocess.run(f"sha256sum {file.name} | cut -d ' ' -f 1 | tr -d '\n'", capture_output=True, shell=True)
     return hash_process.stdout.decode("utf-8")
 
-def download_sources(config, arthashlog_path, cachedir_path, use_cache):
+def download_sources(config, arthashlog_path, tmp_dir, use_cache):
     """
     Downloads the source of the artifact in 'config'.
 
@@ -93,7 +93,7 @@ def download_sources(config, arthashlog_path, cachedir_path, use_cache):
     """
     url = config["artifact_url"]
     artifact_name = trim(url)
-    artifact_dir = os.path.join(cachedir_path, artifact_name)
+    artifact_dir = os.path.join(tmp_dir, artifact_name)
     # Checking if artifact in cache. Not downloading if it is:
     if not os.path.exists(artifact_dir) or not use_cache:
         logging.info(f"Downloading artifact from {url}")
@@ -150,6 +150,7 @@ def buildstatus_saver(output, buildstatus_path, config_path):
 
     file_exists = os.path.exists(buildstatus_path)
     buildstatus_file = open(buildstatus_path, "a")
+    artifact_name = os.path.basename(config_path).split(".")[0]
     # # Writing header in case file didn't exist:
     # if not file_exists:
     #     buildstatus_file.write("yaml_path,timestamp,error")
@@ -159,11 +160,12 @@ def buildstatus_saver(output, buildstatus_path, config_path):
             unknown_error = False
             now = datetime.datetime.now()
             timestamp = str(datetime.datetime.timestamp(now))
-            buildstatus_file.write(f"{config_path},{timestamp},{error_cat}\n")
+            buildstatus_file.write(f"{artifact_name},{timestamp},{error_cat}\n")
+    print(unknown_error)
     if unknown_error:
         now = datetime.datetime.now()
         timestamp = str(datetime.datetime.timestamp(now))
-        buildstatus_file.write(f"{config_path},{timestamp},unknown_error\n")
+        buildstatus_file.write(f"{artifact_name},{timestamp},unknown_error\n")
     buildstatus_file.close()
 
 def build_image(config, src_dir):
@@ -361,12 +363,15 @@ def main():
     # print(config)
     config_file.close()
 
-    src_dir = download_sources(config, arthashlog_path, cachedir_path, use_cache)
-    return_code, build_output = build_image(config, src_dir)
+    tmp_dir = tempfile.TemporaryDirectory()
+    artifact_dir = download_sources(config, arthashlog_path, tmp_dir.name, use_cache)
+    return_code, build_output = build_image(config, artifact_dir)
     if return_code == 0:
-        check_env(config, src_dir, pkglist_path)
+        check_env(config, artifact_dir, pkglist_path)
         remove_image(config)
+        pathlib.Path(buildstatus_path).touch()
     else:
+        pathlib.Path(pkglist_path).touch()
         buildstatus_saver(build_output, buildstatus_path, config_path)
 
     if not use_cache:

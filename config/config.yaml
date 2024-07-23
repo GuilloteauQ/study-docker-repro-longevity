@@ -1,0 +1,14 @@
+folder_artifacts_nickel: "artifacts/nickel"
+folder_artifacts_json: "artifacts/json"
+folder_blacklists: "blacklists"
+symlink_blacklist: "blacklist.csv"
+system: "g5k" # can be "local" for local execution
+prefix: "outputs"
+
+site: "grenoble"
+cluster: "dahu"
+max_duration: 60 # 1 hour
+checkpoint: 1 # 1 minute
+besteffort: True
+  #sleep_time: 300 # 5 minutes
+sleep_time: 30 # 0.5 minutes

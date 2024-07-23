@@ -3,7 +3,7 @@ output/*
 cache/*
 examples/*
 .snakemake/*
-artifacts_json/*
+artifacts/json/*
 pkglist.csv
 log.txt
 build_status.csv
