@@ -7,7 +7,7 @@
   dockerfile_location = "wsmoses-PolygeistGPU-Docker-ba18197/MocCUDA",
   package_managers = [ "dpkg", "pip" ],
   git_packages = [
-    { name = "MocCUDA", location = "/root/MocCUDA"}
+    { name = "MocCUDA", location = "/root/MocCUDA" }
   ],
   misc_packages = [
     { name = "cmake-3.23.1", url = "https://github.com/Kitware/CMake/releases/download/v3.23.1/cmake-3.23.1.tar.gz" }

@@ -219,38 +219,46 @@ def check_env(config, src_dir, pkglist_path):
     # Commands to list installed packages along with their versions and the name
     # of the package manager, depending on the package managers.
     # Each package manager is associated with a tuple, the first item being
-    # the query command, and the second being the command that will format
+    # the package manager's command, the second being the arguments for the
+    # query (they must be separate for the "--entrypoint" argument of Docker
+    # 'run', see below), and the third one being the command that will format
     # the output of the query command (this one can be an empty string in case
     # the formatting part is already done using the options of the first command).
-    # The first needs to be run on the container, and the second on the host,
-    # to take into account container images that do not have the formatting
+    # The first command needs to be run on the container, and the second on the
+    # host, to take into account container images that do not have the formatting
     # packages installed.
     pkgmgr_cmd = {
-        "dpkg": ("dpkg -l", "awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'"), \
-        "rpm":("rpm -qa --queryformat '%{NAME},%{VERSION},rpm\\n'", ""), \
-        "pacman":("pacman -Q", "awk '{print $0 \",\" $1 \",pacman\"}'"), \
-        "pip":("pip freeze", "sed 's/==/,/g' | awk '{print $0 \",pip\"}'"), \
-        "conda":("/root/.conda/bin/conda list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'")
+        "dpkg": ("dpkg", "-l", "awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'"), \
+        "rpm":("rpm", "-qa --queryformat '%{NAME},%{VERSION},rpm\\n'", ""), \
+        "pacman":("pacman", "-Q", "awk '{print $0 \",\" $1 \",pacman\"}'"), \
+        "pip":("pip", "freeze", "sed 's/==/,/g' | awk '{print $0 \",pip\"}'"), \
+        "conda":("/root/.conda/bin/conda", "list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'")
     }
-    # Command to obtain the latest commit hash in a git repository:
-    gitcmd = "git log -n 1 --pretty=format:%H"
+    # Command to obtain the latest commit hash in a git repository (separated
+    # into 2 parts for "--entrypoint"):
+    gitcmd = ("git", "log -n 1 --pretty=format:%H")
 
     logging.info("Checking software environment")
     pkglist_file = open(pkglist_path, "w")
     # pkglist_file.write("package,version,package_manager\n")
     path = os.path.join(src_dir, config["dockerfile_location"])
     for pkgmgr in config["package_managers"]:
+        # "--entrypoint" requires command and arguments to be separated.
+        # This Docker 'run' option is used to prevent the shell from printing
+        # a login message, if any.
         pkglist_cmd = pkgmgr_cmd[pkgmgr][0]
-        listformat_cmd = pkgmgr_cmd[pkgmgr][1]
+        pkglist_cmdargs = pkgmgr_cmd[pkgmgr][1].split(" ")
+        listformat_cmd = pkgmgr_cmd[pkgmgr][2]
         logging.info(f"Checking '{pkgmgr}'")
-        pkglist_process = subprocess.run(["docker", "run", "--rm", config["image_name"]] + pkglist_cmd.split(" "), cwd=path, capture_output=True)
+        # pkglist_process = subprocess.run(["docker", "run", "--rm", config["image_name"]] + pkglist_cmd.split(" "), cwd=path, capture_output=True)
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "--entrypoint", pkglist_cmd, config["image_name"]] + pkglist_cmdargs, cwd=path, capture_output=True)
         format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
     if "git_packages" in config.keys():
         logging.info("Checking Git packages")
         for repo in config["git_packages"]:
-            pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], config["image_name"]] + gitcmd.split(" "), cwd=path, capture_output=True)
+            pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], config["image_name"]] + gitcmd[1].split(" "), cwd=path, capture_output=True)
             repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git"
             pkglist_file.write(f"{repo_row}\n")
     if "misc_packages" in config.keys():

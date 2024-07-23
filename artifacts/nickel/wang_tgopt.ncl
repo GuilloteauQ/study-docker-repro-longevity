@@ -8,6 +8,6 @@
   package_managers = [ "dpkg", "conda" ],
   git_packages = [],
   misc_packages = [
-    {name = "Miniconda3-py37_4.12.0-Linux-x86_64", url = "https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh" }
+    { name = "Miniconda3-py37_4.12.0-Linux-x86_64", url = "https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh" }
   ],
 }

@@ -7,7 +7,7 @@
   dockerfile_location = "path/to/docker/folder",
   package_managers = [ "dpkg" ],
   git_packages = [
-    { name = "pkg1", location = "path/to/git/repo"}
+    { name = "pkg1", location = "path/to/git/repo" }
   ],
   misc_packages = [
     { name = "mpkg1", url = "http://example.com/package.zip" }
