@@ -21,4 +21,5 @@
       url = "https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz"
     }
   ],
+  python_venvs = []
 }

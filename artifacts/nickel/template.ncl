@@ -11,5 +11,8 @@
   ],
   misc_packages = [
     { name = "mpkg1", url = "http://example.com/package.zip" }
+  ],
+  python_venvs = [
+    { path = "path/to/venv" }
   ]
 }

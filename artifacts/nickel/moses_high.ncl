@@ -12,4 +12,7 @@
   misc_packages = [
     { name = "cmake-3.23.1", url = "https://github.com/Kitware/CMake/releases/download/v3.23.1/cmake-3.23.1.tar.gz" }
   ],
+  python_venvs = [
+    { path = "/root/MocCUDA/py3_venv" }
+  ]
 }

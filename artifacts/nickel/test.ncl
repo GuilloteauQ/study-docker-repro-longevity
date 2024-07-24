@@ -12,4 +12,5 @@
   misc_packages = [
     { name = "mpkg1", url = "http://localhost/package1.zip" }
   ],
+  python_venvs = []
 }

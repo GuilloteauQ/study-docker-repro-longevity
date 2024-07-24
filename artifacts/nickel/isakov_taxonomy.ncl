@@ -8,4 +8,5 @@
   package_managers = [ "dpkg", "pip" ],
   git_packages = [],
   misc_packages = [],
+  python_venvs = []
 }

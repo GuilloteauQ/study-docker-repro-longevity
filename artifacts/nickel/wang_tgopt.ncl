@@ -10,4 +10,5 @@
   misc_packages = [
     { name = "Miniconda3-py37_4.12.0-Linux-x86_64", url = "https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh" }
   ],
+  python_venvs = []
 }

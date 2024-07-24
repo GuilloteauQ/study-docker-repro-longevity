@@ -16,5 +16,6 @@
         name = "Miniconda3-py310_23.1.0-1-Linux-x86_64",
         url = "https://repo.anaconda.com/miniconda/Miniconda3-py310_23.1.0-1-Linux-x86_64.sh"
     }
-  ]
+  ],
+  python_venvs = []
 }

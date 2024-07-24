@@ -165,7 +165,7 @@ def buildstatus_saver(output, buildstatus_path, config_path):
         buildstatus_file.write(f"{artifact_name},{timestamp},unknown_error\n")
     buildstatus_file.close()
 
-def build_image(config, src_dir):
+def build_image(config, src_dir, docker_cache = False):
     """
     Builds the given Docker image in 'config'.
 
@@ -177,15 +177,21 @@ def build_image(config, src_dir):
     src_dir: str
         Path to the directory where the artifact is stored.
 
+    docker_cache: bool
+        Enables or disables Docker 'build' cache.
+
     Returns
     -------
     return_code: bool, build_output: str
         Return code and output of Docker 'build'.
     """
+    cache_arg = "--no-cache"
+    if docker_cache:
+        cache_arg = ""
     name = config["image_name"]
     logging.info(f"Starting building image {name}")
     path = os.path.join(src_dir, config["dockerfile_location"])
-    build_command = f"docker build -t {config['image_name']} ."
+    build_command = f"docker build {cache_arg} -t {config['image_name']} ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
     build_output = f"stdout:\n{build_process.stdout.decode('utf-8')}\nstderr:\n{build_process.stderr.decode('utf-8')}"
     # build_output = build_process.stderr.decode("utf-8")
@@ -242,6 +248,7 @@ def check_env(config, src_dir, pkglist_path):
     pkglist_file = open(pkglist_path, "w")
     # pkglist_file.write("package,version,package_manager\n")
     path = os.path.join(src_dir, config["dockerfile_location"])
+    # Package managers:
     for pkgmgr in config["package_managers"]:
         # "--entrypoint" requires command and arguments to be separated.
         # This Docker 'run' option is used to prevent the shell from printing
@@ -255,21 +262,33 @@ def check_env(config, src_dir, pkglist_path):
         format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
-    if "git_packages" in config.keys():
-        logging.info("Checking Git packages")
-        for repo in config["git_packages"]:
-            pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], config["image_name"]] + gitcmd[1].split(" "), cwd=path, capture_output=True)
-            repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git"
-            pkglist_file.write(f"{repo_row}\n")
-    if "misc_packages" in config.keys():
-        logging.info("Checking packages obtained outside of a package manager or VCS")
-        for pkg in config["misc_packages"]:
-            logging.info(f"Downloading package {pkg['name']} from {pkg['url']}")
-            pkg_file = tempfile.NamedTemporaryFile()
-            pkg_path = pkg_file.name
-            pkg_hash = download_file(pkg["url"], pkg_path)
-            pkg_row = f"{pkg['name']},{pkg_hash},misc"
-            pkglist_file.write(f"{pkg_row}\n")
+
+    # Git packages:
+    logging.info("Checking Git packages")
+    for repo in config["git_packages"]:
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], config["image_name"]] + gitcmd[1].split(" "), cwd=path, capture_output=True)
+        repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git"
+        pkglist_file.write(f"{repo_row}\n")
+
+    # Misc packages:
+    logging.info("Checking packages obtained outside of a package manager or VCS")
+    for pkg in config["misc_packages"]:
+        logging.info(f"Downloading package {pkg['name']} from {pkg['url']}")
+        pkg_file = tempfile.NamedTemporaryFile()
+        pkg_path = pkg_file.name
+        pkg_hash = download_file(pkg["url"], pkg_path)
+        pkg_row = f"{pkg['name']},{pkg_hash},misc"
+        pkglist_file.write(f"{pkg_row}\n")
+
+    # Python venvs:
+    for venv in config["python_venvs"]:
+        pipcmd = pkgmgr_cmd["pip"][0]
+        pipcmd_args = pkgmgr_cmd["pip"][1]
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", venv["path"], "--entrypoint", "source", config["image_name"], ".bin/activate", "&&", pipcmd] + pipcmd_args.split(" "), cwd=path, capture_output=True)
+
+        format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
+        pkglist = format_process.stdout.decode("utf-8")
+        pkglist_file.write(pkglist)
     pkglist_file.close()
 
 def remove_image(config):
@@ -337,6 +356,10 @@ def main():
         help = "Path to the cache directory, where artifacts that are downloaded will be stored for future usage. " \
                 "If not specified, cache is disabled.",
         required = False
+    ),
+    parser.add_argument('--docker-cache',
+        action = 'store_true',
+        help = "Use cache for Docker 'build'."
     )
     args = parser.parse_args()
 
@@ -352,8 +375,7 @@ def main():
     # file:
     print(f"Output will be stored in {log_path}")
     logging.basicConfig(filename = log_path, filemode = "w", format = '%(levelname)s: %(message)s', level = logging.INFO)
-    verbose = args.verbose
-    if verbose:
+    if args.verbose:
        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     # Parsing the input file including the configuration of the artifact's
@@ -374,7 +396,7 @@ def main():
         use_cache = True
         dl_dir = cache_dir
     artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache)
-    return_code, build_output = build_image(config, artifact_dir)
+    return_code, build_output = build_image(config, artifact_dir, args.docker_cache)
     if return_code == 0:
         check_env(config, artifact_dir, pkglist_path)
         remove_image(config)

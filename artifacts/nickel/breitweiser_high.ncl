@@ -27,4 +27,5 @@
       url = "http://biodynamo-lfs.web.cern.ch/biodynamo-lfs/third-party/paraview_v5.9.0_ubuntu-20.04_default.tar.gz"
     },
   ],
+  python_venvs = []
 }

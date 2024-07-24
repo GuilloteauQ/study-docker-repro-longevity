@@ -39,6 +39,11 @@ in
       | doc "URL of the package. Will be used to compute the hash"
       | URL
   },
+  PythonVenv = {
+    path
+      | doc "Path to the Python venv."
+      | FilePath
+  }
   Artifact = {
     artifact_url
       | doc "URL where to download the artifact"
@@ -67,5 +72,8 @@ in
     misc_packages
       | doc "Misc. packages downloaded from the container"
       | Array MiscPackage,
+    python_venvs
+      | doc "Python venvs created in the container"
+      | Array PythonVenv
   }
 }

@@ -14,4 +14,5 @@
   misc_packages = [
     { name = "pip", url = "https://bootstrap.pypa.io/get-pip.py" }
   ],
+  python_venvs = []
 }
