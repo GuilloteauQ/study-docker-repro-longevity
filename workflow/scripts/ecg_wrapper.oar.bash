@@ -17,7 +17,7 @@ export PATH=~/.local/bin:$PATH
 g5k-setup-docker -t
 
 handler() {
-    echo "${ARTIFACT_FILE}, `date +%s.%N`, exceeded_time" >> ${BUILD_STATUS_FILE}; exit 0;
+    echo "${ARTIFACT_FILE}, `date +%s.%N`, job_time_exceeded" >> ${BUILD_STATUS_FILE}; exit 0;
 }
 trap handler SIGUSR2
 
