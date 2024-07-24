@@ -7,9 +7,9 @@
   dockerfile_location = "nnfusion-osdi2023welder",
   package_managers = [ "dpkg", "pip", "conda" ],
   git_packages = [
-    { name = "tvm", location = "/tvm" },
-    { name = "nnfusion", location = "/nnfusion" },
-    { name = "cutlass", location = "/cutlass" }
+    { name = "tvm", location = "/root/tvm" },
+    { name = "nnfusion", location = "/root/nnfusion" },
+    { name = "cutlass", location = "/root/cutlass" }
   ],
   misc_packages = [
     {
