@@ -3,7 +3,6 @@
   type = "tar",
   doi = "10.1145/3572848.3577490",
   comment = "",
-  image_name = "tgopt:artefact",
   dockerfile_location = "tgopt-artifact",
   package_managers = [ "dpkg", "conda" ],
   git_packages = [],

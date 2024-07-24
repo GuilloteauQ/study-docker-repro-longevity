@@ -3,7 +3,6 @@
   type = "zip",
   doi = "...",
   comment = "",
-  image_name = "prog:latest",
   dockerfile_location = "./",
   package_managers = [ "dpkg", "pip" ],
   git_packages = [

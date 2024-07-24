@@ -20,10 +20,12 @@ import pathlib
 import logging
 import datetime
 import sys
+import string
 
-def trim(url) :
+def trim(url):
     """
-    Trims given url for cache storage.
+    Trims given URL to make it contain only lowercase letters and numbers,
+    as well as with a maximum length of 128.
 
     Parameters
     ----------
@@ -36,10 +38,13 @@ def trim(url) :
         Trimmed URL.
     """
     trimmed = ""
-    for c in url.lower():
-        if c not in "/:;\\'\" *?":
+    url_lc = url.lower()
+    i = 0
+    while i < len(url_lc) and i < 128:
+        c = url_lc[i]
+        if c in string.ascii_lowercase or c in [str(x) for x in range(0, 10)]:
             trimmed += c
-
+        i += 1
     return trimmed
 
 def download_file(url, dest):
@@ -66,7 +71,7 @@ def download_file(url, dest):
     hash_process = subprocess.run(f"sha256sum {file.name} | cut -d ' ' -f 1 | tr -d '\n'", capture_output=True, shell=True)
     return hash_process.stdout.decode("utf-8")
 
-def download_sources(config, arthashlog_path, dl_dir, use_cache):
+def download_sources(config, arthashlog_path, dl_dir, artifact_name, use_cache):
     """
     Downloads the source of the artifact in 'config'.
 
@@ -81,6 +86,9 @@ def download_sources(config, arthashlog_path, dl_dir, use_cache):
     dl_dir: str
         Path to the directory where to download the artifact.
 
+    artifact_name: str
+        Name of the artifact.
+
     use_cache: bool
         Indicates whether the cache should be used or not.
 
@@ -90,7 +98,6 @@ def download_sources(config, arthashlog_path, dl_dir, use_cache):
         Path to the directory where the artifact is downloaded to.
     """
     url = config["artifact_url"]
-    artifact_name = trim(url)
     artifact_dir = os.path.join(dl_dir, artifact_name)
     # Checking if artifact in cache. Not downloading if it is:
     if not os.path.exists(artifact_dir) or not use_cache:
@@ -165,7 +172,7 @@ def buildstatus_saver(output, buildstatus_path, config_path):
         buildstatus_file.write(f"{artifact_name},{timestamp},unknown_error\n")
     buildstatus_file.close()
 
-def build_image(config, src_dir, docker_cache = False):
+def build_image(config, src_dir, image_name, docker_cache = False):
     """
     Builds the given Docker image in 'config'.
 
@@ -177,6 +184,9 @@ def build_image(config, src_dir, docker_cache = False):
     src_dir: str
         Path to the directory where the artifact is stored.
 
+    image_name: str
+        Name of the Docker image.
+
     docker_cache: bool
         Enables or disables Docker 'build' cache.
 
@@ -185,13 +195,13 @@ def build_image(config, src_dir, docker_cache = False):
     return_code: bool, build_output: str
         Return code and output of Docker 'build'.
     """
-    cache_arg = "--no-cache"
+    cache_arg = " --no-cache"
     if docker_cache:
         cache_arg = ""
-    name = config["image_name"]
-    logging.info(f"Starting building image {name}")
+    logging.info(f"Starting building image {image_name}")
     path = os.path.join(src_dir, config["dockerfile_location"])
-    build_command = f"docker build {cache_arg} -t {config['image_name']} ."
+    # Using trimmed artifact URL as name:
+    build_command = f"docker build{cache_arg} -t {trim(config["artifact_url"])} ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
     build_output = f"stdout:\n{build_process.stdout.decode('utf-8')}\nstderr:\n{build_process.stderr.decode('utf-8')}"
     # build_output = build_process.stderr.decode("utf-8")
@@ -201,7 +211,7 @@ def build_image(config, src_dir, docker_cache = False):
     logging.info(f"Command '{build_command}' exited with code {return_code}")
     return return_code, build_output
 
-def check_env(config, src_dir, pkglist_path):
+def check_env(config, src_dir, image_name, pkglist_path):
     """
     Builds a list of all software packages installed in the
     Docker image given in 'config', depending on the package managers
@@ -214,6 +224,9 @@ def check_env(config, src_dir, pkglist_path):
 
     src_dir: str
         Path to the directory where the artifact is stored.
+
+    image_name: str
+        Name of the Docker image.
 
     pkglist_path: str
         Path to the package list file.
@@ -258,7 +271,7 @@ def check_env(config, src_dir, pkglist_path):
         listformat_cmd = pkgmgr_cmd[pkgmgr][2]
         logging.info(f"Checking '{pkgmgr}'")
         # pkglist_process = subprocess.run(["docker", "run", "--rm", config["image_name"]] + pkglist_cmd.split(" "), cwd=path, capture_output=True)
-        pkglist_process = subprocess.run(["docker", "run", "--rm", "--entrypoint", pkglist_cmd, config["image_name"]] + pkglist_cmdargs, cwd=path, capture_output=True)
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "--entrypoint", pkglist_cmd, image_name] + pkglist_cmdargs, cwd=path, capture_output=True)
         format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
@@ -266,7 +279,7 @@ def check_env(config, src_dir, pkglist_path):
     # Git packages:
     logging.info("Checking Git packages")
     for repo in config["git_packages"]:
-        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], config["image_name"]] + gitcmd[1].split(" "), cwd=path, capture_output=True)
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], image_name] + gitcmd[1].split(" "), cwd=path, capture_output=True)
         repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git"
         pkglist_file.write(f"{repo_row}\n")
 
@@ -284,14 +297,14 @@ def check_env(config, src_dir, pkglist_path):
     for venv in config["python_venvs"]:
         pipcmd = pkgmgr_cmd["pip"][0]
         pipcmd_args = pkgmgr_cmd["pip"][1]
-        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", venv["path"], "--entrypoint", "source", config["image_name"], ".bin/activate", "&&", pipcmd] + pipcmd_args.split(" "), cwd=path, capture_output=True)
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", venv["path"], "--entrypoint", "source", image_name, ".bin/activate", "&&", pipcmd] + pipcmd_args.split(" "), cwd=path, capture_output=True)
 
         format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
     pkglist_file.close()
 
-def remove_image(config):
+def remove_image(config, image_name):
     """
     Removes the Docker image given in 'config'.
 
@@ -300,13 +313,15 @@ def remove_image(config):
     config: dict
         Parsed config file.
 
+    image_name: str
+        Name of the Docker image.
+
     Returns
     -------
     None
     """
-    name = config["image_name"]
-    logging.info(f"Removing image '{name}'")
-    subprocess.run(["docker", "rmi", name], capture_output = True)
+    logging.info(f"Removing image '{image_name}'")
+    subprocess.run(["docker", "rmi", image_name], capture_output = True)
 
 def main():
     # Paths:
@@ -395,11 +410,12 @@ def main():
     else:
         use_cache = True
         dl_dir = cache_dir
-    artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache)
-    return_code, build_output = build_image(config, artifact_dir, args.docker_cache)
+    artifact_name = trim(config["artifact_url"])
+    artifact_dir = download_sources(config, arthashlog_path, dl_dir, artifact_name, use_cache)
+    return_code, build_output = build_image(config, artifact_dir, artifact_name, args.docker_cache)
     if return_code == 0:
-        check_env(config, artifact_dir, pkglist_path)
-        remove_image(config)
+        check_env(config, artifact_dir, artifact_name, pkglist_path)
+        remove_image(config, artifact_name)
         # Creates file if not already:
         pathlib.Path(buildstatus_path).touch()
     else:

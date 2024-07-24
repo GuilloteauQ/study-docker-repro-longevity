@@ -3,7 +3,6 @@
   type = "zip",
   doi = "...",
   comment = "",
-  image_name = "k9db/latest",
   dockerfile_location = "K9db-osdi2023",
   package_managers = [ "dpkg", "pip" ],
   git_packages = [],

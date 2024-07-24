@@ -3,7 +3,6 @@
   type = "tar",
   doi = "10.1145/3572848.3577480",
   comment = "",
-  image_name = "bdm-publication-image-v7",
   dockerfile_location = "bdm-paper-examples/docker",
   package_managers = [ "dpkg" ],
   git_packages = [

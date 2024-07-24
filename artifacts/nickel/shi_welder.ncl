@@ -3,7 +3,6 @@
   type = "zip",
   doi = "",
   comment = "",
-  image_name = "welder_cuda",
   dockerfile_location = "nnfusion-osdi2023welder",
   package_managers = [ "dpkg", "pip", "conda" ],
   git_packages = [

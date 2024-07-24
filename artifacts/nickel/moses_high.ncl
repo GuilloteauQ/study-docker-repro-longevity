@@ -3,7 +3,6 @@
   type = "zip",
   doi = "10.1145/3572848.3577475",
   comment = "",
-  image_name = "polygeist:artefact",
   dockerfile_location = "wsmoses-PolygeistGPU-Docker-ba18197/MocCUDA",
   package_managers = [ "dpkg", "pip" ],
   git_packages = [

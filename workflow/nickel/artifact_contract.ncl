@@ -20,9 +20,6 @@ in
   URL = std.contract.from_predicate (
       fun value => std.string.is_match conf.URL_REGEX value
   ),
-  ImageName = std.contract.from_predicate (
-      fun value => (std.string.is_match conf.IMAGENAME_REGEX value) && (std.string.length value < 128) # Length could be more than 128, but it's easier that way...
-  ),
   GitPackage = {
     name
       | doc "Name of the package for future identification"
@@ -57,9 +54,6 @@ in
     comment
       | doc "Additional comments on the artifact that couldn't be written elsewhere"
       | String,
-    image_name
-      | doc "Name to give the image when building"
-      | ImageName,
     dockerfile_location
       | doc "Path to the dockerfile in the artifact"
       | FilePath,

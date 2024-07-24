@@ -3,7 +3,6 @@
   type = "zip",
   doi = "10.5555/3571885.3571906",
   comment = "",
-  image_name = "taxo:artefact",
   dockerfile_location = "SC22_artifacts_submission",
   package_managers = [ "dpkg", "pip" ],
   git_packages = [],

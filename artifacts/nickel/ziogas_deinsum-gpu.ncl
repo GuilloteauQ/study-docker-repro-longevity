@@ -3,7 +3,6 @@
   type = "zip",
   comment = "",
   doi = "10.5555/3571885.3571918",
-  image_name = "deinsum:artefact_gpu",
   dockerfile_location = "deinsum-sc22-artifact-7559901/docker_gpu",
   package_managers = [ "dpkg", "pip" ],
   git_packages = [
