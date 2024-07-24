@@ -231,7 +231,7 @@ def check_env(config, src_dir, pkglist_path):
         "dpkg": ("dpkg", "-l", "awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'"), \
         "rpm":("rpm", "-qa --queryformat '%{NAME},%{VERSION},rpm\\n'", ""), \
         "pacman":("pacman", "-Q", "awk '{print $0 \",\" $1 \",pacman\"}'"), \
-        "pip":("pip", "freeze", "sed 's/==/,/g' | awk '{print $0 \",pip\"}'"), \
+        "pip":("pip", "list", "awk 'NR>2 {print $1 \",\" $2 \",\" \"pip\"}'"), \
         "conda":("/root/.conda/bin/conda", "list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'")
     }
     # Command to obtain the latest commit hash in a git repository (separated

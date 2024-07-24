@@ -13,9 +13,12 @@ It will then download the artifact, build the Dockerfile, and then create a list
 ## Setup
 
 A Linux operating system and the following packages are required:
+- `python`
+- `docker`
 - `snakemake`
 - `gawk`
 - `nickel`
+- `sed`
 
 The following Python package is also required:
 - `requests`

@@ -5,7 +5,7 @@
   comment = "Template for artifact configuration.",
   image_name = "image:version",
   dockerfile_location = "path/to/docker/folder",
-  package_managers = [ "dpkg" ],
+  package_managers = [ "dpkg", "rpm", "pacman", "pip", "conda" ],
   git_packages = [
     { name = "pkg1", location = "path/to/git/repo" }
   ],
