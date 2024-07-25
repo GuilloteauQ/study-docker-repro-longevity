@@ -71,7 +71,7 @@ def download_file(url, dest):
     hash_process = subprocess.run(f"sha256sum {file.name} | cut -d ' ' -f 1 | tr -d '\n'", capture_output=True, shell=True)
     return hash_process.stdout.decode("utf-8")
 
-def download_sources(config, arthashlog_path, dl_dir, artifact_name, use_cache):
+def download_sources(config, arthashlog_path, dl_dir, use_cache):
     """
     Downloads the source of the artifact in 'config'.
 
@@ -86,9 +86,6 @@ def download_sources(config, arthashlog_path, dl_dir, artifact_name, use_cache):
     dl_dir: str
         Path to the directory where to download the artifact.
 
-    artifact_name: str
-        Name of the artifact.
-
     use_cache: bool
         Indicates whether the cache should be used or not.
 
@@ -98,7 +95,8 @@ def download_sources(config, arthashlog_path, dl_dir, artifact_name, use_cache):
         Path to the directory where the artifact is downloaded to.
     """
     url = config["artifact_url"]
-    artifact_dir = os.path.join(dl_dir, artifact_name)
+    artcache_dir = trim(url)
+    artifact_dir = os.path.join(dl_dir, artcache_dir)
     # Checking if artifact in cache. Not downloading if it is:
     if not os.path.exists(artifact_dir) or not use_cache:
         logging.info(f"Downloading artifact from {url}")
@@ -201,7 +199,7 @@ def build_image(config, src_dir, image_name, docker_cache = False):
     logging.info(f"Starting building image {image_name}")
     path = os.path.join(src_dir, config["dockerfile_location"])
     # Using trimmed artifact URL as name:
-    build_command = f"docker build{cache_arg} -t {trim(config["artifact_url"])} ."
+    build_command = f"docker build{cache_arg} -t {image_name} ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
     build_output = f"stdout:\n{build_process.stdout.decode('utf-8')}\nstderr:\n{build_process.stderr.decode('utf-8')}"
     # build_output = build_process.stderr.decode("utf-8")
@@ -410,8 +408,8 @@ def main():
     else:
         use_cache = True
         dl_dir = cache_dir
-    artifact_name = trim(config["artifact_url"])
-    artifact_dir = download_sources(config, arthashlog_path, dl_dir, artifact_name, use_cache)
+    artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache)
+    artifact_name = os.path.splitext(os.path.basename(config_path))[0]
     return_code, build_output = build_image(config, artifact_dir, artifact_name, args.docker_cache)
     if return_code == 0:
         check_env(config, artifact_dir, artifact_name, pkglist_path)
