@@ -292,6 +292,7 @@ def check_env(config, src_dir, image_name, pkglist_path):
         pkglist_file.write(f"{pkg_row}\n")
 
     # Python venvs:
+    logging.info("Checking Python venvs")
     for venv in config["python_venvs"]:
         pipcmd = pkgmgr_cmd["pip"][0]
         pipcmd_args = pkgmgr_cmd["pip"][1]
@@ -325,7 +326,7 @@ def main():
     # Paths:
     config_path = ""
     pkglist_path = "" # Package list being generated
-    buildstatus_path = "" # Summary of the build process of the image
+    buildstatus_path = "" # Status of the build process of the image, when it fails
     arthashlog_path = "" # Log of the hash of the downloaded artifact
     cache_dir = "" # Artifact cache directory, when using one. 'None' value indicates no cache.
     use_cache = False
@@ -355,8 +356,8 @@ def main():
         required = True
     )
     parser.add_argument(
-        "-b", "--build-summary",
-        help = "Path to the file where to write the build summary of the Docker image given in the configuration file.",
+        "-b", "--build-status",
+        help = "Path to the file where to write the build status of the Docker image given in the configuration file.",
         required = True
     )
     parser.add_argument(
@@ -380,7 +381,7 @@ def main():
     log_path = "log.txt" # Output of the program
     pkglist_path = args.pkg_list
     log_path = args.log_path
-    buildstatus_path = args.build_summary
+    buildstatus_path = args.build_status
     arthashlog_path = args.artifact_hash
     cache_dir = args.cache_dir
 
