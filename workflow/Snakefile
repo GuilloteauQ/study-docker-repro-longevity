@@ -33,7 +33,7 @@ rule all:
 rule check_all:
   input:
     expand(f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.json", artifact=ARTIFACTS)
-    
+
 
 rule check_artifact:
   input:
@@ -77,4 +77,5 @@ rule update_blacklist:
   output:
     f"{BLACKLIST_FOLDER}/{{date}}.csv"
   shell:
-    f"cat {{input}} > {{output}} && rm -rf {BLACKLIST} && ln -s {{output}} {BLACKLIST}"
+    # We need to ignore lines where build is successful:
+    f"cat {{input}} | grep -v ',success' > {{output}} && rm -rf {BLACKLIST} && ln -s {{output}} {BLACKLIST}"

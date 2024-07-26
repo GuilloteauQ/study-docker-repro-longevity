@@ -138,15 +138,53 @@ def download_sources(config, arthashlog_path, dl_dir, use_cache):
         logging.info(f"Cache found for {url}, skipping download")
     return artifact_dir
 
-def buildstatus_saver(output, buildstatus_path, config_path):
+def builderror_identifier(output):
+
     """
-    Parses the given 'output' to indentify the errors, then saves them to the
-    'build_status' file.
+    Parses the given 'output' to indentify the error.
 
     Parameters
     ----------
     output: str
         Output of Docker.
+
+    Returns
+    -------
+    found_error: str
+        The error that has been found in the output, according to the
+        categories. If there is more than one, only the latest is taken into
+        account.
+    """
+    # Possible error messages given by 'docker build' and their category.
+    # The key is the category, the value is a tuple of error messages belonging to
+    # to this category:
+    build_errors = {
+        "package_unavailable":("Unable to locate package"),
+        "baseimage_unavailable":("manifest unknown: manifest unknown"),
+        "dockerfile_not_found":("Dockerfile: no such file or directory")
+    }
+
+    found_error = ""
+    unknown_error = True
+    for error_cat, error in build_errors.items():
+        if error in output:
+            unknown_error = False
+            found_error = error_cat
+    if unknown_error:
+        found_error = "unknown_error"
+    return found_error
+
+def buildresult_saver(result, buildstatus_path, config_path):
+    """
+    Saves the given result in the 'build_status' file.
+
+    Parameters
+    ----------
+    result: str
+        The result of the build. Either a Docker 'build' error
+        (see 'builderror_identifier'), another type of error
+        (for instance 'artifact_unavailable'), or 'success'
+        if build is successful.
 
     buildstatus_path: str
         Path to the build status file.
@@ -158,32 +196,15 @@ def buildstatus_saver(output, buildstatus_path, config_path):
     -------
     None
     """
-    # Possible error messages given by 'docker build' and their category.
-    # The key is the category, the value is a tuple of error messages belonging to
-    # to this category:
-    build_errors = {
-        "package_unavailable":("Unable to locate package"),
-        "baseimage_unavailable":("manifest unknown: manifest unknown"),
-        "artifact_unavailable":("artifact_unavailable")
-    }
-
     file_exists = os.path.exists(buildstatus_path)
     buildstatus_file = open(buildstatus_path, "a")
     artifact_name = os.path.basename(config_path).split(".")[0]
     # # Writing header in case file didn't exist:
     # if not file_exists:
     #     buildstatus_file.write("yaml_path,timestamp,error")
-    unknown_error = True
-    for error_cat, error in build_errors.items():
-        if error in output:
-            unknown_error = False
-            now = datetime.datetime.now()
-            timestamp = str(datetime.datetime.timestamp(now))
-            buildstatus_file.write(f"{artifact_name},{timestamp},{error_cat}\n")
-    if unknown_error:
-        now = datetime.datetime.now()
-        timestamp = str(datetime.datetime.timestamp(now))
-        buildstatus_file.write(f"{artifact_name},{timestamp},unknown_error\n")
+    now = datetime.datetime.now()
+    timestamp = str(datetime.datetime.timestamp(now))
+    buildstatus_file.write(f"{artifact_name},{timestamp},{result}\n")
     buildstatus_file.close()
 
 def build_image(config, src_dir, image_name, docker_cache = False):
@@ -427,23 +448,25 @@ def main():
         use_cache = True
         dl_dir = cache_dir
     artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache)
+    status = ""
     # If download was successful:
     if artifact_dir != "":
         artifact_name = os.path.splitext(os.path.basename(config_path))[0]
         return_code, build_output = build_image(config, artifact_dir, artifact_name, args.docker_cache)
+        status = ""
         if return_code == 0:
+            status = "success"
             check_env(config, artifact_dir, artifact_name, pkglist_path)
             remove_image(config, artifact_name)
-            # Creates file if not already:
-            pathlib.Path(buildstatus_path).touch()
         else:
+            status = builderror_identifier(build_output)
             # Creates file if not already:
             pathlib.Path(pkglist_path).touch()
-            buildstatus_saver(build_output, buildstatus_path, config_path)
     # If download failed, we need to save the error to the build status log:
     else:
         logging.fatal("Artifact could not be downloaded!")
-        buildstatus_saver("artifact_unavailable", buildstatus_path, config_path)
+        status = "artifact_unavailable"
+    buildresult_saver(status, buildstatus_path, config_path)
 
 if __name__ == "__main__":
     main()

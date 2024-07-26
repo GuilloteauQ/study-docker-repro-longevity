@@ -25,6 +25,7 @@ def softenv_analysis(input_tables):
         Output table of the analysis in the form of a dict with headers as keys.
     """
     pkgmgr = {}
+    i = 0
     for table in input_tables:
         for row in table:
             # Third column is the package source:
@@ -107,7 +108,8 @@ def artifact_analysis(input_tables):
 
 def buildstatus_analysis(input_tables):
     """
-    Analyzes the given build status tables.
+    Analyzes the given build status tables to count the results of the building
+    of the Dockerfile for each category.
 
     Parameters
     ----------
@@ -119,7 +121,23 @@ def buildstatus_analysis(input_tables):
     dict
         Output table of the analysis in the form of a dict with headers as keys.
     """
-    return {}
+    buildstatus = {}
+    for table in input_tables:
+        # # There has never been any error:
+        # if table == [[]]:
+        #     if "never_failed" not in buildstatus:
+        #             buildstatus["never_failed"] = 1
+        #     else:
+        #         buildstatus["never_failed"] += 1
+        # # There has been an error at least once:
+        # else:
+        for row in table:
+            # Third column is the result:
+            if row[2] not in buildstatus:
+                buildstatus[row[2]] = 1
+            else:
+                buildstatus[row[2]] += 1
+    return buildstatus
 
 def main():
     # Command line arguments parsing:
