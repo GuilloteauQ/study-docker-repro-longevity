@@ -9,15 +9,15 @@ import argparse
 import csv
 import os
 
-def softenv_analysis(input_table):
+def softenv_analysis(input_tables):
     """
-    Analyzes the given package lists table to determine the number of artifacts
+    Analyzes the given package lists tables to determine the number of artifacts
     using a package manager, Git packages or misc packages.
 
     Parameters
     ----------
-    input_table: str
-        Table to analyse.
+    input_tables: str
+        Tables to analyse.
 
     Returns
     -------
@@ -25,22 +25,69 @@ def softenv_analysis(input_table):
         Output table of the analysis in the form of a dict with headers as keys.
     """
     pkgmgr = {}
-    for row in input_table:
-        # Third column is the package source:
-        if row[2] in pkgmgr:
-            pkgmgr[row[2]] += 1
-        else:
-            pkgmgr[row[2]] = 1
+    for table in input_tables:
+        for row in table:
+            # Third column is the package source:
+            if row[2] not in pkgmgr:
+                pkgmgr[row[2]] = 1
+            else:
+                pkgmgr[row[2]] += 1
     return pkgmgr
 
-def artifact_analysis(input_table):
+def artifact_changed(table):
     """
-    Analyzes the given artifact hash table to determine the number of artifacts
-    that change through time.
+    Indicates whether the artifact involved in the given hash log table
+    has changed over time.
 
     Parameters
     ----------
-    input_table: str
+    table: list
+        Artifact hash log table.
+
+    Returns
+    -------
+    bool
+        True if artifact changed, False otherwise.
+    """
+    changed = False
+    # Hash is in the 2nd column:
+    artifact_hash = table[0][1]
+    i = 0
+    while i < len(table) and not changed:
+        if table[i][1] != artifact_hash:
+            changed = True
+        i += 1
+    return changed
+
+def artifact_available(table):
+    """
+    Indicates whether the artifact involved in the given hash log table
+    is still available.
+
+    Parameters
+    ----------
+    table: list
+        Artifact hash log table.
+
+    Returns
+    -------
+    bool
+        True if artifact is still available, False otherwise.
+    """
+    available = True
+    # We check the last line to check current availability:
+    if table[-1][1] == "":
+        available = False
+    return available
+
+def artifact_analysis(input_tables):
+    """
+    Analyzes the given artifact hash tables to determine if the artifacts are
+    still available and didn't change, changed, or aren't available anymore.
+
+    Parameters
+    ----------
+    input_tables: str
         Table to analyse.
 
     Returns
@@ -48,16 +95,24 @@ def artifact_analysis(input_table):
     dict
         Output table of the analysis in the form of a dict with headers as keys.
     """
-    return {}
+    artifacts = {"available":0, "unavailable":0, "changed":0}
+    for table in input_tables:
+        if artifact_available(table):
+            artifacts["available"] += 1
+        else:
+            artifacts["unavailable"] += 1
+        if artifact_changed(table):
+            artifacts["changed"] += 1
+    return artifacts
 
-def buildstatus_analysis(input_table):
+def buildstatus_analysis(input_tables):
     """
-    Analyzes the given build status table.
+    Analyzes the given build status tables.
 
     Parameters
     ----------
-    input_table: str
-        Table to analyse.
+    input_tables: str
+        Tables to analyse.
 
     Returns
     -------
@@ -100,21 +155,21 @@ def main():
     output_path = args.output_path
 
     # Parsing the inputs from the directory:
-    input_table = []
+    input_tables = []
     for input_path in os.listdir(input_dir):
         input_file = open(os.path.join(input_dir, input_path))
-        input_table += list(csv.reader(input_file))
+        input_tables.append(list(csv.reader(input_file)))
         input_file.close()
 
     # Analyzing the inputs:
     output_file = open(output_path, "w+")
     output_dict = {}
     if analysis_type == "soft-env":
-        output_dict = softenv_analysis(input_table)
+        output_dict = softenv_analysis(input_tables)
     elif analysis_type == "artifact":
-        output_dict = artifact_analysis(input_table)
+        output_dict = artifact_analysis(input_tables)
     elif analysis_type == "build-status":
-        output_dict = buildstatus_analysis(input_table)
+        output_dict = buildstatus_analysis(input_tables)
     # Writing analysis to output file:
     dict_writer = csv.DictWriter(output_file, fieldnames=output_dict.keys())
     dict_writer.writeheader()
