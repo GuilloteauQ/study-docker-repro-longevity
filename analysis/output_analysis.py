@@ -12,7 +12,7 @@ import os
 def softenv_analysis(input_table):
     """
     Analyzes the given package lists table to determine the number of artifacts
-    usinga package manager, Git packages or misc packages.
+    using a package manager, Git packages or misc packages.
 
     Parameters
     ----------
@@ -21,10 +21,17 @@ def softenv_analysis(input_table):
 
     Returns
     -------
-    list
-        Output table of the analysis.
+    dict
+        Output table of the analysis in the form of a dict with headers as keys.
     """
-    return []
+    pkgmgr = {}
+    for row in input_table:
+        # Third column is the package source:
+        if row[2] in pkgmgr:
+            pkgmgr[row[2]] += 1
+        else:
+            pkgmgr[row[2]] = 1
+    return pkgmgr
 
 def artifact_analysis(input_table):
     """
@@ -38,10 +45,10 @@ def artifact_analysis(input_table):
 
     Returns
     -------
-    list
-        Output table of the analysis.
+    dict
+        Output table of the analysis in the form of a dict with headers as keys.
     """
-    return []
+    return {}
 
 def buildstatus_analysis(input_table):
     """
@@ -54,10 +61,10 @@ def buildstatus_analysis(input_table):
 
     Returns
     -------
-    list
-        Output table of the analysis.
+    dict
+        Output table of the analysis in the form of a dict with headers as keys.
     """
-    return []
+    return {}
 
 def main():
     # Command line arguments parsing:
@@ -94,21 +101,24 @@ def main():
 
     # Parsing the inputs from the directory:
     input_table = []
-    os.chdir(input_dir)
-    for input_path in os.listdir():
-        input_file = open(input_path)
+    for input_path in os.listdir(input_dir):
+        input_file = open(os.path.join(input_dir, input_path))
         input_table += list(csv.reader(input_file))
-        print(input_table)
         input_file.close()
 
     # Analyzing the inputs:
     output_file = open(output_path, "w+")
+    output_dict = {}
     if analysis_type == "soft-env":
-        output_file.writelines(softenv_analysis(input_table))
+        output_dict = softenv_analysis(input_table)
     elif analysis_type == "artifact":
-        output_file.writelines(artifact_analysis(input_table))
+        output_dict = artifact_analysis(input_table)
     elif analysis_type == "build-status":
-        output_file.writelines(buildstatus_analysis(input_table))
+        output_dict = buildstatus_analysis(input_table)
+    # Writing analysis to output file:
+    dict_writer = csv.DictWriter(output_file, fieldnames=output_dict.keys())
+    dict_writer.writeheader()
+    dict_writer.writerow(output_dict)
     output_file.close()
 
 if __name__ == "__main__":
