@@ -62,14 +62,22 @@ def download_file(url, dest):
     Returns
     -------
     str
-       Hash of the downloaded file.
+       Hash of the downloaded file, or empty string if download failed.
     """
-    req = requests.get(url)
-    file = open(dest, "wb")
-    file.write(req.content)
-    file.close()
-    hash_process = subprocess.run(f"sha256sum {file.name} | cut -d ' ' -f 1 | tr -d '\n'", capture_output=True, shell=True)
-    return hash_process.stdout.decode("utf-8")
+    file_hash = ""
+    try:
+        req = requests.get(url)
+        if req.status_code != 404:
+            file = open(dest, "wb")
+            file.write(req.content)
+            file.close()
+            hash_process = subprocess.run(f"sha256sum {file.name} | cut -d ' ' -f 1 | tr -d '\n'", capture_output=True, shell=True)
+            file_hash = hash_process.stdout.decode("utf-8")
+    except requests.exceptions.ConnectionError:
+        # We can just ignore this exception, as we will just return an empty
+        # hash to indicate the error:
+        pass
+    return file_hash
 
 def download_sources(config, arthashlog_path, dl_dir, use_cache):
     """
@@ -92,7 +100,8 @@ def download_sources(config, arthashlog_path, dl_dir, use_cache):
     Returns
     -------
     temp_dir: str
-        Path to the directory where the artifact is downloaded to.
+        Path to the directory where the artifact is downloaded to, or empty
+        string if download failed.
     """
     url = config["artifact_url"]
     artcache_dir = trim(url)
@@ -107,16 +116,22 @@ def download_sources(config, arthashlog_path, dl_dir, use_cache):
         artifact_file = tempfile.NamedTemporaryFile()
         artifact_path = artifact_file.name
         artifact_hash = download_file(url, artifact_path)
-        if config["type"] == "zip":
-            artifact = zipfile.ZipFile(artifact_path)
-        elif config["type"] == "tar":
-            artifact = tarfile.open(artifact_path)
-        logging.info(f"Extracting artifact at {artifact_dir}")
-        artifact.extractall(artifact_dir)
+        # If download was successful:
+        if artifact_hash != "":
+            if config["type"] == "zip":
+                artifact = zipfile.ZipFile(artifact_path)
+            elif config["type"] == "tar":
+                artifact = tarfile.open(artifact_path)
+            logging.info(f"Extracting artifact at {artifact_dir}")
+            artifact.extractall(artifact_dir)
+        # If download failed:
+        else:
+            artifact_dir = ""
         # Logging the current hash of the artifact:
         arthashlog_file = open(arthashlog_path, "a")
         now = datetime.datetime.now()
         timestamp = str(datetime.datetime.timestamp(now))
+        # Artifact hash will be an empty string if download failed:
         arthashlog_file.write(f"{timestamp},{artifact_hash}\n")
         arthashlog_file.close()
     else:
@@ -148,7 +163,8 @@ def buildstatus_saver(output, buildstatus_path, config_path):
     # to this category:
     build_errors = {
         "package_unavailable":("Unable to locate package"),
-        "baseimage_unavailable":("manifest unknown: manifest unknown")
+        "baseimage_unavailable":("manifest unknown: manifest unknown"),
+        "artifact_unavailable":("artifact_unavailable")
     }
 
     file_exists = os.path.exists(buildstatus_path)
@@ -288,6 +304,7 @@ def check_env(config, src_dir, image_name, pkglist_path):
         pkg_file = tempfile.NamedTemporaryFile()
         pkg_path = pkg_file.name
         pkg_hash = download_file(pkg["url"], pkg_path)
+        # Package hash will be an empty string if download failed:
         pkg_row = f"{pkg['name']},{pkg_hash},misc"
         pkglist_file.write(f"{pkg_row}\n")
 
@@ -410,17 +427,23 @@ def main():
         use_cache = True
         dl_dir = cache_dir
     artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache)
-    artifact_name = os.path.splitext(os.path.basename(config_path))[0]
-    return_code, build_output = build_image(config, artifact_dir, artifact_name, args.docker_cache)
-    if return_code == 0:
-        check_env(config, artifact_dir, artifact_name, pkglist_path)
-        remove_image(config, artifact_name)
-        # Creates file if not already:
-        pathlib.Path(buildstatus_path).touch()
+    # If download was successful:
+    if artifact_dir != "":
+        artifact_name = os.path.splitext(os.path.basename(config_path))[0]
+        return_code, build_output = build_image(config, artifact_dir, artifact_name, args.docker_cache)
+        if return_code == 0:
+            check_env(config, artifact_dir, artifact_name, pkglist_path)
+            remove_image(config, artifact_name)
+            # Creates file if not already:
+            pathlib.Path(buildstatus_path).touch()
+        else:
+            # Creates file if not already:
+            pathlib.Path(pkglist_path).touch()
+            buildstatus_saver(build_output, buildstatus_path, config_path)
+    # If download failed, we need to save the error to the build status log:
     else:
-        # Creates file if not already:
-        pathlib.Path(pkglist_path).touch()
-        buildstatus_saver(build_output, buildstatus_path, config_path)
+        logging.fatal("Artifact could not be downloaded!")
+        buildstatus_saver("artifact_unavailable", buildstatus_path, config_path)
 
 if __name__ == "__main__":
     main()
