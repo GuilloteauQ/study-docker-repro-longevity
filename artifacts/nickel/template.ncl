@@ -1,4 +1,5 @@
 {
+  version = "1.0",
   artifact_url = "https://example.com/artifact.zip",
   type = "zip",
   doi = "...",

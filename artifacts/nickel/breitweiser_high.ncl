@@ -1,4 +1,5 @@
 {
+  version = "1.0",
   artifact_url = "https://zenodo.org/record/7544675/files/SF2-code.tar.gz",
   type = "tar",
   doi = "10.1145/3572848.3577480",

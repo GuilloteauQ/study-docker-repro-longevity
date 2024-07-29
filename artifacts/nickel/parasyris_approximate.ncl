@@ -1,4 +1,5 @@
 {
+  version = "1.0",
   artifact_url = "https://zenodo.org/record/6926481/files/koparasy/HPAC-v0.0.0-Puppeteer.zip",
   type = "zip",
   doi = "10.5555/3571885.3571974",

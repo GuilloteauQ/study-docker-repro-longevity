@@ -1,4 +1,5 @@
 {
+  version = "1.0",
   artifact_url = "https://github.com/microsoft/nnfusion/archive/refs/heads/osdi2023welder.zip",
   type = "zip",
   doi = "",

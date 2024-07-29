@@ -1,4 +1,5 @@
 {
+  version = "1.0",
   artifact_url = "https://zenodo.org/record/7328505/files/tgopt-artifact.tgz",
   type = "tar",
   doi = "10.1145/3572848.3577490",

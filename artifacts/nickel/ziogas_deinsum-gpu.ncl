@@ -1,4 +1,5 @@
 {
+  version = "1.0",
   artifact_url = "https://zenodo.org/record/7004393/files/deinsum/sc22-artifact-0.4.zip",
   type = "zip",
   comment = "",

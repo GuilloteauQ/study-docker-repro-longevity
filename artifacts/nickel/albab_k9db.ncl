@@ -1,4 +1,5 @@
 {
+  version = "1.0",
   artifact_url = "https://github.com/brownsys/K9db/archive/refs/tags/osdi2023.zip",
   type = "zip",
   doi = "...",
