@@ -71,6 +71,7 @@ The following are the possible results of the build:
 - `baseimage_unavailable`: The base image needed for this container is not available.
 - `artifact_unavailable`: The artifact could not be downloaded.
 - `dockerfile_not_found`: No Dockerfile has been found in the location specified in the configuration file.
+- `script_crash`: An error has occurred with the script itself.
 - `unknown_error`: Any other error.
 
 ### Artifact hash log

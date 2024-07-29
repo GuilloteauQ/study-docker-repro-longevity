@@ -21,6 +21,7 @@ import logging
 import datetime
 import sys
 import string
+import traceback
 
 def trim(url):
     """
@@ -375,7 +376,8 @@ def main():
         description = "ECG is a program that automates software environment checking for scientific artifacts. "
             "It is meant to be executed periodically to analyze variations in the software environment of the artifact through time."
     )
-    parser.add_argument('-v', '--verbose',
+    parser.add_argument(
+        '-v', '--verbose',
         action = 'store_true',
         help = "Shows more details on what is being done."
     )
@@ -409,7 +411,8 @@ def main():
                 "If not specified, cache is disabled.",
         required = False
     ),
-    parser.add_argument('--docker-cache',
+    parser.add_argument(
+        '--docker-cache',
         action = 'store_true',
         help = "Use cache for Docker 'build'."
     )
@@ -433,39 +436,47 @@ def main():
     # Parsing the input file including the configuration of the artifact's
     # image:
     config_path = args.config
-    config_file = open(config_path, "r")
-    config = json.loads(config_file.read())
-    # config = yaml.safe_load(config_file)
-    # print(config)
-    config_file.close()
-
-    dl_dir = None
-    # If not using cache, creates a temporary directory:
-    if cache_dir == None:
-        tmp_dir = tempfile.TemporaryDirectory()
-        dl_dir = tmp_dir.name
-    else:
-        use_cache = True
-        dl_dir = cache_dir
-    artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache)
     status = ""
-    # If download was successful:
-    if artifact_dir != "":
-        artifact_name = os.path.splitext(os.path.basename(config_path))[0]
-        return_code, build_output = build_image(config, artifact_dir, artifact_name, args.docker_cache)
-        status = ""
-        if return_code == 0:
-            status = "success"
-            check_env(config, artifact_dir, artifact_name, pkglist_path)
-            remove_image(config, artifact_name)
+    try:
+        config_file = open(config_path, "r")
+        config = json.loads(config_file.read())
+        # config = yaml.safe_load(config_file)
+        # print(config)
+        config_file.close()
+
+        dl_dir = None
+        # If not using cache, creates a temporary directory:
+        if cache_dir == None:
+            tmp_dir = tempfile.TemporaryDirectory()
+            dl_dir = tmp_dir.name
         else:
-            status = builderror_identifier(build_output)
-            # Creates file if not already:
-            pathlib.Path(pkglist_path).touch()
-    # If download failed, we need to save the error to the build status log:
-    else:
-        logging.fatal("Artifact could not be downloaded!")
-        status = "artifact_unavailable"
+            use_cache = True
+            dl_dir = cache_dir
+        artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache)
+        # If download was successful:
+        if artifact_dir != "":
+            artifact_name = os.path.splitext(os.path.basename(config_path))[0]
+            return_code, build_output = build_image(config, artifact_dir, artifact_name, args.docker_cache)
+            if return_code == 0:
+                status = "success"
+                check_env(config, artifact_dir, artifact_name, pkglist_path)
+                remove_image(config, artifact_name)
+            else:
+                status = builderror_identifier(build_output)
+                # Creates file if not already:
+                pathlib.Path(pkglist_path).touch()
+        # If download failed, we need to save the error to the build status log:
+        else:
+            logging.fatal("Artifact could not be downloaded!")
+            status = "artifact_unavailable"
+    except Exception as err:
+        # Handles any possible script's own crashes:
+        formatted_err = str(''.join(traceback.format_exception(None, err, err.__traceback__)))
+        log_file = open(log_path, "a")
+        log_file.write(formatted_err)
+        log_file.close()
+        print(formatted_err)
+        status = "script_crash"
     buildresult_saver(status, buildstatus_path, config_path)
 
 if __name__ == "__main__":
