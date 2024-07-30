@@ -4,7 +4,8 @@
   type = "zip",
   doi = "...",
   comment = "Template for artifact configuration.",
-  dockerfile_location = "path/to/docker/folder",
+  virtualization = "docker",
+  buildfile_dir = "path/to/docker/folder",
   package_managers = [ "dpkg", "rpm", "pacman", "pip", "conda" ],
   git_packages = [
     { name = "pkg1", location = "path/to/git/repo" }

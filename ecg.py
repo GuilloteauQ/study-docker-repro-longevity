@@ -235,7 +235,7 @@ def build_image(config, src_dir, image_name, docker_cache = False):
     if docker_cache:
         cache_arg = ""
     logging.info(f"Starting building image {image_name}")
-    path = os.path.join(src_dir, config["dockerfile_location"])
+    path = os.path.join(src_dir, config["buildfile_dir"])
     # Using trimmed artifact URL as name:
     build_command = f"docker build{cache_arg} -t {image_name} ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
@@ -296,7 +296,7 @@ def check_env(config, src_dir, image_name, pkglist_path):
     logging.info("Checking software environment")
     pkglist_file = open(pkglist_path, "w")
     # pkglist_file.write("package,version,package_manager\n")
-    path = os.path.join(src_dir, config["dockerfile_location"])
+    path = os.path.join(src_dir, config["buildfile_dir"])
     # Package managers:
     for pkgmgr in config["package_managers"]:
         # "--entrypoint" requires command and arguments to be separated.
@@ -316,6 +316,7 @@ def check_env(config, src_dir, image_name, pkglist_path):
     logging.info("Checking Git packages")
     for repo in config["git_packages"]:
         pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], image_name] + gitcmd[1].split(" "), cwd=path, capture_output=True)
+        print(pkglist_process.stderr.decode('utf-8'))
         repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git"
         pkglist_file.write(f"{repo_row}\n")
 

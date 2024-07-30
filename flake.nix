@@ -21,6 +21,7 @@
             snakemake
             gawk
             nickel
+            graphviz
 	    # TODO separate into several shells
             (python3.withPackages (ps: with ps; [
               requests

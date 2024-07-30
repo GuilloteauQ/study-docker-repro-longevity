@@ -4,7 +4,8 @@
   type = "tar",
   doi = "10.1145/3572848.3577490",
   comment = "",
-  dockerfile_location = "tgopt-artifact",
+  virtualization = "docker",
+  buildfile_dir = "tgopt-artifact",
   package_managers = [ "dpkg", "conda" ],
   git_packages = [],
   misc_packages = [

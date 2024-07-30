@@ -4,7 +4,8 @@
   type = "tar",
   doi = "10.1145/3572848.3577480",
   comment = "",
-  dockerfile_location = "bdm-paper-examples/docker",
+  virtualization = "docker",
+  buildfile_dir = "bdm-paper-examples/docker",
   package_managers = [ "dpkg" ],
   git_packages = [
     { name = "pyenv", location = "~/.pyenv" }

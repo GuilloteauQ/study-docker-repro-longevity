@@ -4,7 +4,8 @@
   type = "zip",
   doi = "",
   comment = "",
-  dockerfile_location = "nnfusion-osdi2023welder",
+  buildfile_dir = "nnfusion-osdi2023welder",
+  virtualization = "docker",
   package_managers = [ "dpkg", "pip", "conda" ],
   git_packages = [
     { name = "tvm", location = "/root/tvm" },

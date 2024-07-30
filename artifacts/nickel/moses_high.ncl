@@ -4,7 +4,8 @@
   type = "zip",
   doi = "10.1145/3572848.3577475",
   comment = "",
-  dockerfile_location = "wsmoses-PolygeistGPU-Docker-ba18197/MocCUDA",
+  virtualization = "docker",
+  buildfile_dir = "wsmoses-PolygeistGPU-Docker-ba18197/MocCUDA",
   package_managers = [ "dpkg", "pip" ],
   git_packages = [
     { name = "MocCUDA", location = "/root/MocCUDA" }

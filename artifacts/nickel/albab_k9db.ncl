@@ -4,7 +4,8 @@
   type = "zip",
   doi = "...",
   comment = "",
-  dockerfile_location = "K9db-osdi2023",
+  virtualization = "docker",
+  buildfile_dir = "K9db-osdi2023",
   package_managers = [ "dpkg", "pip" ],
   git_packages = [],
   misc_packages = [
