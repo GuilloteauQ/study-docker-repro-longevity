@@ -29,6 +29,12 @@
             ]))
           ];
         };
+        latex = pkgs.mkShell {
+          packages = with pkgs; [
+            texliveFull
+            rubber
+          ];
+        };
       };
     });
 }

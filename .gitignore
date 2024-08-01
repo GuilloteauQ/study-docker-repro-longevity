@@ -7,3 +7,4 @@ artifacts/json/*
 pkglist.csv
 log.txt
 build_status.csv
+*.pdf
