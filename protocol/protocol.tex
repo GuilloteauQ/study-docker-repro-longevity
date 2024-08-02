@@ -15,11 +15,10 @@ frame = single,
 breaklines=true
 }
 
-
 \newcommand{\noteqg}{\todo[backgroundcolor=blue!10,bordercolor=blue,inline,caption={}]} 
 
 %\usepackage{amssymb}
-%\usepackage{booktabs}
+\usepackage{booktabs}
 %\usepackage{adjustbox}
 
 \newcommand{\dfile}{\texttt{Dockerfile}}
@@ -88,8 +87,6 @@ The definition of the schema is archived on Software Heritage \cite{nickel_schem
   git_packages = [
     { name = "bar", location = "~/bar" }
   ],
-  misc_packages = [
-  ],
 }
 \end{lstlisting}
 \end{minipage}
@@ -106,7 +103,7 @@ This Python script\ \cite{ecg_code} takes as input a (verified) JSON representat
 \item Log the cryptographic hash of the downloaded artifact (Section \ref{sec:download})
 \item Extract the artifact
 \item Build the docker image (Section \ref{sec:docker_build})
-\item If the build is successful, gather information about the produced software environment (Sections \ref{sec:package_managers}, \ref{sec:git}, and \ref{sec:misc})
+\item If the build is successful, gather information about the produced software environment (Sections \ref{sec:package_managers}, \ref{sec:git}, \ref{sec:misc}, and \ref{sec:pyenv})
 \item If the build failed, gather information about the reason of the failure
 \end{enumerate}
 
@@ -169,17 +166,37 @@ Below is an example of data collected for the downloading of the \texttt{Minicon
 Miniconda3-py37_4.12.0-Linux-x86_64,4dc4214839c60b2f5eb3efbdee1ef5d9b45e74f2c09fcae6c8934a13f36ffc3e,misc
 \end{lstlisting}
 
+\subsubsection{Python Virtual Environment (\texttt{pyenv})}\label{sec:pyenv}
+
+Even if \texttt{pip} is managed in the ``Package Managers'' section (Section \ref{sec:package_managers}), when authors use a virtual environment, \ecg\ needs to query this exact Python environment, and not the global one.
+
 \subsection{Snakemake}
 
 \subsection{R}
 
 \section{Data collection}
 
+\subsection{Has the data collection started?}
+
+No.
+
 \subsection{Considered Conferences}
 
-\begin{itemize}
-\item Conference Name, Submission Date, Proceeding Publication Date
-\end{itemize}
+\begin{table}
+  \centering
+  \begin{tabular}{lrr}
+    \toprule
+    Conference Name     & Submission Date & Proceedings Publication Date\\
+    \midrule
+    EuroPar 2024        & March 2024      & September 2024\\
+    SuperComputing 2024 & April 2024      & November 2024 \\
+    \bottomrule
+\end{tabular}
+  \caption{Considered Conferences and associated important dates}
+  \label{tab:conferences}
+\end{table}
+
+Table \ref{tab:conferences} summarizes the considered conferences and their important dates.
 
 \noteqg{todo}
 
@@ -258,10 +275,9 @@ The software environment will be managed by Nix \cite{dolstra2004nix}.
 
 \noteqg{TODO: do an estimation}
 
-\subsection{Data and Source Code Availability}
+\subsection{Data and Source Code Long-term Availability}
 
 The collected data will be stored on Zenodo.
-
 The Source code will be archived on Software-Heritage.
 
 \printbibliography
