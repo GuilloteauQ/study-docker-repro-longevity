@@ -52,13 +52,7 @@ breaklines=true
 
 This project aims to show the limitations of using Docker containers as a reliable reproducibility tool.
 In particular, as Docker relies on non-reproducible tools, it is difficult to construct a \dfile\ that will rebuild the \emph{exact} same software environment in the future.
-In this project, we will collect research artifacts coming from various scientific conferences containing \dfile s.
-Once collected, we will \emph{periodically} build these \dfile s \emph{without cache}.
-If the build is successful, the produced software environment will be extracted (package names and versions).
-If the build failed, we will categorize the reason.
-
-
-This is too much details for this section!
+In this project, we will collect research artifacts coming from various scientific conferences containing \dfile s, rebuild them periodically, and observe the variation in the resulting software environments.
 
 \subsection{Related work from contributors}
 
@@ -66,13 +60,11 @@ This is too much details for this section!
 
 \section{Architecture}
 
-\subsection{Nickel}
+\subsection{Nickel}\label{sec:nickel}
 
 We use the Nickel configuration language to guarantee the correctness of the descriptions of the artifacts.
 This allows us to catch potential errors or incoherencies, from the Data Curation phase, even before trying to build the artifacts.
 The definition of the schema is archived on Software Heritage \cite{nickel_schema}.
-
-\noteqg{example \dfile\ and nickel}
 
 \noindent\begin{minipage}{.49\textwidth}
 \begin{lstlisting}[caption=\dfile]{Name}
@@ -104,30 +96,30 @@ The definition of the schema is archived on Software Heritage \cite{nickel_schem
 
 \subsection{\ecg}
 
-This Python script\ \cite{ecg_code} takes as input a JSON representation of the Nickel artifact description, and then tries to build the \dfile\ contained in the artifact.
+This Python script\ \cite{ecg_code} takes as input a (verified) JSON representation of the Nickel artifact description, and then tries to build the \dfile\ contained in the artifact.
 
 \paragraph{Workflow}
 
 \begin{enumerate}
 \item Read the JSON description of the artifact
-\item Download the artifact
-\item Log the cryptographic hash of the downloaded artifact
+\item Download the artifact (Section \ref{sec:download})
+\item Log the cryptographic hash of the downloaded artifact (Section \ref{sec:download})
 \item Extract the artifact
-\item Build the docker image
-\item If the build is successful, gather information about the produced software environment
+\item Build the docker image (Section \ref{sec:docker_build})
+\item If the build is successful, gather information about the produced software environment (Sections \ref{sec:package_managers}, \ref{sec:git}, and \ref{sec:misc})
 \item If the build failed, gather information about the reason of the failure
 \end{enumerate}
 
 \noteqg{should probably be a flowgraph}
 
-\subsubsection{Download of the Artifact}
+\subsubsection{Download of the Artifact}\label{sec:download}
 
 The link the to artifact is the link provided by the authors in their Artifact Description.
 \ecg\ will use this link to download the artifact.
 If the download is successful, \ecg\ will check the cryptographic hash of the content.
 This allows us to also have information about the stability/longevity of the artifact sharing.
 
-\subsubsection{Docker Build Statuses}
+\subsubsection{Docker Build Statuses}\label{sec:docker_build}
 
 \ecg\ captures different types of statuses for the build attempt of a \dfile:
 
@@ -137,7 +129,7 @@ This allows us to also have information about the stability/longevity of the art
 \item \texttt{unknown\_error}: the build failed for an unknown/classified reason
 \end{itemize}
 
-\subsubsection{Information from the Package Manager}
+\subsubsection{Information from the Package Manager}\label{sec:package_managers}
 
 Package Managers can provide information about the packages installed: package name and package version.
 
@@ -151,7 +143,7 @@ Below is an example of data collected for the \texttt{gcc-8} package on a Ubuntu
 gcc-8,8.3.0-6,dpkg
 \end{lstlisting}
 
-\subsubsection{Git repositories (\texttt{git})}
+\subsubsection{Git repositories (\texttt{git})}\label{sec:git}
 
 \dfile\ authors can also install packages from source.
 One way to do this is via Git.
@@ -165,7 +157,7 @@ Below is an example of data collected for a Git repository called \texttt{ctf}:
 ctf,c3f95829628c381dc9bf631c69f08a7b17580b53,git
 \end{lstlisting}
 
-\subsubsection{Download content (\texttt{misc})}
+\subsubsection{Download content (\texttt{misc})}\label{sec:misc}
 
 In the case where the \dfile\ download content from the internet (\eg\ archives, binaries), \ecg\ will download the same content on the host machine (\ie\ not in the container) and then compute the cryptographic hash of the downloaded content.
 
@@ -183,12 +175,30 @@ Miniconda3-py37_4.12.0-Linux-x86_64,4dc4214839c60b2f5eb3efbdee1ef5d9b45e74f2c09f
 
 \section{Data collection}
 
-\subsection{Periodicity}
+\subsection{Considered Conferences}
 
-The workflow will be executed \emph{every month} for one year.
+\begin{itemize}
+\item Conference Name, Submission Date, Proceeding Publication Date
+\end{itemize}
+
+\noteqg{todo}
+
+\subsection{Gathering of \dfile s}
+
+The gathering part of the \dfile s will be done right after the publication of the proceeding of a conference.
+Contributors of the ``Data Curation'' phase will go through all the papers and their artifact to extract artifact containing \dfile s.
+These \dfile s will then be captured with the Nickel description (see Section \ref{sec:nickel}).
+To avoid mistake, at least two contributors will be assigned by paper.
+If there is any difference in the Nickel description of an artifact, a discussion between the contributors will be initiated to conclude on the correct artifact description.
+
+\noteqg{can we do this in the workflow?}
+
+\subsection{Building Periodicity}
+
+The builind workflow will be executed \emph{every month} for one year.
 After one year, the workflow will be executed with increasing time intervals between execution.
 
-\noteqg{TODO: A table/list of all the planned executions (dates)}
+\noteqg{TODO: A table/list/gantt chart of all the planned executions (dates)}
 
 \section{Analysis}
 
