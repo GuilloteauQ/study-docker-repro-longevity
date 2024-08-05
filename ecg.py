@@ -248,7 +248,7 @@ def build_image(config, src_dir, image_name, docker_cache = False):
     logging.info(f"Command '{build_command}' exited with code {return_code}")
     return return_code, build_output
 
-def check_env(config, src_dir, image_name, pkglist_path):
+def check_env(config, src_dir, artifact_name, pkglist_path):
     """
     Builds a list of all software packages installed in the
     Docker image given in 'config', depending on the package managers
@@ -262,8 +262,9 @@ def check_env(config, src_dir, image_name, pkglist_path):
     src_dir: str
         Path to the directory where the artifact is stored.
 
-    image_name: str
-        Name of the Docker image.
+    artifact_name: str
+        Name of the artifact. Used both as the Docker image name, and for the
+        packages list for tracking purpose during the output analysis.
 
     pkglist_path: str
         Path to the package list file.
@@ -284,11 +285,11 @@ def check_env(config, src_dir, image_name, pkglist_path):
     # host, to take into account container images that do not have the formatting
     # packages installed.
     pkgmgr_cmd = {
-        "dpkg": ("dpkg", "-l", "awk 'NR>5 {print $2 \",\" $3 \",\" \"dpkg\"}'"), \
-        "rpm":("rpm", "-qa --queryformat '%{NAME},%{VERSION},rpm\\n'", ""), \
-        "pacman":("pacman", "-Q", "awk '{print $0 \",\" $1 \",pacman\"}'"), \
-        "pip":("pip", "list", "awk 'NR>2 {print $1 \",\" $2 \",\" \"pip\"}'"), \
-        "conda":("/root/.conda/bin/conda", "list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda\"}'")
+        "dpkg": ("dpkg", "-l", "awk 'NR>5 {print $2 \",\" $3 \",dpkg," + artifact_name + "\"}'"), \
+        "rpm":("rpm", "-qa --queryformat '%{NAME},%{VERSION},rpm," + artifact_name + "\\n'", ""), \
+        "pacman":("pacman", "-Q", "awk '{print $0 \",\" $1 \",pacman," + artifact_name + "\"}'"), \
+        "pip":("pip", "list", "awk 'NR>2 {print $1 \",\" $2 \",\" \"pip," + artifact_name + "\"}'"), \
+        "conda":("/root/.conda/bin/conda", "list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda," + artifact_name + "\"}'")
     }
     # Command to obtain the latest commit hash in a git repository (separated
     # into 2 parts for "--entrypoint"):
@@ -308,7 +309,16 @@ def check_env(config, src_dir, image_name, pkglist_path):
         listformat_cmd = pkgmgr_cmd[pkgmgr][2]
         logging.info(f"Checking '{pkgmgr}'")
         # pkglist_process = subprocess.run(["docker", "run", "--rm", config["image_name"]] + pkglist_cmd.split(" "), cwd=path, capture_output=True)
-        pkglist_process = subprocess.run(["docker", "run", "--rm", "--entrypoint", pkglist_cmd, image_name] + pkglist_cmdargs, cwd=path, capture_output=True)
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "--entrypoint", pkglist_cmd, artifact_name] + pkglist_cmdargs, cwd=path, capture_output=True)
+        format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
+        pkglist = format_process.stdout.decode("utf-8")
+        pkglist_file.write(pkglist)
+    # Python venvs:
+    logging.info("Checking Python venvs")
+    for venv in config["python_venvs"]:
+        pipcmd = pkgmgr_cmd["pip"][0]
+        pipcmd_args = pkgmgr_cmd["pip"][1]
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", venv["path"], "--entrypoint", "source", artifact_name, ".bin/activate", "&&", pipcmd] + pipcmd_args.split(" "), cwd=path, capture_output=True)
         format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
@@ -316,8 +326,8 @@ def check_env(config, src_dir, image_name, pkglist_path):
     # Git packages:
     logging.info("Checking Git packages")
     for repo in config["git_packages"]:
-        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], image_name] + gitcmd[1].split(" "), cwd=path, capture_output=True)
-        repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git"
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], artifact_name] + gitcmd[1].split(" "), cwd=path, capture_output=True)
+        repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git,{artifact_name}"
         pkglist_file.write(f"{repo_row}\n")
 
     # Misc packages:
@@ -328,19 +338,8 @@ def check_env(config, src_dir, image_name, pkglist_path):
         pkg_path = pkg_file.name
         pkg_hash = download_file(pkg["url"], pkg_path)
         # Package hash will be an empty string if download failed:
-        pkg_row = f"{pkg['name']},{pkg_hash},misc"
+        pkg_row = f"{pkg['name']},{pkg_hash},misc,{artifact_name}"
         pkglist_file.write(f"{pkg_row}\n")
-
-    # Python venvs:
-    logging.info("Checking Python venvs")
-    for venv in config["python_venvs"]:
-        pipcmd = pkgmgr_cmd["pip"][0]
-        pipcmd_args = pkgmgr_cmd["pip"][1]
-        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", venv["path"], "--entrypoint", "source", image_name, ".bin/activate", "&&", pipcmd] + pipcmd_args.split(" "), cwd=path, capture_output=True)
-
-        format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
-        pkglist = format_process.stdout.decode("utf-8")
-        pkglist_file.write(pkglist)
     pkglist_file.close()
 
 def remove_image(config, image_name):
