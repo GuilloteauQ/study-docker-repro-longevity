@@ -146,8 +146,9 @@ def main():
         description = "This script analyzes the outputs from ECG to create " \
             "tables."
     )
-    parser.add_argument('-v', '--verbose',
-        action = 'store_true',
+    parser.add_argument(
+        "-v", "--verbose",
+        action = "store_true",
         help = "Shows more details on what is being done."
     )
     parser.add_argument(
@@ -157,25 +158,30 @@ def main():
         required = True
     )
     parser.add_argument(
-        "input_dir",
-        help = "Path to the directory where the CSV files used as input for " \
-            "the analysis function are stored. They must be all outputs from ECG."
+        "-i", "--input",
+        action = "append",
+        help = "The CSV file used as input for the analysis function." \
+            "Multiple files can be specified by repeating this argument" \
+            "with different paths. All the input files must be outputs" \
+            "from ECG.",
+        required = True
     )
     parser.add_argument(
-        "output_path",
+        "-o", "--output",
         help = "Path to the output CSV file that will be created by the " \
-            "analysis function."
+            "analysis function.",
+        required = True
     )
     args = parser.parse_args()
 
     analysis_type = args.analysis_type
-    input_dir = args.input_dir
-    output_path = args.output_path
+    input_paths = args.input
+    output_path = args.output
 
-    # Parsing the inputs from the directory:
+    # Parsing the input files:
     input_tables = []
-    for input_path in os.listdir(input_dir):
-        input_file = open(os.path.join(input_dir, input_path))
+    for path in input_paths:
+        input_file = open(path)
         input_tables.append(list(csv.reader(input_file)))
         input_file.close()
 
