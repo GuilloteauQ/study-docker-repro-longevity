@@ -318,7 +318,7 @@ def check_env(config, src_dir, artifact_name, pkglist_path):
     for venv in config["python_venvs"]:
         pipcmd = pkgmgr_cmd["pip"][0]
         pipcmd_args = pkgmgr_cmd["pip"][1]
-        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", venv["path"], "--entrypoint", "source", artifact_name, ".bin/activate", "&&", pipcmd] + pipcmd_args.split(" "), cwd=path, capture_output=True)
+        pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", venv["path"], "--entrypoint", venv["path"] + "/bin/" + pipcmd, artifact_name] + pipcmd_args.split(" "), cwd=path, capture_output=True)
         format_process = subprocess.run(f"cat << EOF | {listformat_cmd}\n{pkglist_process.stdout.decode('utf-8')}EOF", cwd=path, capture_output=True, shell=True)
         pkglist = format_process.stdout.decode("utf-8")
         pkglist_file.write(pkglist)
