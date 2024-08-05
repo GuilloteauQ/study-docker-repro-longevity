@@ -72,6 +72,7 @@ The following are the possible results of the build:
 - `artifact_unavailable`: The artifact could not be downloaded.
 - `dockerfile_not_found`: No Dockerfile has been found in the location specified in the configuration file.
 - `script_crash`: An error has occurred with the script itself.
+- `job_time_exceeded`: When running on a batch system such as OAR, this error indicates that the script exceeded the allocated run time and had to be terminated.
 - `unknown_error`: Any other error.
 
 ### Artifact hash log

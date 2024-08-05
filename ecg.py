@@ -65,7 +65,7 @@ def download_file(url, dest):
     str
        Hash of the downloaded file, or empty string if download failed.
     """
-    file_hash = ""
+    file_hash = "-1"
     try:
         req = requests.get(url)
         if req.status_code != 404:
@@ -118,7 +118,7 @@ def download_sources(config, arthashlog_path, dl_dir, use_cache):
         artifact_path = artifact_file.name
         artifact_hash = download_file(url, artifact_path)
         # If download was successful:
-        if artifact_hash != "":
+        if artifact_hash != "-1":
             if config["type"] == "zip":
                 artifact = zipfile.ZipFile(artifact_path)
             elif config["type"] == "tar":
@@ -127,6 +127,7 @@ def download_sources(config, arthashlog_path, dl_dir, use_cache):
             artifact.extractall(artifact_dir)
         # If download failed:
         else:
+            os.rmdir(artifact_dir)
             artifact_dir = ""
         # Logging the current hash of the artifact:
         arthashlog_file = open(arthashlog_path, "a")
@@ -316,7 +317,6 @@ def check_env(config, src_dir, image_name, pkglist_path):
     logging.info("Checking Git packages")
     for repo in config["git_packages"]:
         pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], image_name] + gitcmd[1].split(" "), cwd=path, capture_output=True)
-        print(pkglist_process.stderr.decode('utf-8'))
         repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git"
         pkglist_file.write(f"{repo_row}\n")
 
@@ -476,7 +476,7 @@ def main():
         log_file = open(log_path, "a")
         log_file.write(formatted_err)
         log_file.close()
-        print(formatted_err)
+        logging.error(formatted_err)
         status = "script_crash"
     buildresult_saver(status, buildstatus_path, config_path)
 
