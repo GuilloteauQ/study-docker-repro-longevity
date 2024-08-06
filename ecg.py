@@ -273,6 +273,10 @@ def check_env(config, src_dir, artifact_name, pkglist_path):
     -------
     None
     """
+    # Saving the current time to add it to every row:
+    now = datetime.datetime.now()
+    timestamp = str(datetime.datetime.timestamp(now))
+
     # Commands to list installed packages along with their versions and the name
     # of the package manager, depending on the package managers.
     # Each package manager is associated with a tuple, the first item being
@@ -285,11 +289,11 @@ def check_env(config, src_dir, artifact_name, pkglist_path):
     # host, to take into account container images that do not have the formatting
     # packages installed.
     pkgmgr_cmd = {
-        "dpkg": ("dpkg", "-l", "awk 'NR>5 {print $2 \",\" $3 \",dpkg," + artifact_name + "\"}'"), \
-        "rpm":("rpm", "-qa --queryformat '%{NAME},%{VERSION},rpm," + artifact_name + "\\n'", ""), \
-        "pacman":("pacman", "-Q", "awk '{print $0 \",\" $1 \",pacman," + artifact_name + "\"}'"), \
-        "pip":("pip", "list", "awk 'NR>2 {print $1 \",\" $2 \",\" \"pip," + artifact_name + "\"}'"), \
-        "conda":("/root/.conda/bin/conda", "list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda," + artifact_name + "\"}'")
+        "dpkg": ("dpkg", "-l", "awk 'NR>5 {print $2 \",\" $3 \",dpkg," + artifact_name + "," + timestamp + "\"}'"), \
+        "rpm":("rpm", "-qa --queryformat '%{NAME},%{VERSION},rpm," + artifact_name + "," + timestamp + "\\n'", ""), \
+        "pacman":("pacman", "-Q", "awk '{print $0 \",\" $1 \",pacman," + artifact_name + "," + timestamp + "\"}'"), \
+        "pip":("pip", "list", "awk 'NR>2 {print $1 \",\" $2 \",\" \"pip," + artifact_name + "," + timestamp + "\"}'"), \
+        "conda":("/root/.conda/bin/conda", "list -e", "sed 's/=/ /g' | awk 'NR>3 {print $1 \",\" $2 \",conda," + artifact_name + "," + timestamp + "\"}'")
     }
     # Command to obtain the latest commit hash in a git repository (separated
     # into 2 parts for "--entrypoint"):
@@ -327,7 +331,7 @@ def check_env(config, src_dir, artifact_name, pkglist_path):
     logging.info("Checking Git packages")
     for repo in config["git_packages"]:
         pkglist_process = subprocess.run(["docker", "run", "--rm", "-w", repo["location"], "--entrypoint", gitcmd[0], artifact_name] + gitcmd[1].split(" "), cwd=path, capture_output=True)
-        repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git,{artifact_name}"
+        repo_row = f"{repo['name']},{pkglist_process.stdout.decode('utf-8')},git,{artifact_name},{timestamp}"
         pkglist_file.write(f"{repo_row}\n")
 
     # Misc packages:
@@ -338,7 +342,7 @@ def check_env(config, src_dir, artifact_name, pkglist_path):
         pkg_path = pkg_file.name
         pkg_hash = download_file(pkg["url"], pkg_path)
         # Package hash will be an empty string if download failed:
-        pkg_row = f"{pkg['name']},{pkg_hash},misc,{artifact_name}"
+        pkg_row = f"{pkg['name']},{pkg_hash},misc,{artifact_name},{timestamp}"
         pkglist_file.write(f"{pkg_row}\n")
     pkglist_file.close()
 
@@ -373,8 +377,11 @@ def main():
     # Command line arguments parsing:
     parser = argparse.ArgumentParser(
         prog = "ecg",
-        description = "ECG is a program that automates software environment checking for scientific artifacts. "
-            "It is meant to be executed periodically to analyze variations in the software environment of the artifact through time."
+        description =
+        """
+        ECG is a program that automates software environment checking for scientific artifacts.
+        It is meant to be executed periodically to analyze variations in the software environment of the artifact through time.
+        """
     )
     parser.add_argument(
         '-v', '--verbose',
@@ -407,8 +414,11 @@ def main():
     )
     parser.add_argument(
         "-c", "--cache-dir",
-        help = "Path to the cache directory, where artifacts that are downloaded will be stored for future usage. " \
-                "If not specified, cache is disabled.",
+        help =
+        """
+        Path to the cache directory, where artifacts that are downloaded will be stored for future usage.
+        If not specified, cache is disabled.
+        """,
         required = False
     ),
     parser.add_argument(
