@@ -3,7 +3,6 @@
   artifact_url = "http://localhost.com/artifact.zip",
   type = "zip",
   doi = "...",
-  comment = "",
   virtualization = "docker",
   buildfile_dir = "./",
   package_managers = [ "dpkg", "pip" ],
@@ -12,6 +11,5 @@
   ],
   misc_packages = [
     { name = "mpkg1", url = "http://localhost.com/package1.zip" }
-  ],
-  python_venvs = []
+  ]
 }

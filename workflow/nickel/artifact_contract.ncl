@@ -52,7 +52,9 @@ in
   Artifact = {
     version
       | doc "Version of the Nickel contract"
-      | String,
+      | optional
+      | String
+      | default = "1.0",
     artifact_url
       | doc "URL where to download the artifact"
       | URL,
@@ -64,7 +66,9 @@ in
       | String,
     comment
       | doc "Additional comments on the artifact that couldn't be written elsewhere"
-      | String,
+      | optional
+      | String
+      | default = "",
     virtualization
       | doc "Virtualization technology used in the artifact. Possible values: docker"
       | VirtTech,
@@ -73,15 +77,23 @@ in
       | FilePath,
     package_managers
       | doc "Package Managers used in the container. Possible values: dpkg, rpm, pacman, pip, conda"
-      | Array PackageManager,
+      | optional
+      | Array PackageManager
+      | default = [],
     git_packages
       | doc "Git repositories cloned in the container"
-      | Array GitPackage,
+      | optional
+      | Array GitPackage
+      | default = [],
     misc_packages
       | doc "Misc. packages downloaded from the container"
-      | Array MiscPackage,
+      | optional
+      | Array MiscPackage
+      | default = [],
     python_venvs
       | doc "Python venvs created in the container"
+      | optional
       | Array PythonVenv
+      | default = [],
   }
 }
