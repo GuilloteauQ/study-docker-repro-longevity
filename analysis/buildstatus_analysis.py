@@ -13,15 +13,15 @@ import argparse
 import csv
 import os
 
-def analysis(input_tables):
+def analysis(input_table):
     """
-    Analyzes the given build status tables to count the results of the building
+    Analyzes the given build status table to count the results of the building
     of the Dockerfile for each category.
 
     Parameters
     ----------
-    input_tables: str
-        Tables to analyse.
+    input_table: str
+        Table to analyse.
 
     Returns
     -------
@@ -29,21 +29,12 @@ def analysis(input_tables):
         Output table of the analysis in the form of a dict with headers as keys.
     """
     buildstatus = {}
-    for table in input_tables:
-        # # There has never been any error:
-        # if table == [[]]:
-        #     if "never_failed" not in buildstatus:
-        #             buildstatus["never_failed"] = 1
-        #     else:
-        #         buildstatus["never_failed"] += 1
-        # # There has been an error at least once:
-        # else:
-        for row in table:
-            # Third column is the result:
-            if row[2] not in buildstatus:
-                buildstatus[row[2]] = 1
-            else:
-                buildstatus[row[2]] += 1
+    for row in input_table:
+        # Third column is the result:
+        if row[2] not in buildstatus:
+            buildstatus[row[2]] = 1
+        else:
+            buildstatus[row[2]] += 1
     return buildstatus
 
 def main():
@@ -88,18 +79,17 @@ def main():
     output_path = args.output
 
     # Parsing the input files:
-    input_tables = []
+    input_table = []
     for path in input_paths:
         input_file = open(path)
-        input_tables.append(list(csv.reader(input_file)))
+        input_table += list(csv.reader(input_file))
         input_file.close()
 
     # Analyzing the inputs:
-    output_file = open(output_path, "w+")
-    output_dict = {}
-    output_dict = analysis(input_tables)
+    output_dict = analysis(input_table)
 
     # Writing analysis to output file:
+    output_file = open(output_path, "w+")
     dict_writer = csv.DictWriter(output_file, fieldnames=output_dict.keys())
     dict_writer.writeheader()
     dict_writer.writerow(output_dict)

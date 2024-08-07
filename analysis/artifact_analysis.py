@@ -13,15 +13,18 @@ import argparse
 import csv
 import os
 
-def artifact_changed(table):
+def artifact_changed(table, name):
     """
-    Indicates whether the artifact involved in the given hash log table
-    has changed over time.
+    Indicates whether the artifact of the given name has changed over time.
+    An artifact becoming unavailable is considered as modified.
 
     Parameters
     ----------
     table: list
         Artifact hash log table.
+
+    name: str
+        Name of the artifact to check.
 
     Returns
     -------
@@ -29,24 +32,30 @@ def artifact_changed(table):
         True if artifact changed, False otherwise.
     """
     changed = False
-    # Hash is in the 2nd column:
-    artifact_hash = table[0][1]
     i = 0
+    artifact_hash = ""
     while i < len(table) and not changed:
-        if table[i][1] != artifact_hash:
-            changed = True
+        row = table[i]
+        if row[2] == name:
+            # If the first hash has not been saved yet:
+            if artifact_hash == "":
+                artifact_hash = row[1] # Hash is in the 2nd column
+            elif row[1] != artifact_hash:
+                changed = True
         i += 1
     return changed
 
-def artifact_available(table):
+def artifact_available(table, name):
     """
-    Indicates whether the artifact involved in the given hash log table
-    is still available.
+    Indicates whether the artifact of the given name is still available.
 
     Parameters
     ----------
     table: list
         Artifact hash log table.
+
+    name: str
+        Name of the artifact to check.
 
     Returns
     -------
@@ -54,19 +63,26 @@ def artifact_available(table):
         True if artifact is still available, False otherwise.
     """
     available = True
-    # We check the last line to check current availability:
-    if table[-1][1] == "":
-        available = False
+    for row in table:
+        if row[2] == name:
+            if row[1] == "-1":
+                # -1 means the artifact could not be downloaded. Otherwise,
+                # this column would contain the hash of the artifact.
+                available = False
+            else:
+                available = True
+    # The last log of the artifact hash will determine if the artifact is
+    # currently available or not.
     return available
 
-def analysis(input_tables):
+def analysis(input_table):
     """
-    Analyzes the given artifact hash tables to determine if the artifacts are
+    Analyzes the given artifact hash table to determine if the artifacts are
     still available and didn't change, changed, or aren't available anymore.
 
     Parameters
     ----------
-    input_tables: str
+    input_table: str
         Table to analyse.
 
     Returns
@@ -75,13 +91,17 @@ def analysis(input_tables):
         Output table of the analysis in the form of a dict with headers as keys.
     """
     artifacts = {"available":0, "unavailable":0, "changed":0}
-    for table in input_tables:
-        if artifact_available(table):
-            artifacts["available"] += 1
-        else:
-            artifacts["unavailable"] += 1
-        if artifact_changed(table):
-            artifacts["changed"] += 1
+    checked = [] # Artifacts that have been checked already
+    for row in input_table:
+        artifact_name = row[2] # Name of the artifact in the 3rd column
+        if artifact_name not in checked:
+            if artifact_available(input_table, artifact_name):
+                artifacts["available"] += 1
+            else:
+                artifacts["unavailable"] += 1
+            if artifact_changed(input_table, artifact_name):
+                artifacts["changed"] += 1
+            checked.append(artifact_name)
     return artifacts
 
 def main():
@@ -126,18 +146,17 @@ def main():
     output_path = args.output
 
     # Parsing the input files:
-    input_tables = []
+    input_table = []
     for path in input_paths:
         input_file = open(path)
-        input_tables.append(list(csv.reader(input_file)))
+        input_table += list(csv.reader(input_file))
         input_file.close()
 
     # Analyzing the inputs:
-    output_file = open(output_path, "w+")
-    output_dict = {}
-    output_dict = analysis(input_tables)
+    output_dict = analysis(input_table)
 
     # Writing analysis to output file:
+    output_file = open(output_path, "w+")
     dict_writer = csv.DictWriter(output_file, fieldnames=output_dict.keys())
     dict_writer.writeheader()
     dict_writer.writerow(output_dict)

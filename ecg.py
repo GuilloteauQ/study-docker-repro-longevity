@@ -80,7 +80,7 @@ def download_file(url, dest):
         pass
     return file_hash
 
-def download_sources(config, arthashlog_path, dl_dir, use_cache):
+def download_sources(config, arthashlog_path, dl_dir, use_cache, artifact_name):
     """
     Downloads the source of the artifact in 'config'.
 
@@ -97,6 +97,9 @@ def download_sources(config, arthashlog_path, dl_dir, use_cache):
 
     use_cache: bool
         Indicates whether the cache should be used or not.
+
+    artifact_name: str
+        Name of the artifact, for the artifact hash log.
 
     Returns
     -------
@@ -134,7 +137,7 @@ def download_sources(config, arthashlog_path, dl_dir, use_cache):
         now = datetime.datetime.now()
         timestamp = str(datetime.datetime.timestamp(now))
         # Artifact hash will be an empty string if download failed:
-        arthashlog_file.write(f"{timestamp},{artifact_hash}\n")
+        arthashlog_file.write(f"{timestamp},{artifact_hash},{artifact_name}\n")
         arthashlog_file.close()
     else:
         logging.info(f"Cache found for {url}, skipping download")
@@ -462,10 +465,10 @@ def main():
         else:
             use_cache = True
             dl_dir = cache_dir
-        artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache)
+        artifact_name = os.path.splitext(os.path.basename(config_path))[0]
+        artifact_dir = download_sources(config, arthashlog_path, dl_dir, use_cache, artifact_name)
         # If download was successful:
         if artifact_dir != "":
-            artifact_name = os.path.splitext(os.path.basename(config_path))[0]
             return_code, build_output = build_image(config, artifact_dir, artifact_name, args.docker_cache)
             if return_code == 0:
                 status = "success"

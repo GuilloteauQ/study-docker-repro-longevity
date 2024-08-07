@@ -6,26 +6,26 @@
     program.
 
     Depending on the type of analysis, multiple tables can be generated:
-    - sources-stats: Number of packages per source (a package manager, git or
+    - `sources-stats`: Number of packages per source (a package manager, git or
     misc)
-    - pkg-changes: Number of packages that changed over time (0 if only one file
+    - `pkg-changes`: Number of packages that changed over time (0 if only one file
     is given, since it will only include the package list of a single execution)
-    - pkg-per-container: Number of packages per container
+    - `pkgs-per-container`: Number of packages per container
 """
 
 import argparse
 import csv
 import os
 
-def sources_stats(input_tables):
+def sources_stats(input_table):
     """
-    Analyzes the given package lists tables to determine the number of artifacts
+    Analyzes the given package lists table to determine the number of artifacts
     using a package manager, Git packages or misc packages.
 
     Parameters
     ----------
-    input_tables: str
-        Tables to analyse.
+    input_table: str
+        Table to analyse.
 
     Returns
     -------
@@ -34,14 +34,45 @@ def sources_stats(input_tables):
     """
     pkgmgr = {}
     i = 0
-    for table in input_tables:
-        for row in table:
-            # Third column is the package source:
-            if row[2] not in pkgmgr:
-                pkgmgr[row[2]] = 1
-            else:
-                pkgmgr[row[2]] += 1
+    for row in input_table:
+        # Third column is the package source:
+        if row[2] not in pkgmgr:
+            pkgmgr[row[2]] = 1
+        else:
+            pkgmgr[row[2]] += 1
     return pkgmgr
+
+# def pkg_changed(pkgname, )
+
+def pkgs_changes(input_table):
+    """
+    Analyzes the given package lists table to determine the number of packages
+    that changed for every package source.
+
+    Parameters
+    ----------
+    input_table: str
+        Table to analyse.
+
+    Returns
+    -------
+    dict
+        Output table of the analysis in the form of a dict with headers as keys.
+    """
+    pkgmgr = {}
+    i = 0
+    for row in input_table:
+        # Third column is the package source:
+        if row[2] not in pkgmgr:
+            pkgmgr[row[2]] = 1
+        else:
+            pkgmgr[row[2]] += 1
+    return pkgmgr
+
+def pkgs_per_container(input_table):
+    """
+    """
+    pass
 
 def main():
     # Command line arguments parsing:
@@ -72,7 +103,7 @@ def main():
         of a single execution) by using `pkg-changes`,
         the number of packages per container by specifying `pkgs-per-container`.
         """,
-        choices = ["sources-stats", "pkg-changes", "pkgs-per-container"],
+        choices = ["sources-stats", "pkgs-changes", "pkgs-per-container"],
         required = True
     )
     parser.add_argument(
@@ -100,18 +131,22 @@ def main():
     analysis_type = args.analysis_type
 
     # Parsing the input files:
-    input_tables = []
+    input_table = []
     for path in input_paths:
         input_file = open(path)
-        input_tables.append(list(csv.reader(input_file)))
+        input_table += list(csv.reader(input_file))
         input_file.close()
 
     # Analyzing the inputs:
-    output_file = open(output_path, "w+")
     if analysis_type == "sources-stats":
-        output_dict = sources_stats(input_tables)
+        output_dict = sources_stats(input_table)
+    elif analysis_type == "pkgs-changes":
+        output_dict = pkgs_changes(input_table)
+    elif analysis_type == "pkgs-per-container":
+        output_dict = pkgs_per_container(input_table)
 
     # Writing analysis to output file:
+    output_file = open(output_path, "w+")
     dict_writer = csv.DictWriter(output_file, fieldnames=output_dict.keys())
     dict_writer.writeheader()
     dict_writer.writerow(output_dict)

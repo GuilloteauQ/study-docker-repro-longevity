@@ -20,6 +20,7 @@
           packages = with pkgs; [
             snakemake
             gawk
+            gnused
             nickel
             graphviz
 	    # TODO separate into several shells

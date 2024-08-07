@@ -1,6 +1,6 @@
 # Study of the Reproducibility and Longevity of Dockerfiles
 
-ECG is a program that automates software environment checking for scientific artifacts.
+ECG is a program that automates software environment checking for scientific artifacts that use Docker.
 
 It is meant to be executed periodically to analyze variations in the software environment of the artifact through time.
 
@@ -41,16 +41,18 @@ Where:
 - `<artifact_hash_log>` is the path to the file where to log the hash of the downloaded artifact.
 - `<cache_directory>` is the path to the cache directory, where downloaded artifacts will be stored for future usage. If not specified, cache is disabled.
 
+You can also use `--docker-cache` to enable the cache of the Docker layers, and `-v` to show the full output of the script in your terminal (by default, it is only written to the specified `log_file`).
+
 ## Output
 
 ### Package list
 
-The list of packages installed in the container, depending on the package managers, Git packages and other miscellaneous packages given in the config file, in the form of a CSV file, with the following columns in order:
+The list of packages installed in the container, depending on the sources (a package manager, `git` or `misc`) given in the config file, in the form of a CSV file, with the following columns in order:
 
-| Package name | Version | Package manager |
-|--------------|---------|-----------------|
+| Package name | Version | Source          | Config name | Timestamp |
+|--------------|---------|-----------------|-------------|-----------|
 
-For Git packages, the hash of the last commit is used as version number. For miscellaneous packages, the hash of the file that has been used to install the package is used as version number.
+For Git packages, the hash of the last commit is used as version number. For miscellaneous packages, the hash of the file that has been used to install the package is used as version number. The timestamp corresponds to the time when ECG started building the package list, so it will be the same for each package that has been logged during the same execution of ECG.
 
 ### Output log
 
@@ -60,8 +62,8 @@ Just a plain text file containing the output of the script.
 
 The log of the attempts to build the Docker image, in the form of a CSV file, with the following columns in order:
 
-| Config file path | Timestamp | Result          |
-|------------------|-----------|-----------------|
+| Config name | Timestamp | Result          |
+|-------------|-----------|-----------------|
 
 The timestamp corresponds to when the result is being logged, not to when it happened.
 
@@ -79,10 +81,10 @@ The following are the possible results of the build:
 
 The log of the hash of the artifact archive file, in the form of a CSV file, with the following columns in order:
 
-| Timestamp | Hash |
-|-----------|------|
+| Timestamp | Hash | Config name |
+|-----------|------|-------------|
 
-The timestamp corresponds to when the hash has been logged, not to when the artifact has been downloaded.
+The timestamp corresponds to when the hash has been logged, not to when the artifact has been downloaded. If the artifact couldn't be downloaded, the hash is equal to `-1`.
 
 ## License
 
