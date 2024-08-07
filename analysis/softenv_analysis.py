@@ -9,6 +9,7 @@
 import argparse
 import csv
 import os
+import datetime
 
 def sources_stats(input_table):
     """
@@ -105,19 +106,15 @@ def pkgs_changes(input_table):
         pkgname = row[0] # Package name is in the first column
         pkgsource = row[2] # Package source is in the 3rd column
         if (pkgname, pkgsource) not in checked_artifacts[artifact_name]:
+            if pkgsource not in pkgchanges_dict:
+                pkgchanges_dict[pkgsource] = 0
             if pkg_changed(input_table, artifact_name, pkgname, pkgsource):
-                # Third column is the package source:
-                if row[2] not in pkgchanges_dict:
-                    pkgchanges_dict[row[2]] = 1
-                else:
-                    pkgchanges_dict[row[2]] += 1
+                pkgchanges_dict[pkgsource] += 1
             checked_artifacts[artifact_name].append((pkgname, pkgsource))
     return pkgchanges_dict
 
 def pkgs_per_container(input_table):
-    """
-    """
-    pass
+    print("ERROR: Not implemented!")
 
 def main():
     # Command line arguments parsing:
@@ -189,6 +186,10 @@ def main():
         output_dict = pkgs_changes(input_table)
     elif analysis_type == "pkgs-per-container":
         output_dict = pkgs_per_container(input_table)
+    # Adding the current time to every row:
+    now = datetime.datetime.now()
+    timestamp = str(datetime.datetime.timestamp(now))
+    output_dict["timestamp"] = timestamp
 
     # Writing analysis to output file:
     output_file = open(output_path, "w+")

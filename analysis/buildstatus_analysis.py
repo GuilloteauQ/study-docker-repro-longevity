@@ -8,6 +8,7 @@
 import argparse
 import csv
 import os
+import datetime
 
 def analysis(input_table):
     """
@@ -83,6 +84,10 @@ def main():
 
     # Analyzing the inputs:
     output_dict = analysis(input_table)
+    # Adding the current time to every row:
+    now = datetime.datetime.now()
+    timestamp = str(datetime.datetime.timestamp(now))
+    output_dict["timestamp"] = timestamp
 
     # Writing analysis to output file:
     output_file = open(output_path, "w+")
