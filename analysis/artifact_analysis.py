@@ -3,10 +3,6 @@
 """
     This script performs an artifact analysis on the outputs of the workflow
     to generate tables that can then be plotted by another program.
-
-    The generated table gives the amount of artifacts that are available
-    or not available, and the amount of artifacts that have been modified
-    over time.
 """
 
 import argparse

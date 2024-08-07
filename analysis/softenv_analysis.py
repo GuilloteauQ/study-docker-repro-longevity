@@ -4,13 +4,6 @@
     This script performs a software environment analysis on the outputs
     of the workflow to generate tables that can then be plotted by another
     program.
-
-    Depending on the type of analysis, multiple tables can be generated:
-    - `sources-stats`: Number of packages per source (a package manager, git or
-    misc)
-    - `pkg-changes`: Number of packages that changed over time (0 if only one file
-    is given, since it will only include the package list of a single execution)
-    - `pkgs-per-container`: Number of packages per container
 """
 
 import argparse

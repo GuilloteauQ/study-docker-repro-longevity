@@ -3,10 +3,6 @@
 """
     This script performs a build status analysis on the outputs of the workflow
     to generate tables that can then be plotted by another program.
-
-    The generated table gives the amount of images that have been built
-    sucessfully, and the amount of images that failed to build, for each
-    category of error.
 """
 
 import argparse
@@ -46,7 +42,7 @@ def main():
         This script performs a build status analysis on the outputs of the
         workflow to generate tables that can then be plotted by another program.
         The generated table gives the amount of images that have been
-        built sucessfully, and the amount of images that failed to build,
+        built successfully, and the amount of images that failed to build,
         for each category of error.
         """
     )
