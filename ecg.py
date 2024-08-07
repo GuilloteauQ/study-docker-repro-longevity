@@ -201,7 +201,6 @@ def buildresult_saver(result, buildstatus_path, config_path):
     -------
     None
     """
-    file_exists = os.path.exists(buildstatus_path)
     buildstatus_file = open(buildstatus_path, "a")
     artifact_name = os.path.basename(config_path).split(".")[0]
     # # Writing header in case file didn't exist:
@@ -244,7 +243,6 @@ def build_image(config, src_dir, image_name, docker_cache = False):
     build_command = f"docker build{cache_arg} -t {image_name} ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
     build_output = f"stdout:\n{build_process.stdout.decode('utf-8')}\nstderr:\n{build_process.stderr.decode('utf-8')}"
-    # build_output = build_process.stderr.decode("utf-8")
     logging.info(f"Output of '{build_command}':")
     logging.info(build_output)
     return_code = build_process.returncode
@@ -284,7 +282,7 @@ def check_env(config, src_dir, artifact_name, pkglist_path):
     # of the package manager, depending on the package managers.
     # Each package manager is associated with a tuple, the first item being
     # the package manager's command, the second being the arguments for the
-    # query (they must be separate for the "--entrypoint" argument of Docker
+    # query (they must be separated for the "--entrypoint" argument of Docker
     # 'run', see below), and the third one being the command that will format
     # the output of the query command (this one can be an empty string in case
     # the formatting part is already done using the options of the first command).
@@ -453,8 +451,6 @@ def main():
     try:
         config_file = open(config_path, "r")
         config = json.loads(config_file.read())
-        # config = yaml.safe_load(config_file)
-        # print(config)
         config_file.close()
 
         dl_dir = None

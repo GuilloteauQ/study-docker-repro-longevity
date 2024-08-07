@@ -42,7 +42,47 @@ def sources_stats(input_table):
             pkgmgr[row[2]] += 1
     return pkgmgr
 
-# def pkg_changed(pkgname, )
+def pkg_changed(table, artifact_name, pkgname, pkgsource):
+    """
+    Analyzes the given package lists table to determine if the given package
+    changed for the given artifact.
+
+    Parameters
+    ----------
+    table: str
+        Table to analyse.
+
+    artifact_name: str
+        Name of the artifact for which we want to analyze package changes.
+
+    pkgname: str
+        The package we want to track changes.
+
+    pkgsource: str
+        Source of the package, in case there is multiple packages with the
+        same name but different sources.
+
+    Returns
+    -------
+    changed: bool
+        True if the version number of the package changed over time, False
+        otherwise.
+    """
+    changed = False
+    i = 0
+    pkgver = ""
+    while i < len(table) and not changed:
+        row = table[i]
+        # Artifact name is in the 4th column, package name in the first,
+        # and package source in the 3rd:
+        if row[3] == artifact_name and row[0] == pkgname and row[2] == pkgsource:
+            # If the first version number has not been saved yet:
+            if pkgver == "":
+                pkgver = row[1] # Package version is in the 2nd column
+            elif row[1] != pkgver:
+                changed = True
+        i += 1
+    return changed
 
 def pkgs_changes(input_table):
     """
@@ -59,15 +99,27 @@ def pkgs_changes(input_table):
     dict
         Output table of the analysis in the form of a dict with headers as keys.
     """
-    pkgmgr = {}
+    pkgchanges_dict = {}
+    # Key is the artifact name, and value is a list of tuples constituted
+    # of the package that has been checked and its source for this artifact:
+    # FIXME: Memory usage?
+    checked_artifacts = {}
     i = 0
     for row in input_table:
-        # Third column is the package source:
-        if row[2] not in pkgmgr:
-            pkgmgr[row[2]] = 1
-        else:
-            pkgmgr[row[2]] += 1
-    return pkgmgr
+        artifact_name = row[3] # Artifact name is in the 4th column
+        if artifact_name not in checked_artifacts.keys():
+            checked_artifacts[artifact_name] = []
+        pkgname = row[0] # Package name is in the first column
+        pkgsource = row[2] # Package source is in the 3rd column
+        if (pkgname, pkgsource) not in checked_artifacts[artifact_name]:
+            if pkg_changed(input_table, artifact_name, pkgname, pkgsource):
+                # Third column is the package source:
+                if row[2] not in pkgchanges_dict:
+                    pkgchanges_dict[row[2]] = 1
+                else:
+                    pkgchanges_dict[row[2]] += 1
+            checked_artifacts[artifact_name].append((pkgname, pkgsource))
+    return pkgchanges_dict
 
 def pkgs_per_container(input_table):
     """
