@@ -159,7 +159,7 @@ def main():
     # Writing analysis to output file:
     output_file = open(output_path, "w+")
     dict_writer = csv.DictWriter(output_file, fieldnames=output_dict.keys())
-    dict_writer.writeheader()
+    # dict_writer.writeheader()
     dict_writer.writerow(output_dict)
     output_file.close()
 

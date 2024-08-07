@@ -336,7 +336,7 @@ def check_env(config, src_dir, artifact_name, pkglist_path):
         pkglist_file.write(f"{repo_row}\n")
 
     # Misc packages:
-    logging.info("Checking packages obtained outside of a package manager or VCS")
+    logging.info("Checking miscellaneous packages")
     for pkg in config["misc_packages"]:
         logging.info(f"Downloading package {pkg['name']} from {pkg['url']}")
         pkg_file = tempfile.NamedTemporaryFile()

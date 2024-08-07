@@ -11,7 +11,12 @@ import csv
 import os
 import datetime
 
-def sources_stats(input_table):
+# All possible package sources, initialized to 0.
+# This is required to make the column of the result table deterministic,
+# so they can be determined without the header in the CSV file.
+pkgsources = {"dpkg":0, "rpm":0, "pacman":0, "pip":0, "conda":0, "git":0, "misc":0}
+
+def sources_stats(input_table, pkgsources):
     """
     Analyzes the given package lists table to determine the number of artifacts
     using a package manager, Git packages or misc packages.
@@ -21,20 +26,23 @@ def sources_stats(input_table):
     input_table: str
         Table to analyse.
 
+    pkgsources: dict
+        A dictionnary that contains all the possible package sources as keys,
+        with all keys' value initialized at 0.
+
     Returns
     -------
     dict
         Output table of the analysis in the form of a dict with headers as keys.
     """
-    pkgmgr = {}
     i = 0
     for row in input_table:
         # Third column is the package source:
-        if row[2] not in pkgmgr:
-            pkgmgr[row[2]] = 1
+        if row[2] not in pkgsources:
+            pkgsources[row[2]] = 1
         else:
-            pkgmgr[row[2]] += 1
-    return pkgmgr
+            pkgsources[row[2]] += 1
+    return pkgsources
 
 def pkg_changed(table, artifact_name, pkgname, pkgsource):
     """
@@ -78,7 +86,7 @@ def pkg_changed(table, artifact_name, pkgname, pkgsource):
         i += 1
     return changed
 
-def pkgs_changes(input_table):
+def pkgs_changes(input_table, pkgsources):
     """
     Analyzes the given package lists table to determine the number of packages
     that changed for every package source.
@@ -88,12 +96,15 @@ def pkgs_changes(input_table):
     input_table: str
         Table to analyse.
 
+    pkgsources: dict
+        A dictionnary that contains all the possible package sources as keys,
+        with all keys' value initialized at 0.
+
     Returns
     -------
     dict
         Output table of the analysis in the form of a dict with headers as keys.
     """
-    pkgchanges_dict = {}
     # Key is the artifact name, and value is a list of tuples constituted
     # of the package that has been checked and its source for this artifact:
     # FIXME: Memory usage?
@@ -106,12 +117,10 @@ def pkgs_changes(input_table):
         pkgname = row[0] # Package name is in the first column
         pkgsource = row[2] # Package source is in the 3rd column
         if (pkgname, pkgsource) not in checked_artifacts[artifact_name]:
-            if pkgsource not in pkgchanges_dict:
-                pkgchanges_dict[pkgsource] = 0
             if pkg_changed(input_table, artifact_name, pkgname, pkgsource):
-                pkgchanges_dict[pkgsource] += 1
+                pkgsources[pkgsource] += 1
             checked_artifacts[artifact_name].append((pkgname, pkgsource))
-    return pkgchanges_dict
+    return pkgsources
 
 def pkgs_per_container(input_table):
     print("ERROR: Not implemented!")
@@ -181,9 +190,9 @@ def main():
 
     # Analyzing the inputs:
     if analysis_type == "sources-stats":
-        output_dict = sources_stats(input_table)
+        output_dict = sources_stats(input_table, pkgsources)
     elif analysis_type == "pkgs-changes":
-        output_dict = pkgs_changes(input_table)
+        output_dict = pkgs_changes(input_table, pkgsources)
     elif analysis_type == "pkgs-per-container":
         output_dict = pkgs_per_container(input_table)
     # Adding the current time to every row:
@@ -194,7 +203,7 @@ def main():
     # Writing analysis to output file:
     output_file = open(output_path, "w+")
     dict_writer = csv.DictWriter(output_file, fieldnames=output_dict.keys())
-    dict_writer.writeheader()
+    # dict_writer.writeheader()
     dict_writer.writerow(output_dict)
     output_file.close()
 

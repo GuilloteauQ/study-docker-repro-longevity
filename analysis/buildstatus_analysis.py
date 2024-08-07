@@ -25,13 +25,13 @@ def analysis(input_table):
     dict
         Output table of the analysis in the form of a dict with headers as keys.
     """
-    buildstatus = {}
+    # All build status, initialized to 0.
+    # This is required to make the column of the result table deterministic,
+    # so they can be determined without the header in the CSV file.
+    buildstatus = {"success":0, "package_unavailable":0, "baseimage_unavailable":0, "artifact_unavailable":0, "dockerfile_not_found":0, "script_crash":0, "job_time_exceeded":0, "unknown_error":0}
     for row in input_table:
         # Third column is the result:
-        if row[2] not in buildstatus:
-            buildstatus[row[2]] = 1
-        else:
-            buildstatus[row[2]] += 1
+        buildstatus[row[2]] += 1
     return buildstatus
 
 def main():
@@ -92,7 +92,7 @@ def main():
     # Writing analysis to output file:
     output_file = open(output_path, "w+")
     dict_writer = csv.DictWriter(output_file, fieldnames=output_dict.keys())
-    dict_writer.writeheader()
+    # dict_writer.writeheader()
     dict_writer.writerow(output_dict)
     output_file.close()
 

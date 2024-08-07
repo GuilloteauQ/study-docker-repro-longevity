@@ -15,7 +15,7 @@ frame = single,
 breaklines=true
 }
 
-\newcommand{\noteqg}{\todo[backgroundcolor=blue!10,bordercolor=blue,inline,caption={}]} 
+\newcommand{\noteqg}{\todo[backgroundcolor=blue!10,bordercolor=blue,inline,caption={}]}
 
 %\usepackage{amssymb}
 \usepackage{booktabs}
@@ -43,7 +43,7 @@ breaklines=true
 
 \begin{itemize}
   \item \href{https://orcid.org/0009-0003-7645-5044}{Quentin \textsc{Guilloteau}}: Conceptualization, Methodology, Software, Data Curation, Supervision, Project administration
-  \item ...
+  \item Antoine Waehren
 \end{itemize}
 
 
@@ -52,6 +52,7 @@ breaklines=true
 This project aims to show the limitations of using Docker containers as a reliable reproducibility tool.
 In particular, as Docker relies on non-reproducible tools, it is difficult to construct a \dfile\ that will rebuild the \emph{exact} same software environment in the future.
 In this project, we will collect research artifacts coming from various scientific conferences containing \dfile s, rebuild them periodically, and observe the variation in the resulting software environments.
+We will also catch any error that could occur during the building of the image.
 
 \subsection{Related work from contributors}
 
@@ -102,7 +103,7 @@ This Python script\ \cite{ecg_code} takes as input a (verified) JSON representat
 \item Download the artifact (Section \ref{sec:download})
 \item Log the cryptographic hash of the downloaded artifact (Section \ref{sec:download})
 \item Extract the artifact
-\item Build the docker image (Section \ref{sec:docker_build})
+\item Build the Docker image (Section \ref{sec:docker_build})
 \item If the build is successful, gather information about the produced software environment (Sections \ref{sec:package_managers}, \ref{sec:git}, \ref{sec:misc}, and \ref{sec:pyenv})
 \item If the build failed, gather information about the reason of the failure
 \end{enumerate}
@@ -111,7 +112,7 @@ This Python script\ \cite{ecg_code} takes as input a (verified) JSON representat
 
 \subsubsection{Download of the Artifact}\label{sec:download}
 
-The link the to artifact is the link provided by the authors in their Artifact Description.
+The link to the to artifact is the link provided by the authors in their Artifact Description.
 \ecg\ will use this link to download the artifact.
 If the download is successful, \ecg\ will check the cryptographic hash of the content.
 This allows us to also have information about the stability/longevity of the artifact sharing.
@@ -121,16 +122,21 @@ This allows us to also have information about the stability/longevity of the art
 \ecg\ captures different types of statuses for the build attempt of a \dfile:
 
 \begin{itemize}
-\item \texttt{baseimage\_unavailable}: the base image of the \dfile\ (\texttt{FROM} image)
-\item \texttt{time\_execeed}: the container did not build under \emph{1 hour}
-\item \texttt{unknown\_error}: the build failed for an unknown/classified reason
+  \item \texttt{baseimage\_unavailable}: the base image of the \dfile\ (\texttt{FROM} image) is not available.
+  \item \texttt{job\_time\_exceeded}: when running on a batch system such as OAR, this error indicates that the \dfile\ did not build under \emph{1 hour}
+  \item \texttt{success}: the \dfile\ has been built successfully
+  \item \texttt{package\_unavailable}: a command requested the installation of a package that is not available
+  \item \texttt{artifact_unavailable}: the artifact could not be downloaded
+  \item \texttt{dockerfile_not_found}: no \dfile\ has been found in the location specified in the configuration file
+  \item \texttt{script_crash}: an error has occurred with the script itself
+  \item \texttt{unknown_error}: the \dfile\ could not be built for an unknown reason
 \end{itemize}
 
 \subsubsection{Information from the Package Manager}\label{sec:package_managers}
 
 Package Managers can provide information about the packages installed: package name and package version.
 
-\paragraph{Supported Package Managers} \texttt{dpkg}, \texttt{rpm}, \texttt{pip}, \texttt{conda}
+\paragraph{Supported Package Managers} \texttt{dpkg}, \texttt{rpm}, \texttt{pacman}, \texttt{pip}, \texttt{conda}
 
 \paragraph{Example of Data}
 
@@ -144,7 +150,7 @@ gcc-8,8.3.0-6,dpkg
 
 \dfile\ authors can also install packages from source.
 One way to do this is via Git.
-In this case, once the container built sucessfully, \ecg\ logs into the container and extract the commit hash of the repository (via \texttt{git log}).
+In this case, once the container built successfully, \ecg\ logs into the container and extracts the commit hash of the repository (via \texttt{git log}).
 
 \paragraph{Example of Data}
 
@@ -156,7 +162,7 @@ ctf,c3f95829628c381dc9bf631c69f08a7b17580b53,git
 
 \subsubsection{Download content (\texttt{misc})}\label{sec:misc}
 
-In the case where the \dfile\ download content from the internet (\eg\ archives, binaries), \ecg\ will download the same content on the host machine (\ie\ not in the container) and then compute the cryptographic hash of the downloaded content.
+In the case where the \dfile\ downloads content from the internet (\eg\ archives, binaries), \ecg\ will download the same content on the host machine (\ie\ not in the container) and then compute the cryptographic hash of the downloaded content.
 
 \paragraph{Example of Data}
 
@@ -248,7 +254,7 @@ The second part of the analysis will be done after the first year of data collec
 
 \begin{itemize}
 \item Number/Proportion of \dfile s that build succesfully
-\item Number/Proportion of \dfile s errors (\texttt{baseimage\_unavailable}, \texttt{time\_execeed}, \texttt{unknown\_error}) for the failed builds
+\item Number/Proportion of \dfile s errors (\texttt{baseimage\_unavailable}, \texttt{job\_time\_execeed}, \texttt{unknown\_error}) for the failed builds
 \end{itemize}
 
 \paragraph{Software Environment}

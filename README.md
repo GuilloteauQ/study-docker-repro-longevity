@@ -16,11 +16,20 @@ This repository contains configuration files for multiple artifacts from HPC con
 
 ### ECG
 
-ECG is a program that automates software environment checking for scientific artifacts that use Docker. It takes as input a JSON configuration telling where to download the artifact, where to find the Dockerfile to build in the artifact, and which package managers are used by the Docker container.
+ECG is a program that automates software environment checking for scientific artifacts that use Docker. It takes as input a JSON configuration telling where to download the artifact, where to find the Dockerfile to build in the artifact, and which package sources are used by the Docker container.
 
 It will then download the artifact, build the Dockerfile, and then create a list of the installed packages in the Docker container (if it was built successfully). It also stores the potential errors encountered when building the Dockerfile, and logs the hash of the artifact for future comparison.
 
 It is meant to be executed periodically to analyze variations in the software environment of the artifact through time.
+
+Supported package sources:
+- `dpkg`
+- `rpm`
+- `pacman`
+- `pip`
+- `conda`
+- `git`
+- `misc` *(miscellaneous packages are packages that have been installed outside of a package manager or VCS such as Git)*
 
 ### Analysis
 
