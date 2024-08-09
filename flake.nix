@@ -28,6 +28,7 @@
               requests
 	      kapkgs.execo
             ]))
+            (rWrapper.override { packages = with rPackages; [ tidyverse reshape2 ]; })
           ];
         };
         latex = pkgs.mkShell {
