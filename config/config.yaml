@@ -4,6 +4,7 @@ folder_blacklists: "blacklists"
 symlink_blacklist: "blacklist.csv"
 system: "g5k" # can be "local" for local execution
 prefix: "outputs"
+analysis_dir: "analysis"
 
 site: "grenoble"
 cluster: "dahu"
