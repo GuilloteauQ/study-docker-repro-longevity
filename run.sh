@@ -13,4 +13,4 @@ then
     mkdir $CACHE_DIR
 fi
 
-./ecg.py $TESTFILE -v -p $OUTPUT_PATH/pkglist.csv -b $OUTPUT_PATH/build_status.csv -a $OUTPUT_PATH/artifact_hash.csv -c $CACHE_DIR --docker-cache
+./ecg.py $TESTFILE -p $OUTPUT_PATH/pkglist.csv -b $OUTPUT_PATH/build_status.csv -a $OUTPUT_PATH/artifact_hash.csv -c $CACHE_DIR --docker-cache
