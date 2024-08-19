@@ -89,18 +89,68 @@ ANALYSIS_SCRIPTS = {
   "artifact": f"python3 {ANALYSIS_DIR}/artifact_analysis.py"
 }
 
-rule all_analysis:
+rule analysis:
   input:
-    expand(f"{PREFIX}/{{folder}}/{{artifact}}/{{date}}.csv",\
-           folder=["pkgs", "build_status", "artifact_hash"],\
-           artifact=ARTIFACTS,\
-           date=DATE
+    {
+      "sources_stats": expand(f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",\
+                              artifact = ARTIFACTS,\
+                              date = DATE
+      ),
+      "pkgs_changes": expand(f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",\
+                            artifact = ARTIFACTS,\
+                            date = DATE
+      ),
+      "build_status": expand(f"{PREFIX}/build_status/{{artifact}}/{{date}}.csv",\
+                            artifact = ARTIFACTS,\
+                            date = DATE
+      ),
+      "artifact_hash": expand(f"{PREFIX}/artifact_hash/{{artifact}}/{{date}}.csv",\
+                            artifact = ARTIFACTS,\
+                            date = DATE
+      ),
+    }
+  output:
+    {
+      "sources_stats": expand(f"{ANALYSIS_DIR}/sources_stats/{{artifact}}/{{date}}.csv",\
+                              artifact = ARTIFACTS,\
+                              date = DATE
+      ),
+      "pkgs_changes": expand(f"{ANALYSIS_DIR}/pkgs_changes/{{artifact}}/{{date}}.csv",\
+                            artifact = ARTIFACTS,\
+                            date = DATE
+      ),
+      "build_status": expand(f"{ANALYSIS_DIR}/build_status/{{artifact}}/{{date}}.csv",\
+                            artifact = ARTIFACTS,\
+                            date = DATE
+      ),
+      "artifact_hash": expand(f"{ANALYSIS_DIR}/artifact_hash/{{artifact}}/{{date}}.csv",\
+                            artifact = ARTIFACTS,\
+                            date = DATE
+      ),
+    }
+  shell:
+    f"{{{{ANALYSIS_SCRIPTS[wildcards.folder]}}}} -i {{input[wildcards.folder]}} -o {{output[wildcards.folder]}}"
+
+PLOT_HEADERS = {
+  "sources_stats": ["dpkg", "rpm", "pacman", "pip", "conda", "git", "misc"],
+  "pkgs_changes": ["dpkg", "rpm", "pacman", "pip", "conda", "git", "misc"],
+  "build_status": ["success", "package_unavailable", "baseimage_unavailable", "artifact_unavailable", "dockerfile_not_found", "script_crash", "job_time_exceeded", "unknown_error"],
+  "artifact": ["available", "unavailable", "changed"]
+}
+
+rule plot:
+  input:
+    expand(f"{ANALYSIS_DIR}/{{folder}}/{{artifact}}/{{date}}.csv",\
+           folder = ["sources_stats", "pkgs_changes", "build_status", "artifact"],\
+           artifact = ARTIFACTS,\
+           date = DATE
     ),
   output:
-    expand(f"{ANALYSIS_DIR}/{{folder}}/{{artifact}}/{{date}}.csv",\
-           folder=["sources_stats", "pkgs_changes", "build_status", "artifact"],\
-           artifact=ARTIFACTS,\
-           date=DATE
+    expand(f"{ANALYSIS_DIR}/{{folder}}/{{plot_type}}.pdf",\
+           folder = ["sources_stats", "pkgs_changes", "build_status", "artifact"],\
+           plot_type = ["line", "bar"],\
+           artifact = ARTIFACTS,\
+           date = DATE
     ),
   shell:
-    f"{{{{ANALYSIS_SCRIPTS[wildcards.folder]}}}} -i {{input}} -o {{output}}"
+    f"Rscript plot.r  {{{{wildcards.plot_type}}}} {{{{PLOT_HEADERS[wildcards.folder]}}}}"
