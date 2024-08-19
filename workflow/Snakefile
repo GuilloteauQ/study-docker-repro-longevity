@@ -82,6 +82,13 @@ rule update_blacklist:
     # We need to ignore lines where build is successful:
     f"cat {{input}} | grep -v ',success' > {{output}} && rm -rf {BLACKLIST} && ln -s {{output}} {BLACKLIST}"
 
+ANALYSIS_SCRIPTS = {
+  "sources_stats": f"python3 {ANALYSIS_DIR}/softenv_analysis.py -t sources-stats",
+  "pkgs_changes": f"python3 {ANALYSIS_DIR}/softenv_analysis.py -t pkgs-changes",
+  "build_status": f"python3 {ANALYSIS_DIR}/buildstatus_analysis.py",
+  "artifact": f"python3 {ANALYSIS_DIR}/artifact_analysis.py"
+}
+
 rule all_analysis:
   input:
     expand(f"{PREFIX}/{{folder}}/{{artifact}}/{{date}}.csv",\
@@ -95,19 +102,5 @@ rule all_analysis:
            artifact=ARTIFACTS,\
            date=DATE
     ),
-
-rule softenv_analysis:
-  input:
-    expand(f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",
-                 artifact=ARTIFACTS,\
-                 date=DATE
-    ),
-  output:
-    expand(f"{ANALYSIS_DIR}/pkgs_changes/{{artifact}}/{{date}}.csv",\
-           artifact=ARTIFACTS,\
-           date=DATE
-    ),
   shell:
-    expand(f"python3 {ANALYSIS_DIR}/softenv_analysis.py -t {{analysis_type}} -i {{{{input}}}} -o {{{{output}}}}",\
-           analysis_type = ["sources-stats", "pkgs-changes"]
-    )
+    f"{{{{ANALYSIS_SCRIPTS[wildcards.folder]}}}} -i {{input}} -o {{output}}"
