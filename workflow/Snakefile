@@ -35,7 +35,6 @@ rule check_all:
   input:
     expand(f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.json", artifact=ARTIFACTS)
 
-
 rule check_artifact:
   input:
     "flake.nix",
@@ -99,7 +98,7 @@ rule all_analysis:
 
 rule softenv_analysis:
   input:
-    pkg = expand(f"-i {PREFIX}/pkgs/{{artifact}}/{{date}}.csv",
+    expand(f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",
                  artifact=ARTIFACTS,\
                  date=DATE
     ),
@@ -109,6 +108,6 @@ rule softenv_analysis:
            date=DATE
     ),
   shell:
-    expand(f"python3 {ANALYSIS_DIR}/softenv_analysis.py -t {{analysis_type}} {{input.pkg}}",\
+    expand(f"python3 {ANALYSIS_DIR}/softenv_analysis.py -t {{analysis_type}} -i {{{{input}}}} -o {{{{output}}}}",\
            analysis_type = ["sources-stats", "pkgs-changes"]
     )
