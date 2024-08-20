@@ -1,14 +1,13 @@
 folder_artifacts_nickel: "artifacts/nickel"
 folder_artifacts_json: "artifacts/json"
 folder_blacklists: "blacklists"
-system: "local" # can be "local" for local execution
+system: "local"
 prefix: "outputs"
 analysis_dir: "outputs/analysis"
 
 site: "grenoble"
 cluster: "dahu"
-max_duration: 60 # 1 hour
-checkpoint: 1 # 1 minute
+max_duration: 60
+checkpoint: 1
 besteffort: True
-  #sleep_time: 300 # 5 minutes
-sleep_time: 30 # 0.5 minutes
+sleep_time: 30
