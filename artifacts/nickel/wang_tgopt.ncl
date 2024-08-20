@@ -3,6 +3,7 @@
   artifact_url = "https://zenodo.org/record/7328505/files/tgopt-artifact.tgz",
   type = "tar",
   doi = "10.1145/3572848.3577490",
+  conf_date = 2023,
   comment = "",
   virtualization = "docker",
   buildfile_dir = "tgopt-artifact",

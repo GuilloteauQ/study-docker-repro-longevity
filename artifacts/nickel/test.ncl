@@ -1,8 +1,9 @@
 {
   version = "1.0",
-  artifact_url = "http://localhost.com/artifact.zip",
+  artifact_url = "http://127.0.0.1/artifact.zip",
   type = "zip",
   doi = "...",
+  conf_date = 0,
   virtualization = "docker",
   buildfile_dir = "./",
   package_managers = [ "dpkg", "pip" ],
@@ -10,6 +11,6 @@
     { name = "pkg1", location = "/pkg1" }
   ],
   misc_packages = [
-    { name = "mpkg1", url = "http://localhost.com/package1.zip" }
+    { name = "mpkg1", url = "http://127.0.0.1/package1.zip" }
   ]
 }

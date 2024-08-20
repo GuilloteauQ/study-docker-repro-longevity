@@ -3,6 +3,7 @@
   artifact_url = "https://github.com/microsoft/nnfusion/archive/refs/heads/osdi2023welder.zip",
   type = "zip",
   doi = "",
+  conf_date = 2023,
   comment = "",
   buildfile_dir = "nnfusion-osdi2023welder",
   virtualization = "docker",

@@ -4,6 +4,7 @@
   type = "zip",
   comment = "",
   doi = "10.5555/3571885.3571918",
+  conf_date = 2022,
   virtualization = "docker",
   buildfile_dir = "deinsum-sc22-artifact-7559901/docker_gpu",
   package_managers = [ "dpkg", "pip" ],

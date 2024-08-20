@@ -3,6 +3,7 @@
   artifact_url = "https://example.com/artifact.zip",
   type = "zip",
   doi = "...",
+  conf_date = 0,
   comment = "Template for artifact configuration.",
   virtualization = "docker",
   buildfile_dir = "path/to/docker/folder",

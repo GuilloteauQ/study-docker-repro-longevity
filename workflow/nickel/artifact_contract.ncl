@@ -64,6 +64,9 @@ in
     doi
       | doc "DOI of the artifact"
       | String,
+    conf_date
+      | doc "Date of the conference the artifact was published for"
+      | Number,
     comment
       | doc "Additional comments on the artifact that couldn't be written elsewhere"
       | optional

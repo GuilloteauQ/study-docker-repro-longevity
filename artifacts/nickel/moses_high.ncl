@@ -3,6 +3,7 @@
   artifact_url = "https://zenodo.org/record/7508499/files/wsmoses/PolygeistGPU-Docker-v0.2.1.zip",
   type = "zip",
   doi = "10.1145/3572848.3577475",
+  conf_date = 2023,
   comment = "",
   virtualization = "docker",
   buildfile_dir = "wsmoses-PolygeistGPU-Docker-ba18197/MocCUDA",

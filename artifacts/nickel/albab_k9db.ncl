@@ -3,6 +3,7 @@
   artifact_url = "https://github.com/brownsys/K9db/archive/refs/tags/osdi2023.zip",
   type = "zip",
   doi = "...",
+  conf_date = 2023,
   comment = "",
   virtualization = "docker",
   buildfile_dir = "K9db-osdi2023",
