@@ -120,7 +120,7 @@ The timestamp corresponds to when the result is being logged, not to when it hap
 
 The following are the possible results of the build:
 - `success`: The Docker image has been built successfully.
-- `package_unavailable`: A command requested the installation of a package that is not available.
+- `package_install_failed`: A command requested the installation of a package that failed.
 - `baseimage_unavailable`: The base image needed for this container is not available.
 - `artifact_unavailable`: The artifact could not be downloaded.
 - `dockerfile_not_found`: No Dockerfile has been found in the location specified in the configuration file.

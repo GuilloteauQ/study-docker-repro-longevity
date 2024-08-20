@@ -164,17 +164,19 @@ def builderror_identifier(output):
     # The key is the category, the value is a tuple of error messages belonging to
     # to this category:
     build_errors = {
-        "package_unavailable":("Unable to locate package"),
-        "baseimage_unavailable":("manifest unknown: manifest unknown"),
-        "dockerfile_not_found":("Dockerfile: no such file or directory")
+        "package_install_failed":("Unable to locate package", "error: failed to compile"),
+        "baseimage_unavailable":("manifest unknown: manifest unknown",),
+        "dockerfile_not_found":("Dockerfile: no such file or directory",)
     }
 
+    # Last error found is the right one in theory:
     found_error = ""
     unknown_error = True
-    for error_cat, error in build_errors.items():
-        if error in output:
-            unknown_error = False
-            found_error = error_cat
+    for error_cat, error_msgs in build_errors.items():
+        for error in error_msgs:
+            if error in output:
+                unknown_error = False
+                found_error = error_cat
     if unknown_error:
         found_error = "unknown_error"
     return found_error
@@ -436,6 +438,12 @@ def main():
     cache_dir = args.cache_dir
     # log_path = "log.txt" # Output of the program
     # log_path = args.log_path
+
+    # Creating the output files to avoid complaints from Snakemake about missing
+    # outputs...
+    pathlib.Path(pkglist_path).touch()
+    pathlib.Path(buildstatus_path).touch()
+    pathlib.Path(arthashlog_path).touch()
 
     # Setting up the log:
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)

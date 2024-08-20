@@ -28,7 +28,7 @@ def analysis(input_table):
     # All build status, initialized to 0.
     # This is required to make the column of the result table deterministic,
     # so they can be determined without the header in the CSV file.
-    buildstatus = {"success":0, "package_unavailable":0, "baseimage_unavailable":0, "artifact_unavailable":0, "dockerfile_not_found":0, "script_crash":0, "job_time_exceeded":0, "unknown_error":0}
+    buildstatus = {"success":0, "package_install_failed":0, "baseimage_unavailable":0, "artifact_unavailable":0, "dockerfile_not_found":0, "script_crash":0, "job_time_exceeded":0, "unknown_error":0}
     for row in input_table:
         # Third column is the result:
         buildstatus[row[2]] += 1
