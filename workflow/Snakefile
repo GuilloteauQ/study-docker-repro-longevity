@@ -9,13 +9,12 @@ DATE = datetime.datetime.now().strftime("%Y%m%d")
 ARTIFACTS_FOLDER_NICKEL = config["folder_artifacts_nickel"]
 ARTIFACTS_FOLDER_JSON   = config["folder_artifacts_json"]
 BLACKLIST_FOLDER = config["folder_blacklists"]
-BLACKLIST = config["symlink_blacklist"]
 EXTENSION = "json"
 SYSTEM = config["system"]
 PREFIX = config["prefix"]
 ANALYSIS_DIR = config["analysis_dir"]
 
-ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER_NICKEL, BLACKLIST)
+ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER_NICKEL, BLACKLIST_FOLDER)
 
 rule all:
   input:
@@ -72,7 +71,6 @@ rule run_ecg:
 
 rule update_blacklist:
   input:
-    BLACKLIST,
     build_status=expand(f"{PREFIX}/build_status/{{artifact}}/{{{{date}}}}.csv",\
                         artifact=ARTIFACTS
     )
@@ -80,7 +78,7 @@ rule update_blacklist:
     f"{BLACKLIST_FOLDER}/{{date}}.csv"
   shell:
     # We need to ignore lines where build is successful:
-    f"cat {{input}} | grep -v ',success' > {{output}} && rm -rf {BLACKLIST} && ln -s {{output}} {BLACKLIST}"
+    f"cat {{input}} | grep -v ',success' > {{output}}"
 
 rule analysis:
   input:
@@ -146,7 +144,7 @@ rule analysis_aggregate:
 # PLOT_HEADERS = {
 #   "sources_stats": ["dpkg", "rpm", "pacman", "pip", "conda", "git", "misc"],
 #   "pkgs_changes": ["dpkg", "rpm", "pacman", "pip", "conda", "git", "misc"],
-#   "build_status": ["success", "package_unavailable", "baseimage_unavailable", "artifact_unavailable", "dockerfile_not_found", "script_crash", "job_time_exceeded", "unknown_error"],
+#   "build_status": ["success", "package_install_failed", "baseimage_unavailable", "artifact_unavailable", "dockerfile_not_found", "script_crash", "job_time_exceeded", "unknown_error"],
 #   "artifact": ["available", "unavailable", "changed"]
 # }
 

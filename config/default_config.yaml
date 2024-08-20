@@ -1,7 +1,7 @@
 folder_artifacts_nickel: "artifacts/nickel"
 folder_artifacts_json: "artifacts/json"
 folder_blacklists: "blacklists"
-system: "local" # can be "local" for local execution
+system: "g5k" # can be "local" for local execution
 prefix: "outputs"
 analysis_dir: "outputs/analysis"
 
