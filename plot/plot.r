@@ -6,11 +6,14 @@ library(tidyverse)
 
 # Parsing command line arguments:
 options = commandArgs(trailingOnly = TRUE)
-filename = options[1]
-plot_type = options[2]
-table_header = options[-1:-2]
+plot_type = options[1]
+input = options[2]
+output = options[3]
+table_header = options[-1:-2:-3]
 
-read_csv(filename, col_names = table_header) %>%
+pdf(output)
+
+read_csv(input, col_names = table_header) %>%
     mutate(timestamp = as_date(as_datetime(timestamp))) %>% # Formatting the date
     melt(id.vars = "timestamp", variable.name = "category", value.name = "amount") %>% # Formatting the table to plot each category
     {
