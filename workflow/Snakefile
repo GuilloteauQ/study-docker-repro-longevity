@@ -12,22 +12,29 @@ BLACKLIST_FOLDER = config["folder_blacklists"]
 EXTENSION = "json"
 SYSTEM = config["system"]
 PREFIX = config["prefix"]
+ECG_OUTPUTS = ["pkgs", "build_status", "artifact_hash"]
+
 ANALYSIS_DIR = config["analysis_dir"]
+ANALYSIS_CATS = ["sources_stats", "pkgs_changes", "build_status", "artifact"]
+ANALYSIS_TYPES = ["moment", "long_term"]
 
 ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER_NICKEL, BLACKLIST_FOLDER)
 
 rule all:
   input:
-    expand(f"{PREFIX}/{{folder}}/{{artifact}}/{{date}}.csv",\
-           folder=["pkgs", "build_status", "artifact_hash"],\
-           artifact=ARTIFACTS,\
-           date=DATE
+    expand(f"{ANALYSIS_DIR}/{{cat}}/aggregated/{{date}}.csv",
+      cat = ANALYSIS_CATS,
+      date = DATE
     ),
-    expand(f"{PREFIX}/{{folder}}/{{artifact}}/{{date}}.txt",\
-        folder=["logs"],\
-        artifact=ARTIFACTS,\
-        date=DATE
-    ),
+    # expand(f"{PREFIX}/{{folder}}/{{artifact}}/{{date}}.csv",
+    #        folder=["pkgs", "build_status", "artifact_hash"],
+    #        artifact=ARTIFACTS,
+    #        date=DATE
+    # ),
+    # expand(f"{PREFIX}/logs/{{artifact}}/{{date}}.txt",
+    #     artifact=ARTIFACTS,
+    #     date=DATE
+    # ),
     f"{BLACKLIST_FOLDER}/{DATE}.csv"
 
 rule check_all:
@@ -71,8 +78,8 @@ rule run_ecg:
 
 rule update_blacklist:
   input:
-    build_status=expand(f"{PREFIX}/build_status/{{artifact}}/{{{{date}}}}.csv",\
-                        artifact=ARTIFACTS
+    build_status=expand(f"{PREFIX}/build_status/{{artifact}}/{{{{date}}}}.csv",
+      artifact=ARTIFACTS
     )
   output:
     f"{BLACKLIST_FOLDER}/{{date}}.csv"
@@ -82,91 +89,127 @@ rule update_blacklist:
 
 rule analysis:
   input:
-    expand(f"{PREFIX}/{{folder}}/{{artifact}}/{{{{date}}}}.csv",\
-      folder = ["pkgs", "build_status", "artifact_hash"],\
-      artifact = ARTIFACTS
-    )
-  output:
-    expand(f"{ANALYSIS_DIR}/{{folder}}/{{date}}.csv",\
-      folder = ["sources_stats", "pkgs_changes", "build_status", "artifact_hash"],\
-      date = DATE
+    expand(f"{PREFIX}/{{output_dir}}/{{artifact}}/{{date}}.csv",
+      output_dir = ECG_OUTPUTS,
+      artifact = ARTIFACTS,
+      date = get_analysis_dates("{PREFIX}/{wildcards.output_dir}")
     )
 
 rule softenv_analysis:
+  wildcard_constraints:
+    date="\d+"
   input:
-    expand(f"{PREFIX}/pkgs/{{artifact}}/{{{{date}}}}.csv",\
-      artifact = ARTIFACTS
+    sources_stats = expand(f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",
+      artifact = ARTIFACTS,
+      date = DATE
+    ),
+    pkgs_changes = expand(f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",
+      artifact = ARTIFACTS,
+      date = get_analysis_dates("{PREFIX}/pkgs")
     )
   output:
-    sources_stats = f"{ANALYSIS_DIR}/sources_stats/{DATE}.csv",\
-    pkgs_changes = f"{ANALYSIS_DIR}/pkgs_changes/{DATE}.csv"
+    sources_stats = f"{ANALYSIS_DIR}/sources_stats/{{date}}.csv",
+    pkgs_changes = f"{ANALYSIS_DIR}/pkgs_changes/{{date}}.csv"
   shell:
-    f"python3 analysis/softenv_analysis.py -t sources-stats -i {{input}} -o {{output.sources_stats}}"
-    f"python3 analysis/softenv_analysis.py -t pkgs-changes -i {{input}} -o {{output.pkgs_changes}}"
+    f"""
+    python3 analysis/softenv_analysis.py -t sources-stats -i {{input.sources_stats}} -o {{output.sources_stats}}
+    python3 analysis/softenv_analysis.py -t pkgs-changes -i {{input.pkgs_changes}} -o {{output.pkgs_changes}}
+    """
 
 rule buildstatus_analysis:
+  wildcard_constraints:
+    date="\d+"
   input:
-    expand(f"{PREFIX}/build_status/{{artifact}}/{{{{date}}}}.csv",\
-      artifact = ARTIFACTS
+    expand(f"{PREFIX}/build_status/{{artifact}}/{{date}}.csv",
+      artifact = ARTIFACTS,
+      date = DATE
     )
   output:
-    f"{ANALYSIS_DIR}/build_status/{DATE}.csv"
+    f"{ANALYSIS_DIR}/build_status/{{date}}.csv",
   shell:
-    f"python3 analysis/buildstatus_analysis.py -i {{input}} -o {{output}}"
+    f"""
+    python3 analysis/buildstatus_analysis.py -i {{input}} -o {{output}}
+    """
 
 rule artifact_analysis:
+  wildcard_constraints:
+    date="\d+"
   input:
-    expand(f"{PREFIX}/artifact_hash/{{artifact}}/{{{{date}}}}.csv",\
-      artifact = ARTIFACTS
+    expand(f"{PREFIX}/artifact_hash/{{artifact}}/{{date}}.csv",
+      artifact = ARTIFACTS,
+      date = get_analysis_dates("{PREFIX}/artifact_hash")
     )
   output:
-    f"{ANALYSIS_DIR}/artifact/{DATE}.csv"
+    f"{ANALYSIS_DIR}/artifact/{{date}}.csv",
   shell:
-    f"python3 analysis/artifact_analysis.py -i {{input}} -o {{output}}"
+    f"""
+    python3 analysis/artifact_analysis.py -i {{input}} -o {{output}}
+    """
 
 rule analysis_aggregate:
   input:
-    sources_stats = expand(f"{ANALYSIS_DIR}/sources_stats/{{{{date}}}}.csv"),
-    pkgs_changes = expand(f"{ANALYSIS_DIR}/pkgs_changes/{{{{date}}}}.csv"),
-    build_status = expand(f"{ANALYSIS_DIR}/build_status/{{{{date}}}}.csv"),
-    artifact = expand(f"{ANALYSIS_DIR}/artifact/{{{{date}}}}.csv")
+    expand(f"{ANALYSIS_DIR}/{{input_cat}}/{{date}}.csv",
+      input_cat = ANALYSIS_CATS,
+      date = get_analysis_dates("{ANALYSIS_DIR}/{wildcards.cat}")
+    )
+    # sources_stats = expand(f"{ANALYSIS_DIR}/sources_stats/{{date}}.csv", date = glob_wildcards(f"{ANALYSIS_DIR}/sources_stats/{{date}}.csv").date),
+    # pkgs_changes = expand(f"{ANALYSIS_DIR}/pkgs_changes/{{date}}.csv", date = glob_wildcards(f"{ANALYSIS_DIR}/pkgs_changes/{{date}}.csv").date),
+    # build_status = expand(f"{ANALYSIS_DIR}/build_status/{{date}}.csv", date = glob_wildcards(f"{ANALYSIS_DIR}/build_status/{{date}}.csv").date),
+    # artifact = expand(f"{ANALYSIS_DIR}/artifact/{{date}}.csv", date = glob_wildcards(f"{ANALYSIS_DIR}/artifact/{{date}}.csv").date)
   output:
+    expand(f"{ANALYSIS_DIR}/{{output_cat}}/aggregated/{{{{date}}}}.csv",
+      output_cat = ANALYSIS_CATS
+    )
+  shell:
+    expand(f"cat {ANALYSIS_DIR}/{{cat}}/{{{{date}}}}.csv > {ANALYSIS_DIR}/{{cat}}/aggregated/{{{{date}}}}.csv",
+      cat = ANALYSIS_CATS
+    )
+
+PLOT_HEADERS = {
+  "sources_stats": ["dpkg", "rpm", "pacman", "pip", "conda", "git", "misc"],
+  "pkgs_changes": ["dpkg", "rpm", "pacman", "pip", "conda", "git", "misc"],
+  "build_status": ["success", "package_install_failed", "baseimage_unavailable", "artifact_unavailable", "dockerfile_not_found", "script_crash", "job_time_exceeded", "unknown_error"],
+  "artifact": ["available", "unavailable", "changed"]
+}
+
+rule all_plot:
+  input:
+    expand(f"{ANALYSIS_DIR}/{{folder}}/aggregated/{{date}}.csv",
+      folder = ["sources_stats", "pkgs_changes", "build_status", "artifact"],
+      date = DATE
+    )
+
+rule line_plot:
+  input:
     sources_stats = f"{ANALYSIS_DIR}/sources_stats/aggregated/{DATE}.csv",
     pkgs_changes = f"{ANALYSIS_DIR}/pkgs_changes/aggregated/{DATE}.csv",
     build_status = f"{ANALYSIS_DIR}/build_status/aggregated/{DATE}.csv",
     artifact = f"{ANALYSIS_DIR}/artifact/aggregated/{DATE}.csv"
+  output:
+    sources_stats = f"{ANALYSIS_DIR}/sources_stats/plot/line/{DATE}.csv",
+    pkgs_changes = f"{ANALYSIS_DIR}/pkgs_changes/plot/line/{DATE}.csv",
+    build_status = f"{ANALYSIS_DIR}/build_status/plot/line/{DATE}.csv",
+    artifact = f"{ANALYSIS_DIR}/artifact/plot/line/{DATE}.csv"
   shell:
-    f"cat {{input.sources_stats}} > {{output.sources_stats}}"
-    f"cat {{input.pkgs_changes}} > {{output.pkgs_changes}}"
-    f"cat {{input.build_status}} > {{output.build_status}}"
-    f"cat {{input.artifact}} > {{output.artifact}}"
+    f"""
+    Rscript plot.r line {{input.sources_stats}} {{output.sources_stats}} {{{{PLOT_HEADERS["sources_stats"]}}}}
+    Rscript plot.r line {{input.pkgs_changes}} {{output.pkgs_changes}} {{{{PLOT_HEADERS["pkgs_changes"]}}}}
+    Rscript plot.r line {{input.build_status}} {{output.build_status}} {{{{PLOT_HEADERS["build_status"]}}}}
+    Rscript plot.r line {{input.artifact}} {{output.artifact}} {{{{PLOT_HEADERS["artifact"]}}}}
+    """
 
-# PLOT_HEADERS = {
-#   "sources_stats": ["dpkg", "rpm", "pacman", "pip", "conda", "git", "misc"],
-#   "pkgs_changes": ["dpkg", "rpm", "pacman", "pip", "conda", "git", "misc"],
-#   "build_status": ["success", "package_install_failed", "baseimage_unavailable", "artifact_unavailable", "dockerfile_not_found", "script_crash", "job_time_exceeded", "unknown_error"],
-#   "artifact": ["available", "unavailable", "changed"]
-# }
-
-# rule plot_all:
-#   input:
-#     expand(f"{ANALYSIS_DIR}/{{folder}}/aggregated/{{date}}.csv",\
-#            folder = ["sources_stats", "pkgs_changes", "build_status", "artifact"],\
-#            date = DATE
-#     )
-
-# rule line_plot:
-#   input:
-#     expand(f"{ANALYSIS_DIR}/{{folder}}/{{artifact}}/{{date}}.csv",\
-#            folder = ["sources_stats", "pkgs_changes", "build_status", "artifact"],\
-#            artifact = ARTIFACTS,\
-#            date = DATE
-#     ),
-#   output:
-#     expand(f"{ANALYSIS_DIR}/{{folder}}/line.pdf",\
-#            folder = ["sources_stats", "pkgs_changes", "build_status", "artifact"],\
-#            artifact = ARTIFACTS,\
-#            date = DATE
-#     ),
-#   shell:
-#     f"Rscript plot.r  line {{{{PLOT_HEADERS[wildcards.folder]}}}}"
+rule bar_plot:
+  input:
+    sources_stats = f"{ANALYSIS_DIR}/sources_stats/aggregated/{DATE}.csv",
+    build_status = f"{ANALYSIS_DIR}/build_status/aggregated/{DATE}.csv",
+    artifact = f"{ANALYSIS_DIR}/artifact/aggregated/{DATE}.csv"
+  output:
+    sources_stats = f"{ANALYSIS_DIR}/sources_stats/plot/bar/{DATE}.csv",
+    build_status = f"{ANALYSIS_DIR}/build_status/plot/bar/{DATE}.csv",
+    artifact = f"{ANALYSIS_DIR}/artifact/plot/bar/{DATE}.csv"
+  shell:
+    f"""
+    Rscript plot.r bar {{input.sources_stats}} {{output.sources_stats}} {{{{PLOT_HEADERS["sources_stats"]}}}}
+    Rscript plot.r bar {{input.build_status}} {{output.build_status}} {{{{PLOT_HEADERS["build_status"]}}}}
+    Rscript plot.r bar {{input.artifact}} {{output.artifact}} {{{{PLOT_HEADERS["artifact"]}}}}
+    """
