@@ -7,9 +7,6 @@
   virtualization = "docker",
   buildfile_dir = "./",
   package_managers = [ "dpkg", "pip" ],
-  git_packages = [
-    { name = "pkg1", location = "/pkg1" }
-  ],
   misc_packages = [
     { name = "mpkg1", url = "http://127.0.0.1/package1.zip" }
   ]
