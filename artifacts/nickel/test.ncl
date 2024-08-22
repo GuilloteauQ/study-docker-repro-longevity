@@ -9,5 +9,8 @@
   package_managers = [ "dpkg", "pip" ],
   misc_packages = [
     { name = "mpkg1", url = "http://127.0.0.1/package1.zip" }
+  ],
+  python_venvs = [
+    { path = "/prog" }
   ]
 }
