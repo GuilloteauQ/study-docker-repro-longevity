@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ..
+
 ARTIFACT_NAME=$1
 ARTIFACT_OUT="artifacts/json/$ARTIFACT_NAME.json"
 ARTIFACT_IN="artifacts/nickel/$ARTIFACT_NAME.ncl"

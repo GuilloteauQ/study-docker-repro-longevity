@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ..
+
 OUTPUT_PATH=output
 CACHE_DIR=cache
 
