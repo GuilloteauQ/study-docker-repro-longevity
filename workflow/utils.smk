@@ -7,8 +7,9 @@ def get_analysis_dates(directory):
         for file in os.listdir(directory):
             if not os.path.isdir(os.path.join(directory, file)):
                 outputs.append(os.path.splitext(file)[0])
-    if outputs == []:
-        outputs.append(datetime.datetime.now().strftime("%Y%m%d"))
+    today = datetime.datetime.now().strftime("%Y%m%d")
+    if today not in outputs:
+        outputs.append(today)
     return outputs
 
 # def find_last_blacklist(blacklist_dir_path):
