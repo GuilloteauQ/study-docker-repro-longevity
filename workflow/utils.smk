@@ -11,26 +11,28 @@ def get_analysis_dates(directory):
         outputs.append(datetime.datetime.now().strftime("%Y%m%d"))
     return outputs
 
-def find_last_blacklist(blacklist_dir_path):
-    last_blacklist = "0.csv"
-    for blacklist in os.listdir(blacklist_dir_path):
-        if not os.path.isdir(blacklist):
-            # We want the latest one, so the one that has the most recent date
-            # as file name:
-            curbl_date = int(os.path.splitext(blacklist)[0])
-            lastbl_date = int(os.path.splitext(last_blacklist)[0])
-            if curbl_date > lastbl_date:
-                last_blacklist = blacklist
-    return last_blacklist
+# def find_last_blacklist(blacklist_dir_path):
+#     last_blacklist = "0.csv"
+#     for blacklist in os.listdir(blacklist_dir_path):
+#         if not os.path.isdir(blacklist):
+#             # We want the latest one, so the one that has the most recent date
+#             # as file name:
+#             curbl_date = int(os.path.splitext(blacklist)[0])
+#             lastbl_date = int(os.path.splitext(last_blacklist)[0])
+#             if curbl_date > lastbl_date:
+#                 last_blacklist = blacklist
+#     return last_blacklist
 
 def get_blacklisted(blacklist_dir_path):
     blacklisted = set()
     if os.path.exists(blacklist_dir_path):
-        blacklist_csv_path = os.path.join(blacklist_dir_path, find_last_blacklist(blacklist_dir_path))
-        with open(blacklist_csv_path, "r") as csv_file:
-            spamreader = csv.reader(csv_file, delimiter=",")
-            for row in spamreader:
-                blacklisted.add(row[0])
+        for blacklist in os.listdir(blacklist_dir_path):
+            if not os.path.isdir(blacklist):
+                blacklist_csv_path = os.path.join(blacklist_dir_path, blacklist)
+                with open(blacklist_csv_path, "r") as csv_file:
+                    spamreader = csv.reader(csv_file, delimiter=",")
+                    for row in spamreader:
+                        blacklisted.add(row[0])
     return blacklisted
 
 def get_artifacts_to_build(artifacts_folder, blacklist_dir_path):

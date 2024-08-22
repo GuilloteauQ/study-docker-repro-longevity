@@ -4,6 +4,7 @@ folder_blacklists: "blacklists"
 system: "local"
 prefix: "outputs"
 analysis_dir: "outputs/analysis"
+plot_dir: "outputs/analysis/plot"
 
 site: "grenoble"
 cluster: "dahu"
