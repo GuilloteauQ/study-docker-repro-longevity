@@ -21,6 +21,9 @@ SHELLS_ECG = {
 
 ANALYSIS_DIR = config["analysis_dir"]
 ANALYSIS_CATS = ["sources_stats", "pkgs_changes", "build_status", "artifact"]
+ANALYSIS_SCRIPTS_DIR = "analysis"
+ANALYSIS_WRAPPER = "workflow/scripts/analysis_wrapper.sh"
+AGGREGATE_WRAPPER = "workflow/scripts/aggregate_wrapper.sh"
 
 PLOT_DIR = config["plot_dir"]
 PLOT_SCRIPT = "plot/plot.r"
@@ -42,20 +45,9 @@ rule all:
       analysis_cat = ["sources_stats", "build_status", "artifact"],
       date = DATE
     ),
-    # expand(f"{ANALYSIS_DIR}/{{cat}}/aggregated/{{date}}.csv",
-    #   cat = ANALYSIS_CATS,
-    #   date = DATE
-    # ),
-    # expand(f"{PREFIX}/{{folder}}/{{artifact}}/{{date}}.csv",
-    #        folder=["pkgs", "build_status", "artifact_hash"],
-    #        artifact=ARTIFACTS,
-    #        date=DATE
-    # ),
-    # expand(f"{PREFIX}/logs/{{artifact}}/{{date}}.txt",
-    #     artifact=ARTIFACTS,
-    #     date=DATE
-    # ),
     f"{BLACKLIST_FOLDER}/{DATE}.csv"
+
+# Artifacts configuration files:
 
 rule check_all:
   input:
@@ -73,6 +65,8 @@ rule check_artifact:
     """
     nickel export --format json --output {output} <<< 'let {{Artifact, ..}} = import "{input.contract}" in ((import "{input.artifact}") | Artifact)'
     """
+
+# ECG:
 
 rule run_ecg:
   input:
@@ -102,65 +96,59 @@ rule update_blacklist:
     # We need to ignore lines where build is successful:
     f"cat {{input}} | grep -v ',success' > {{output}} || true"
 
-# rule analysis:
-#   input:
-#     expand(f"{PREFIX}/{{output_dir}}/{{artifact}}/{{date}}.csv",
-#       output_dir = ECG_OUTPUTS,
-#       artifact = ARTIFACTS,
-#       # date = get_analysis_dates("{PREFIX}/{output_dir}")
-#       date = glob_wildcards("{PREFIX}/{output_dir}/{artifact}/{date}.csv").date
-#     )
+# Analysis:
 
 rule softenv_analysis:
   wildcard_constraints:
     date="\d+"
   input:
-    sources_stats = expand(f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",
-      artifact = ARTIFACTS,
-      date = DATE
+    today_files = expand(f"{PREFIX}/pkgs/{{artifact}}/{{{{date}}}}.csv",
+      artifact = ARTIFACTS
     ),
-    pkgs_changes = expand(f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",
-      artifact = ARTIFACTS,
-      date = get_analysis_dates(f"{PREFIX}/pkgs")
-    )
+    dirs = expand(f"{PREFIX}/pkgs/{{artifact}}",
+      artifact = ARTIFACTS
+    ),
   output:
     sources_stats = f"{ANALYSIS_DIR}/sources_stats/{{date}}.csv",
     pkgs_changes = f"{ANALYSIS_DIR}/pkgs_changes/{{date}}.csv"
   shell:
     f"""
-    python3 analysis/softenv_analysis.py -t sources-stats -i {{input.sources_stats}} -o {{output.sources_stats}}
-    python3 analysis/softenv_analysis.py -t pkgs-changes -i {{input.pkgs_changes}} -o {{output.pkgs_changes}}
+    {ANALYSIS_WRAPPER} files {ANALYSIS_SCRIPTS_DIR}/softenv_analysis.py sources-stats {{output.sources_stats}} {{input.today_files}}
+    {ANALYSIS_WRAPPER} dirs {ANALYSIS_SCRIPTS_DIR}/softenv_analysis.py pkgs-changes {{output.pkgs_changes}} {{input.dirs}}
     """
 
 rule buildstatus_analysis:
   wildcard_constraints:
     date="\d+"
   input:
-    expand(f"{PREFIX}/build_status/{{artifact}}/{{date}}.csv",
-      artifact = ARTIFACTS,
-      date = DATE
-    )
+    expand(f"{PREFIX}/build_status/{{artifact}}/{{{{date}}}}.csv",
+      artifact = ARTIFACTS
+    ),
   output:
     f"{ANALYSIS_DIR}/build_status/{{date}}.csv",
   shell:
     f"""
-    python3 analysis/buildstatus_analysis.py -i {{input}} -o {{output}}
+    {ANALYSIS_WRAPPER} files {ANALYSIS_SCRIPTS_DIR}/buildstatus_analysis.py {{output}} {{input}}
     """
 
 rule artifact_analysis:
   wildcard_constraints:
     date="\d+"
   input:
-    expand(f"{PREFIX}/artifact_hash/{{artifact}}/{{date}}.csv",
-      artifact = ARTIFACTS,
-      date = get_analysis_dates(f"{PREFIX}/artifact_hash")
-    )
+    today_files = expand(f"{PREFIX}/artifact_hash/{{artifact}}/{{{{date}}}}.csv",
+      artifact = ARTIFACTS
+    ),
+    dirs = expand(f"{PREFIX}/artifact_hash/{{artifact}}",
+      artifact = ARTIFACTS
+    ),
   output:
     f"{ANALYSIS_DIR}/artifact/{{date}}.csv",
   shell:
     f"""
-    python3 analysis/artifact_analysis.py -i {{input}} -o {{output}}
+    {ANALYSIS_WRAPPER} dirs {ANALYSIS_SCRIPTS_DIR}/artifact_analysis.py {{output}} {{input.dirs}}
     """
+
+# Analysis aggregate:
 
 rule analysis_aggregate:
   input:
@@ -169,56 +157,43 @@ rule analysis_aggregate:
       date = DATE
     )
 
-# rule single_aggregate:
-#   input:
-#     expand(f"{ANALYSIS_DIR}/{{{{cat}}}}/{{date}}.csv",
-#       date = get_analysis_dates(f"{ANALYSIS_DIR}/{{wildcards.cat}}")
-#       # date = glob_wildcards("{ANALYSIS_DIR}/{cat}/{date}.csv").date
-#     )
-#   output:
-#     f"{ANALYSIS_DIR}/{{cat}}/aggregated/{{date}}.csv"
-#   shell:
-#     f"cat {{input}} > {{output}}"
-
 rule pkgschgs_aggregate:
   input:
-    expand(f"{ANALYSIS_DIR}/pkgs_changes/{{date}}.csv",
-      date = get_analysis_dates(f"{ANALYSIS_DIR}/pkgs_changes")
-    )
+    dir = f"{ANALYSIS_DIR}/pkgs_changes",
+    today_file = f"{ANALYSIS_DIR}/pkgs_changes/{{date}}.csv"
   output:
     f"{ANALYSIS_DIR}/pkgs_changes/aggregated/{{date}}.csv"
   shell:
-    f"cat {{input}} > {{output}}"
+    f"{AGGREGATE_WRAPPER} {{input.dir}} {{output}}"
 
 rule srcsstats_aggregate:
   input:
-    expand(f"{ANALYSIS_DIR}/sources_stats/{{date}}.csv",
-      date = get_analysis_dates(f"{ANALYSIS_DIR}/sources_stats")
-    )
+    dir = f"{ANALYSIS_DIR}/sources_stats",
+    today_file = f"{ANALYSIS_DIR}/sources_stats/{{date}}.csv"
   output:
     f"{ANALYSIS_DIR}/sources_stats/aggregated/{{date}}.csv"
   shell:
-    f"cat {{input}} > {{output}}"
+    f"{AGGREGATE_WRAPPER} {{input.dir}} {{output}}"
 
 rule artifact_aggregate:
   input:
-    expand(f"{ANALYSIS_DIR}/artifact/{{date}}.csv",
-      date = get_analysis_dates(f"{ANALYSIS_DIR}/artifact")
-    )
+    dir = f"{ANALYSIS_DIR}/artifact",
+    today_file = f"{ANALYSIS_DIR}/artifact/{{date}}.csv"
   output:
     f"{ANALYSIS_DIR}/artifact/aggregated/{{date}}.csv"
   shell:
-    f"cat {{input}} > {{output}}"
+    f"{AGGREGATE_WRAPPER} {{input.dir}} {{output}}"
 
 rule buildstatus_aggregate:
   input:
-    expand(f"{ANALYSIS_DIR}/build_status/{{date}}.csv",
-      date = get_analysis_dates(f"{ANALYSIS_DIR}/build_status")
-    )
+    dir = f"{ANALYSIS_DIR}/build_status",
+    today_file = f"{ANALYSIS_DIR}/build_status/{{date}}.csv"
   output:
     f"{ANALYSIS_DIR}/build_status/aggregated/{{date}}.csv"
   shell:
-    f"cat {{input}} > {{output}}"
+    f"{AGGREGATE_WRAPPER} {{input.dir}} {{output}}"
+
+# Plot:
 
 rule all_plot:
   input:

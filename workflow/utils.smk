@@ -1,29 +1,6 @@
 import csv
 import os
 
-def get_analysis_dates(directory):
-    outputs = []
-    if os.path.exists(directory):
-        for file in os.listdir(directory):
-            if not os.path.isdir(os.path.join(directory, file)):
-                outputs.append(os.path.splitext(file)[0])
-    today = datetime.datetime.now().strftime("%Y%m%d")
-    if today not in outputs:
-        outputs.append(today)
-    return outputs
-
-# def find_last_blacklist(blacklist_dir_path):
-#     last_blacklist = "0.csv"
-#     for blacklist in os.listdir(blacklist_dir_path):
-#         if not os.path.isdir(blacklist):
-#             # We want the latest one, so the one that has the most recent date
-#             # as file name:
-#             curbl_date = int(os.path.splitext(blacklist)[0])
-#             lastbl_date = int(os.path.splitext(last_blacklist)[0])
-#             if curbl_date > lastbl_date:
-#                 last_blacklist = blacklist
-#     return last_blacklist
-
 def get_blacklisted(blacklist_dir_path):
     blacklisted = set()
     if os.path.exists(blacklist_dir_path):
