@@ -114,7 +114,7 @@ This Python script\ \cite{ecg_code} takes as input a (verified) JSON representat
 
 The link to the to artifact is the link provided by the authors in their Artifact Description.
 \ecg\ will use this link to download the artifact.
-If the download is successful, \ecg\ will check the cryptographic hash of the content.
+If the download is successful, \ecg\ will log the cryptographic hash of the content.
 This allows us to also have information about the stability/longevity of the artifact sharing.
 
 \subsubsection{Docker Build Statuses}\label{sec:docker_build}
@@ -125,7 +125,7 @@ This allows us to also have information about the stability/longevity of the art
   \item \texttt{baseimage\_unavailable}: the base image of the \dfile\ (\texttt{FROM} image) is not available.
   \item \texttt{job\_time\_exceeded}: when running on a batch system such as OAR, this error indicates that the \dfile\ did not build under \emph{1 hour}
   \item \texttt{success}: the \dfile\ has been built successfully
-  \item \texttt{package\_unavailable}: a command requested the installation of a package that is not available
+  \item \texttt{package_install_failed}: a command requested the installation of a package that failed
   \item \texttt{artifact_unavailable}: the artifact could not be downloaded
   \item \texttt{dockerfile_not_found}: no \dfile\ has been found in the location specified in the configuration file
   \item \texttt{script_crash}: an error has occurred with the script itself
@@ -146,11 +146,14 @@ Below is an example of data collected for the \texttt{gcc-8} package on a Ubuntu
 gcc-8,8.3.0-6,dpkg
 \end{lstlisting}
 
+First column is the name of the package, second is the version number given by the package manager, and third is the package manager. The actual outputs will also have a fourth column with the timestamp of when the package list was generated.
+
 \subsubsection{Git repositories (\texttt{git})}\label{sec:git}
 
 \dfile\ authors can also install packages from source.
 One way to do this is via Git.
 In this case, once the container built successfully, \ecg\ logs into the container and extracts the commit hash of the repository (via \texttt{git log}).
+To be considered as a Git package, a package must have been downloaded using the \verb|git| command, and the repository's local directory should still have a \verb|.git| subdirectory. Otherwise, it should be considered as a \textit{misc} package, since the hash of the latest commit cannot be retrieved in that case (see below).
 
 \paragraph{Example of Data}
 
@@ -160,7 +163,9 @@ Below is an example of data collected for a Git repository called \texttt{ctf}:
 ctf,c3f95829628c381dc9bf631c69f08a7b17580b53,git
 \end{lstlisting}
 
-\subsubsection{Download content (\texttt{misc})}\label{sec:misc}
+First column is the name of the package, second is the cryptographic hash of the latest commit in the current branch of the Git repo (used as version number), and third is the package source (Git). The actual outputs will also have a fourth column with the timestamp of when the package list was generated.
+
+\subsubsection{Downloaded content (\texttt{misc})}\label{sec:misc}
 
 In the case where the \dfile\ downloads content from the internet (\eg\ archives, binaries), \ecg\ will download the same content on the host machine (\ie\ not in the container) and then compute the cryptographic hash of the downloaded content.
 
@@ -171,6 +176,8 @@ Below is an example of data collected for the downloading of the \texttt{Minicon
 \begin{lstlisting}
 Miniconda3-py37_4.12.0-Linux-x86_64,4dc4214839c60b2f5eb3efbdee1ef5d9b45e74f2c09fcae6c8934a13f36ffc3e,misc
 \end{lstlisting}
+
+First column is the name of the package, second is the cryptographic hash of the downloaded content (used as version number), and third is the package source (misc). The actual outputs will also have a fourth column with the timestamp of when the package list was generated.
 
 \subsubsection{Python Virtual Environment (\texttt{pyenv})}\label{sec:pyenv}
 
@@ -218,7 +225,7 @@ If there is any difference in the Nickel description of an artifact, a discussio
 
 \subsection{Building Periodicity}
 
-The builind workflow will be executed \emph{every month} for one year.
+The building workflow will be executed \emph{every month} for one year.
 After one year, the workflow will be executed with increasing time intervals between execution.
 
 \noteqg{TODO: A table/list/gantt chart of all the planned executions (dates)}
@@ -235,8 +242,8 @@ The first part of the analysis can be done statically from the description of th
 
 \begin{itemize}
 \item Number/Proportion of \dfile s using particular package managers
-\item Number/Proportion of \dfile s downloading from Git repositories
-\item Number/Proportion of \dfile s downloading from internet
+\item Number/Proportion of \dfile s downloading content from Git repositories
+\item Number/Proportion of \dfile s downloading content from internet
 \end{itemize}
 
 \subsection{Dynamic Analysis}
@@ -253,7 +260,7 @@ The second part of the analysis will be done after the first year of data collec
 \paragraph{Build Status}
 
 \begin{itemize}
-\item Number/Proportion of \dfile s that build succesfully
+\item Number/Proportion of \dfile s that build successfully
 \item Number/Proportion of \dfile s errors (\texttt{baseimage\_unavailable}, \texttt{job\_time\_execeed}, \texttt{unknown\_error}) for the failed builds
 \end{itemize}
 
@@ -262,7 +269,7 @@ The second part of the analysis will be done after the first year of data collec
 \begin{itemize}
 \item Number of installed packages per container
 \item Number/Proportion of packages that changed version since last build
-\item Package sources (package manager, Git, Misc) from where packages are changing the most
+\item Package sources (package manager, Git, misc) from where packages are changing the most
 \end{itemize}
 
 \section{Other}
