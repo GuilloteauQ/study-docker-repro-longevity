@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "$@"
-
 MODE=$1 # Either "dirs" or "files", depending on the type of input
 shift
 SCRIPT=$1
@@ -11,16 +9,16 @@ if [ $1 = "-t" ]
 then
     TYPE=$2 # Used if softenv analysis
     shift
+    OUTPUT=$2
+    shift
 else
     OUTPUT=$1
 fi
 shift
 INPUT="$@"
 
-echo $OUTPUT
-
 # Adding option prefix:
-if [ $TYPE != "" ]
+if [ "$TYPE" != "" ]
 then
     TYPE="-t $TYPE"
 fi
@@ -37,6 +35,5 @@ then
         INPUT_FILES="$INPUT_FILES $(find $dir/*.csv -maxdepth 1 -type f)"
     done
 fi
-echo $INPUT_FILES
 
 python3 $SCRIPT $TYPE -i $INPUT_FILES -o $OUTPUT
