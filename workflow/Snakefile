@@ -34,9 +34,10 @@ SOFTENV_ANALYSIS_DIRS = " ".join(expand(f"{PREFIX}/pkgs/{{artifact}}",
 ))
 
 PLOT_DIR = config["plot_dir"]
-PLOT_SCRIPT = "plot/plot.r"
 PLOT_HEADERS = {
-  "softenv": "dpkg rpm pacman pip conda git misc",
+  #"softenv": "dpkg rpm pacman pip conda git misc",
+  "sources_stats": "dpkg rpm pacman pip conda git misc",
+  "pkgs_changes": "dpkg rpm pacman pip conda git misc",
   "build_status": "success package_install_failed baseimage_unavailable artifact_unavailable dockerfile_not_found script_crash job_time_exceeded unknown_error",
   "artifact": "available unavailable changed"
 }
@@ -157,78 +158,24 @@ rule analysis_aggregate:
       date = DATE
     )
 
-rule pkgschgs_aggregate:
+rule aggregate_by_type:
   input:
-    f"{ANALYSIS_DIR}/pkgs_changes/{{date}}.csv"
+    data=f"{ANALYSIS_DIR}/{{type}}/{{date}}.csv",
+    script="workflow/scripts/aggregate_wrapper.sh"
   output:
-    f"{ANALYSIS_DIR}/pkgs_changes/aggregated/{{date}}.csv"
+    f"{ANALYSIS_DIR}/{{type}}/aggregated/{{date}}.csv"
   shell:
-    f"{AGGREGATE_WRAPPER} {ANALYSIS_DIR}/pkgs_changes {{output}}"
-
-rule srcsstats_aggregate:
-  input:
-    f"{ANALYSIS_DIR}/sources_stats/{{date}}.csv"
-  output:
-    f"{ANALYSIS_DIR}/sources_stats/aggregated/{{date}}.csv"
-  shell:
-    f"{AGGREGATE_WRAPPER} {ANALYSIS_DIR}/sources_stats {{output}}"
-
-rule artifact_aggregate:
-  input:
-    f"{ANALYSIS_DIR}/artifact/{{date}}.csv"
-  output:
-    f"{ANALYSIS_DIR}/artifact/aggregated/{{date}}.csv"
-  shell:
-    f"{AGGREGATE_WRAPPER} {ANALYSIS_DIR}/artifact {{output}}"
-
-rule buildstatus_aggregate:
-  input:
-    f"{ANALYSIS_DIR}/build_status/{{date}}.csv"
-  output:
-    f"{ANALYSIS_DIR}/build_status/aggregated/{{date}}.csv"
-  shell:
-    f"{AGGREGATE_WRAPPER} {ANALYSIS_DIR}/build_status {{output}}"
+    f"{input.script} {ANALYSIS_DIR}/{{type}} {{output}}"
 
 # Plot:
 
-rule all_plot:
+rule plot:
   input:
-    expand(f"{ANALYSIS_DIR}/{{cat}}/aggregated/{{date}}.csv",
-      cat = ANALYSIS_CATS,
-      date = DATE
-    )
-
-rule line_plot:
-  input:
-    sources_stats = f"{ANALYSIS_DIR}/sources_stats/aggregated/{{date}}.csv",
-    pkgs_changes = f"{ANALYSIS_DIR}/pkgs_changes/aggregated/{{date}}.csv",
-    build_status = f"{ANALYSIS_DIR}/build_status/aggregated/{{date}}.csv",
-    artifact = f"{ANALYSIS_DIR}/artifact/aggregated/{{date}}.csv"
+    script = "plot/plot.r",
+    data = f"{ANALYSIS_DIR}/{{type}}/aggregated/{{date}}.csv",
   output:
-    sources_stats = f"{ANALYSIS_DIR}/sources_stats/plot/line/{{date}}.pdf",
-    pkgs_changes = f"{ANALYSIS_DIR}/pkgs_changes/plot/line/{{date}}.pdf",
-    build_status = f"{ANALYSIS_DIR}/build_status/plot/line/{{date}}.pdf",
-    artifact = f"{ANALYSIS_DIR}/artifact/plot/line/{{date}}.pdf"
+    f"{ANALYSIS_DIR}/{{type}}/{{plot}}/{{date}}.pdf"
+  params:
+    header = lambda w: PLOT_HEADERS[w.type]
   shell:
-    f"""
-    Rscript {PLOT_SCRIPT} line {{input.sources_stats}} {{output.sources_stats}} {PLOT_HEADERS["softenv"]} timestamp
-    Rscript {PLOT_SCRIPT} line {{input.pkgs_changes}} {{output.pkgs_changes}} {PLOT_HEADERS["softenv"]} timestamp
-    Rscript {PLOT_SCRIPT} line {{input.build_status}} {{output.build_status}} {PLOT_HEADERS["build_status"]} timestamp
-    Rscript {PLOT_SCRIPT} line {{input.artifact}} {{output.artifact}} {PLOT_HEADERS["artifact"]} timestamp
-    """
-
-rule bar_plot:
-  input:
-    sources_stats = f"{ANALYSIS_DIR}/sources_stats/aggregated/{{date}}.csv",
-    build_status = f"{ANALYSIS_DIR}/build_status/aggregated/{{date}}.csv",
-    artifact = f"{ANALYSIS_DIR}/artifact/aggregated/{{date}}.csv"
-  output:
-    sources_stats = f"{ANALYSIS_DIR}/sources_stats/plot/bar/{{date}}.pdf",
-    build_status = f"{ANALYSIS_DIR}/build_status/plot/bar/{{date}}.pdf",
-    artifact = f"{ANALYSIS_DIR}/artifact/plot/bar/{{date}}.pdf"
-  shell:
-    f"""
-    Rscript {PLOT_SCRIPT} bar {{input.sources_stats}} {{output.sources_stats}} {PLOT_HEADERS["softenv"]} timestamp
-    Rscript {PLOT_SCRIPT} bar {{input.build_status}} {{output.build_status}} {PLOT_HEADERS["build_status"]} timestamp
-    Rscript {PLOT_SCRIPT} bar {{input.artifact}} {{output.artifact}} {PLOT_HEADERS["artifact"]} timestamp
-    """
+    "Rscript {input.script} {wildcards.plot} {input.data} {output} {params.header} timestamp"
