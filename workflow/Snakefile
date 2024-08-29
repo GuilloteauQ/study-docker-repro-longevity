@@ -79,8 +79,7 @@ rule run_ecg:
   input:
     "flake.nix",
     "flake.lock",
-    ecg="ecg.py",
-    ecg_wrapper="workflow/scripts/ecg_wrapper.sh",
+    ecg="ecg/app/ecg.py",
     execo_wrapper="workflow/scripts/submission_g5k.py",
     oar_wrapper="workflow/scripts/ecg_oar_wrapper.oar.bash",
     artifact=f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.{EXTENSION}"
@@ -90,7 +89,20 @@ rule run_ecg:
     build_status  = f"{PREFIX}/build_status/{{artifact}}/{{date}}.csv",
     artifact_hash = f"{PREFIX}/artifact_hash/{{artifact}}/{{date}}.csv",
   shell:
-    (SHELLS_ECG["g5k"] if SYSTEM == "g5k" else "") + SHELLS_ECG["local"] + ("'" if SYSTEM == "g5k" else "")
+    (f"python3 {{input.execo_wrapper}} --path {os.getcwd()} \
+                                       --script {{input.oar_wrapper}} \
+                                       --site {config['site']} \
+                                       --cluster {config['cluster']} \
+                                       --max-duration {config['max_duration']} \
+                                       --checkpoint {config['checkpoint']} \
+                                     {'--besteffort' if config['besteffort'] else ''} \
+                                       --sleep_time {config['sleep_time']} \
+                                       --build_status_file {{output.build_status}} \
+                                       --artifact {{wildcards.artifact}} -- '" if SYSTEM == "g5k" else "") + \
+    """
+    nix develop .#ecg-shell --command ecg -p {output.pkg} -b {output.build_status} -a {output.artifact_hash} {output.artifact} &> {output.log} || echo "{input.artifact}, `date +%s.%N`, script_crash" > {output.build_status}
+    """ + \
+    ("'" if SYSTEM == "g5k" else "")
 
 rule update_blacklist:
   input:
