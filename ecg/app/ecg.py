@@ -1,13 +1,3 @@
-#!/bin/python3
-
-"""
-    ECG is a program that automates software environment checking
-    for scientific artifacts.
-
-    It is meant to be executed periodically to analyze variations in the
-    software environment of the artifact through time.
-"""
-
 import subprocess
 import json
 import argparse
@@ -29,7 +19,7 @@ def download_file_and_get_hash(url, dest_path):
     try:
         req = requests.get(url)
         if req.status_code != 404:
-            with open(dest_path, "wb") a file:
+            with open(dest_path, "wb") as file:
                 file.write(req.content)
             file_hash = hashlib.sha256(req.content).hexdigest()
     except requests.exceptions.ConnectionError:
