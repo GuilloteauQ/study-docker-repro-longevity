@@ -22,4 +22,4 @@ handler() {
 trap handler SIGUSR2
 
 cd ${DIRECTORY}
-nix develop --command $@
+$@ || echo "${ARTIFACT_FILE}, `date +%s.%N`, script_crash" > ${BUILD_STATUS_FILE}

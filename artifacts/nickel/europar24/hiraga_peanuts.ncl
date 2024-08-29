@@ -6,7 +6,7 @@
   conf_date = 2024,
   comment = "Files in /var/lib/apt/lists/ are removed.",
   virtualization = "docker",
-  buildfile_dir = "./",
+  buildfile_dir = "peanuts-playground",
   package_managers = [ "dpkg" ],
   git_packages = [
     { name = "spack", location = "/home/vscode/.cache/spack" }
