@@ -15,6 +15,17 @@
       kapkgs = kapack.packages.${system};
     in
     {
+      packages = {
+        ecg = pkgs.python3Packages.buildPythonPackage {
+          name = "ecg";
+          version = "0.0.1";
+          src = ./ecg;
+          propagatedBuildInputs = with (pkgs.python3Packages); [
+            requests
+          ];
+          doCheck = false;
+        };
+      };
       devShells = {
         default = pkgs.mkShell {
           packages = with pkgs; [
@@ -28,7 +39,7 @@
               requests
 	      kapkgs.execo
             ]))
-            (rWrapper.override { packages = with rPackages; [ tidyverse reshape2 ]; })
+            #(rWrapper.override { packages = with rPackages; [ tidyverse reshape2 ]; })
           ];
         };
         latex = pkgs.mkShell {
