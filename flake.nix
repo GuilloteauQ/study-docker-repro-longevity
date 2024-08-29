@@ -27,27 +27,10 @@
         };
       };
       devShells = {
-        default = pkgs.mkShell {
-          packages = with pkgs; [
-            snakemake
-            gawk
-            gnused
-            nickel
-            graphviz
-	    # TODO separate into several shells
-            (python3.withPackages (ps: with ps; [
-              requests
-	      kapkgs.execo
-            ]))
-            #(rWrapper.override { packages = with rPackages; [ tidyverse reshape2 ]; })
-          ];
-        };
-        latex = pkgs.mkShell {
-          packages = with pkgs; [
-            texliveFull
-            rubber
-          ];
-        };
+        default  = import ./workflow/envs/snakemake.nix { inherit pkgs kapkgs; };
+        nickel   = import ./workflow/envs/nickel.nix { inherit pkgs kapkgs; };
+        latex    = import ./workflow/envs/latex.nix { inherit pkgs kapkgs; };
+        analysis = import ./workflow/envs/analysis.nix { inherit pkgs kapkgs; };
       };
     });
 }
