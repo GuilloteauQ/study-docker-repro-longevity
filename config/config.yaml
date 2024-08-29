@@ -12,3 +12,5 @@ max_duration: 60
 checkpoint: 1
 besteffort: True
 sleep_time: 30
+
+conference: "europar24"

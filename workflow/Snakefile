@@ -8,24 +8,18 @@ DATE = datetime.datetime.now().strftime("%Y%m%d")
 
 ARTIFACTS_FOLDER_NICKEL = config["folder_artifacts_nickel"]
 ARTIFACTS_FOLDER_JSON   = config["folder_artifacts_json"]
-BLACKLIST_FOLDER = config["folder_blacklists"]
-EXTENSION = "json"
 SYSTEM = config["system"]
+CONFERENCE = config["conference"]
 
-ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER_NICKEL, BLACKLIST_FOLDER)
+ARTIFACTS = get_artifacts_to_build(ARTIFACTS_FOLDER_NICKEL + "/" + CONFERENCE)
 
 PREFIX = config["prefix"]
 ECG_OUTPUTS = ["pkgs", "build_status", "artifact_hash"]
-SHELLS_ECG = {
-  "local": f"./{{input.ecg_wrapper}} {{input.ecg}} {ARTIFACTS_FOLDER_JSON}/{{wildcards.artifact}}.{EXTENSION} {{output.pkg}} {{output.build_status}} {{output.artifact_hash}} {{output.log}}",
-  "g5k": f"python3 {{input.execo_wrapper}} --path {os.getcwd()} --script {{input.oar_wrapper}} --site {config['site']} --cluster {config['cluster']} --max-duration {config['max_duration']} --checkpoint {config['checkpoint']} {'--besteffort' if config['besteffort'] else ''} --sleep_time {config['sleep_time']} --build_status_file {{output.build_status}} --artifact {{wildcards.artifact}} -- '"
-}
 
 ANALYSIS_DIR = config["analysis_dir"]
 ANALYSIS_CATS = ["sources_stats", "pkgs_changes", "build_status", "artifact"]
 ANALYSIS_SCRIPTS_DIR = "analysis"
 ANALYSIS_WRAPPER = "workflow/scripts/analysis_wrapper.sh"
-AGGREGATE_WRAPPER = "workflow/scripts/aggregate_wrapper.sh"
 ARTIFACT_ANALYSIS_DIRS = " ".join(expand(f"{PREFIX}/artifact_hash/{{artifact}}",
   artifact = ARTIFACTS
 ))
@@ -44,33 +38,28 @@ PLOT_HEADERS = {
 
 rule all:
   input:
-    expand(f"{ANALYSIS_DIR}/{{analysis_cat}}/plot/line/{{date}}.pdf",
-      analysis_cat = ANALYSIS_CATS,
-      date = DATE
-    ),
-    expand(f"{ANALYSIS_DIR}/{{analysis_cat}}/plot/bar/{{date}}.pdf",
-      analysis_cat = ["sources_stats", "build_status", "artifact"],
-      date = DATE
-    ),
-    f"{BLACKLIST_FOLDER}/{DATE}.csv"
+    expand(f"{PREFIX}/{{conference}}/build_status/{{artifact}}/{{date}}.csv",\
+           conference=config['conference'],\
+           artifact=ARTIFACTS,\
+           date = DATE)
 
 # Artifacts configuration files:
 
 rule check_all:
   input:
-    expand(f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.json", artifact=ARTIFACTS)
+    expand(f"{ARTIFACTS_FOLDER_JSON}/{{conference}}/{{artifact}}.json", artifact=ARTIFACTS, conference=config['conference'])
 
 rule check_artifact:
   input:
     "flake.nix",
     "flake.lock",
     contract="workflow/nickel/artifact_contract.ncl",
-    artifact=f"{ARTIFACTS_FOLDER_NICKEL}/{{artifact}}.ncl"
+    artifact=f"{ARTIFACTS_FOLDER_NICKEL}/{{conference}}/{{artifact}}.ncl"
   output:
-    f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.json"
+    f"{ARTIFACTS_FOLDER_JSON}/{{conference}}/{{artifact}}.json"
   shell:
     """
-    nickel export --format json --output {output} <<< 'let {{Artifact, ..}} = import "{input.contract}" in ((import "{input.artifact}") | Artifact)'
+    nix develop .#nickel --command nickel export --format json --output {output} <<< 'let {{Artifact, ..}} = import "{input.contract}" in ((import "{input.artifact}") | Artifact)'
     """
 
 # ECG:
@@ -82,12 +71,12 @@ rule run_ecg:
     ecg="ecg/app/ecg.py",
     execo_wrapper="workflow/scripts/submission_g5k.py",
     oar_wrapper="workflow/scripts/ecg_oar_wrapper.oar.bash",
-    artifact=f"{ARTIFACTS_FOLDER_JSON}/{{artifact}}.{EXTENSION}"
+    artifact=f"{ARTIFACTS_FOLDER_JSON}/{{conference}}/{{artifact}}.json"
   output:
-    log           = f"{PREFIX}/logs/{{artifact}}/{{date}}.txt",
-    pkg           = f"{PREFIX}/pkgs/{{artifact}}/{{date}}.csv",
-    build_status  = f"{PREFIX}/build_status/{{artifact}}/{{date}}.csv",
-    artifact_hash = f"{PREFIX}/artifact_hash/{{artifact}}/{{date}}.csv",
+    log           = f"{PREFIX}/{{conference}}/logs/{{artifact}}/{{date}}.txt",
+    pkg           = f"{PREFIX}/{{conference}}/pkgs/{{artifact}}/{{date}}.csv",
+    build_status  = f"{PREFIX}/{{conference}}/build_status/{{artifact}}/{{date}}.csv",
+    artifact_hash = f"{PREFIX}/{{conference}}/artifact_hash/{{artifact}}/{{date}}.csv",
   shell:
     (f"python3 {{input.execo_wrapper}} --path {os.getcwd()} \
                                        --script {{input.oar_wrapper}} \
@@ -100,94 +89,83 @@ rule run_ecg:
                                        --build_status_file {{output.build_status}} \
                                        --artifact {{wildcards.artifact}} -- '" if SYSTEM == "g5k" else "") + \
     """
-    nix develop .#ecg-shell --command ecg -p {output.pkg} -b {output.build_status} -a {output.artifact_hash} {output.artifact} &> {output.log} || echo "{input.artifact}, `date +%s.%N`, script_crash" > {output.build_status}
+    nix shell .#ecg --command ecg -p {output.pkg} -b {output.build_status} -a {output.artifact_hash} {input.artifact} &> {output.log} || echo "{input.artifact}, `date +%s.%N`, script_crash" > {output.build_status}
     """ + \
     ("'" if SYSTEM == "g5k" else "")
 
-rule update_blacklist:
-  input:
-    build_status=expand(f"{PREFIX}/build_status/{{artifact}}/{{{{date}}}}.csv",
-      artifact=ARTIFACTS
-    )
-  output:
-    f"{BLACKLIST_FOLDER}/{{date}}.csv"
-  shell:
-    # We need to ignore lines where build is successful:
-    f"cat {{input}} | grep -v ',success' > {{output}} || true"
-
 # Analysis:
 
-rule softenv_analysis:
-  wildcard_constraints:
-    date="\d+"
-  input:
-    expand(f"{PREFIX}/pkgs/{{artifact}}/{{{{date}}}}.csv",
-      artifact = ARTIFACTS
-    )
-  output:
-    sources_stats = f"{ANALYSIS_DIR}/sources_stats/{{date}}.csv",
-    pkgs_changes = f"{ANALYSIS_DIR}/pkgs_changes/{{date}}.csv"
-  shell:
-    f"""
-    {ANALYSIS_WRAPPER} files {ANALYSIS_SCRIPTS_DIR}/softenv_analysis.py -t sources-stats {{output.sources_stats}} {{input}}
-    {ANALYSIS_WRAPPER} dirs {ANALYSIS_SCRIPTS_DIR}/softenv_analysis.py -t pkgs-changes {{output.pkgs_changes}} {SOFTENV_ANALYSIS_DIRS}
-    """
-
-rule buildstatus_analysis:
-  wildcard_constraints:
-    date="\d+"
-  input:
-    expand(f"{PREFIX}/build_status/{{artifact}}/{{{{date}}}}.csv",
-      artifact = ARTIFACTS
-    ),
-  output:
-    f"{ANALYSIS_DIR}/build_status/{{date}}.csv"
-  shell:
-    f"""
-    {ANALYSIS_WRAPPER} files {ANALYSIS_SCRIPTS_DIR}/buildstatus_analysis.py {{output}} {{input}}
-    """
-
-rule artifact_analysis:
-  wildcard_constraints:
-    date="\d+"
-  input:
-    expand(f"{PREFIX}/artifact_hash/{{artifact}}/{{{{date}}}}.csv",
-      artifact = ARTIFACTS
-    )
-  output:
-    f"{ANALYSIS_DIR}/artifact/{{date}}.csv"
-  shell:
-    f"""
-    {ANALYSIS_WRAPPER} dirs {ANALYSIS_SCRIPTS_DIR}/artifact_analysis.py {{output}} {ARTIFACT_ANALYSIS_DIRS}
-    """
-
-# Analysis aggregate:
-
-rule analysis_aggregate:
-  input:
-    expand(f"{ANALYSIS_DIR}/{{cat}}/aggregated/{{date}}.csv",
-      cat = ANALYSIS_CATS,
-      date = DATE
-    )
-
-rule aggregate_by_type:
-  input:
-    data=f"{ANALYSIS_DIR}/{{type}}/{{date}}.csv",
-    script="workflow/scripts/aggregate_wrapper.sh"
-  output:
-    f"{ANALYSIS_DIR}/{{type}}/aggregated/{{date}}.csv"
-  shell:
-    f"{input.script} {ANALYSIS_DIR}/{{type}} {{output}}"
-
-# Plot:
-
-rule plot:
-  input:
-    script = "plot/plot.r",
-    data = f"{ANALYSIS_DIR}/{{type}}/aggregated/{{date}}.csv",
-  output:
-    f"{ANALYSIS_DIR}/{{type}}/{{plot}}/{{date}}.pdf"
-  params:
-    header = lambda w: PLOT_HEADERS[w.type]
-  shell:
-    "Rscript {input.script} {wildcards.plot} {input.data} {output} {params.header} timestamp"
+#rule softenv_analysis:
+#  wildcard_constraints:
+#    date="\d+"
+#  input:
+#    expand(f"{PREFIX}{{conference}}/pkgs/{{artifact}}/{{{{date}}}}.csv",
+#      artifact = ARTIFACTS
+#    )
+#  output:
+#    sources_stats = f"{ANALYSIS_DIR}/sources_stats/{{date}}.csv",
+#    pkgs_changes = f"{ANALYSIS_DIR}/pkgs_changes/{{date}}.csv"
+#  shell:
+#    f"""
+#    {ANALYSIS_WRAPPER} files {ANALYSIS_SCRIPTS_DIR}/softenv_analysis.py -t sources-stats {{output.sources_stats}} {{input}}
+#    {ANALYSIS_WRAPPER} dirs {ANALYSIS_SCRIPTS_DIR}/softenv_analysis.py -t pkgs-changes {{output.pkgs_changes}} {SOFTENV_ANALYSIS_DIRS}
+#    """
+#
+#rule buildstatus_analysis:
+#  wildcard_constraints:
+#    date="\d+"
+#  input:
+#    expand(f"{PREFIX}/build_status/{{artifact}}/{{{{date}}}}.csv",
+#      artifact = ARTIFACTS
+#    ),
+#  output:
+#    f"{ANALYSIS_DIR}/build_status/{{date}}.csv"
+#  shell:
+#    f"""
+#    {ANALYSIS_WRAPPER} files {ANALYSIS_SCRIPTS_DIR}/buildstatus_analysis.py {{output}} {{input}}
+#    """
+#
+#rule artifact_analysis:
+#  wildcard_constraints:
+#    date="\d+"
+#  input:
+#    expand(f"{PREFIX}/artifact_hash/{{artifact}}/{{{{date}}}}.csv",
+#      artifact = ARTIFACTS
+#    )
+#  output:
+#    f"{ANALYSIS_DIR}/artifact/{{date}}.csv"
+#  shell:
+#    f"""
+#    {ANALYSIS_WRAPPER} dirs {ANALYSIS_SCRIPTS_DIR}/artifact_analysis.py {{output}} {ARTIFACT_ANALYSIS_DIRS}
+#    """
+#
+## Analysis aggregate:
+#
+#rule analysis_aggregate:
+#  input:
+#    expand(f"{ANALYSIS_DIR}/{{cat}}/aggregated/{{date}}.csv",
+#      cat = ANALYSIS_CATS,
+#      date = DATE
+#    )
+#
+#rule aggregate_by_type:
+#  input:
+#    data=f"{ANALYSIS_DIR}/{{type}}/{{date}}.csv",
+#    script="workflow/scripts/aggregate_wrapper.sh"
+#  output:
+#    f"{ANALYSIS_DIR}/{{type}}/aggregated/{{date}}.csv"
+#  shell:
+#    f"{{input.script}} {ANALYSIS_DIR}/{{type}} {{output}}"
+#
+## Plot:
+#
+#rule plot:
+#  input:
+#    script = "plot/plot.r",
+#    data = f"{ANALYSIS_DIR}/{{type}}/aggregated/{{date}}.csv",
+#  output:
+#    f"{ANALYSIS_DIR}/{{type}}/{{plot}}/{{date}}.pdf"
+#  params:
+#    header = lambda w: PLOT_HEADERS[w.type]
+#  shell:
+#    "Rscript {input.script} {wildcards.plot} {input.data} {output} {params.header} timestamp"
