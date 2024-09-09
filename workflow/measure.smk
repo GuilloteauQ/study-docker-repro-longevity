@@ -28,7 +28,7 @@ rule check_artifact:
     f"{ARTIFACTS_FOLDER_JSON}/{{conference}}/{{artifact}}.json"
   shell:
     """
-    nix develop .#nickel --command nickel export --format json --output {output} <<< 'let {{Artifact, ..}} = import "{input.contract}" in ((import "{input.artifact}") | Artifact)'
+    nickel export --format json --output {output} <<< 'let {{Artifact, ..}} = import "{input.contract}" in ((import "{input.artifact}") | Artifact)'
     """
 
 # ECG:
@@ -57,7 +57,5 @@ rule run_ecg:
                                        --sleep_time {config['sleep_time']} \
                                        --build_status_file {{output.build_status}} \
                                        --artifact {{wildcards.artifact}} -- '" if SYSTEM == "g5k" else "") + \
-    """
-    nix shell .#ecg --command ecg -p {output.pkg} -b {output.build_status} -a {output.artifact_hash} {input.artifact} &> {output.log} || echo "{input.artifact}, `date +%s.%N`, script_crash" > {output.build_status}
-    """ + \
-    ("'" if SYSTEM == "g5k" else "")
+    "nix shell .#ecg --command ecg -p {output.pkg} -b {output.build_status} -a {output.artifact_hash} -l {output.log} {input.artifact}" + \
+    ("'" if SYSTEM == "g5k" else "echo \"{input.artifact}, `date +%s.%N`, script_crash\" > {output.build_status}")

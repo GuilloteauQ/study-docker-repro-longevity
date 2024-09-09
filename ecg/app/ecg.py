@@ -34,19 +34,19 @@ def download_sources(url, archive_type, arthashlog_path, dl_dir, artifact_name):
     artifact_dir = ""
 
     tmp_artifact_file = tempfile.NamedTemporaryFile()
-    tmp_artifact_path = artifact_file.name
+    tmp_artifact_path = tmp_artifact_file.name
     artifact_hash = download_file_and_get_hash(url, tmp_artifact_path)
 
     if artifact_hash != "-1":
-        logging.info(f"Extracting artifact at {artifact_dir}")
         artcache_dir = f"ecg_{artifact_hash[:9]}"
         artifact_dir = os.path.join(dl_dir, artcache_dir)
+        logging.info(f"Extracting artifact at {artifact_dir}")
         extractors = {
             "zip": zipfile.ZipFile,
             "tar": tarfile.open
         }
         os.mkdir(artifact_dir)
-        extractors[archive_type](artifact_path).extractall(artifact_dir)
+        extractors[archive_type](tmp_artifact_path).extractall(artifact_dir)
 
     with open(arthashlog_path, "w") as arthashlog_file:
         now = datetime.datetime.now()
@@ -74,10 +74,9 @@ def buildresult_saver(result, buildstatus_path, config_path):
         timestamp = str(datetime.datetime.timestamp(now))
         buildstatus_file.write(f"{artifact_name},{timestamp},{result}\n")
 
-def build_image(path, image_name):
+def build_image(path, dockerfile_path, image_name):
     logging.info(f"Starting building image {image_name}")
-    path = os.path.join(src_dir, config["buildfile_dir"])
-    build_command = f"docker build --no-cache -t {image_name} ."
+    build_command = f"docker build --no-cache -t {image_name} -f {dockerfile_path} ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
     build_output = f"stdout:\n{build_process.stdout.decode('utf-8')}\nstderr:\n{build_process.stderr.decode('utf-8')}"
     logging.info(f"Output of '{build_command}':\n\n{build_output}")
@@ -221,35 +220,40 @@ def main():
         help = "Path to the file where to write the log of the hash of the downloaded artifact.",
         required = True
     )
+    parser.add_argument(
+        "-l", "--log",
+        help = "Path to the file where to write the log of the execution of ecg.",
+        required = True
+    )
     args = parser.parse_args()
 
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(filename=args.log, encoding='utf-8', format='%(levelname)s: %(message)s', level=logging.INFO)
 
     config_path = args.config
-    with open(config_path, "r") as config_file:
-        config = json.loads(config_file.read())
-
     artifact_name = os.path.splitext(os.path.basename(config_path))[0]
 
-    ecg(artifact_name, config, args.pkg_list, args.build_status, args.artifact_hash)
+    ecg(artifact_name, config_path, args.pkg_list, args.build_status, args.artifact_hash)
 
     return 0
 
-def ecg(artifact_name, config, pkglist_path, buildstatus_path, arthashlog_path):
+def ecg(artifact_name, config_path, pkglist_path, buildstatus_path, arthashlog_path):
     # just in case Snakemake does not create them
     pathlib.Path(pkglist_path).touch()
     pathlib.Path(buildstatus_path).touch()
     pathlib.Path(arthashlog_path).touch()
 
+    with open(config_path, "r") as config_file:
+        config = json.loads(config_file.read())
+
+
     status = ""
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        dl_dir = tmp_dir.name
-        artifact_dir = download_sources(config["url"], config["type"], arthashlog_path, dl_dir, artifact_name)
+    with tempfile.TemporaryDirectory() as dl_dir:
+        artifact_dir = download_sources(config["artifact_url"], config["type"], arthashlog_path, dl_dir, artifact_name)
 
         if artifact_dir != "":
             path = os.path.join(artifact_dir, config["buildfile_dir"])
-            return_code, build_output = build_image(path, artifact_name)
+            return_code, build_output = build_image(path, config["dockerfile_path"], artifact_name)
             if return_code == 0:
                 status = "success"
                 check_env(config, artifact_dir, artifact_name, pkglist_path)
