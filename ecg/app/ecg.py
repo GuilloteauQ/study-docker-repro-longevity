@@ -79,7 +79,7 @@ def build_image(path, dockerfile_path, image_name, build_args):
     build_command = f"docker build --no-cache -t {image_name} -f {dockerfile_path}"
     if len(build_args) != 0:
         build_args_str = " ".join(map(lambda x: f"--build-arg {x}", build_args))
-        build_command += build_args_str
+        build_command += f" {build_args_str}"
     build_command += " ."
     build_process = subprocess.run(build_command.split(" "), cwd=path, capture_output=True)
     build_output = f"stdout:\n{build_process.stdout.decode('utf-8')}\nstderr:\n{build_process.stderr.decode('utf-8')}"
