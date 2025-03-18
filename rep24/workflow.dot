@@ -1,0 +1,45 @@
+digraph G {
+  graph [fontname = "Handlee"];
+  node [fontname = "Handlee"];
+  edge [fontname = "Handlee"];
+
+  bgcolor=transparent;
+  rankdir="LR"
+
+  subgraph cluster_0 {
+    #style=filled;
+    color=pink;
+    download -> build -> extract
+    label = "ECG";
+    fontsize = 20;
+  }
+
+  subgraph cluster_1 {
+    node [shape=note];
+    build_status, artifact_hash, package_list;
+    label = "Outputs";
+    fontsize = 20;
+    color=blue
+  }
+  
+  desc_nickel -> nickel;
+  contract -> nickel;
+  nickel -> desc_json;
+  desc_json -> download;
+  download -> artifact_hash;
+  build -> build_status;
+  extract -> package_list;
+  
+  desc_nickel [label="Artifact Description\n(Nickel)", shape=note];
+  desc_json [label="Verified Description\n(JSON)", shape=note];
+  contract [label="Nickel\nContract", shape=note];
+  nickel [label="Nickel\nInterpretor", shape=rect];
+  
+  download [label="Download\nArtifact"];
+  build [label="Build\nContainer"];
+  extract [label="Extract\nSoftware Env."];
+  
+  package_list [label="Packages Info"];
+  build_status [label="Build Status"];
+  artifact_hash [label="Artifact Hash"];
+}

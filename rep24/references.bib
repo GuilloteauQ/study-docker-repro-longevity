@@ -1,0 +1,890 @@
+@article{collberg_repeatability_2015,
+	title = {Repeatability and {Benefaction} in {Computer} {Systems} {Research} - {A} {Study} and a {Modest} {Proposal}},
+	abstract = {We describe a study into the extent to which Computer Systems researchers share their code and data and the extent to which such code builds. Starting with 601 papers from ACM conferences and journals, we examine 402 papers whose results were backed by code. For 32.3\% of these papers we were able to obtain the code and build it within 30 minutes; for 48.3\% of the papers we managed to build the code, but it may have required extra eﬀort; for 54.0\% of the papers either we managed to build the code or the authors stated the code would build with reasonable eﬀort. We also propose a novel sharing speciﬁcation scheme that requires researchers to specify the level of sharing that reviewers and readers can assume from a paper.},
+	language = {en},
+	author = {Collberg, Christian and Proebsting, Todd and Warren, Alex M},
+	year = {2015},
+	pages = {68}
+}
+
+@article{feitelson_repeatability_2015,
+	title = {From {Repeatability} to {Reproducibility} and {Corroboration}},
+	volume = {49},
+	issn = {0163-5980},
+	url = {https://dl.acm.org/doi/10.1145/2723872.2723875},
+	doi = {10.1145/2723872.2723875},
+	abstract = {Being able to repeat experiments is considered a hallmark of the scientiﬁc method, used to conﬁrm or refute hypotheses and previously obtained results. But this can take many forms, from precise repetition using the original experimental artifacts, to conceptual reproduction of the main experimental idea using new artifacts. Furthermore, the conclusions from previous work can also be corroborated using a different experimental methodology altogether. In order to promote a better understanding and use of such methodologies we propose precise deﬁnitions for different terms, and suggest when and why each should be used.},
+	language = {en},
+	number = {1},
+	urldate = {2020-05-21},
+	journal = {ACM SIGOPS Operating Systems Review},
+	author = {Feitelson, Dror G.},
+	month = jan,
+	year = {2015},
+	pages = {3--11}
+}
+
+@article{dolstra_nix_2004,
+	title = {Nix: {A} {Safe} and {Policy}-{Free} {System} for {Software} {Deployment}},
+	abstract = {Existing systems for software deployment are neither safe nor sufficiently flexible. Primary safety issues are the inability to enforce reliable specification of component dependencies, and the lack of support for multiple versions or variants of a component. This renders deployment operations such as upgrading or deleting components dangerous and unpredictable. A deployment system must also be flexible (i.e., policy-free) enough to support both centralised and local package management, and to allow a variety of mechanisms for transferring components. In this paper we present Nix, a deployment system that addresses these issues through a simple technique of using cryptographic hashes to compute unique paths for component instances.},
+	language = {en},
+	author = {Dolstra, Eelco and de Jonge, Merijn and Visser, Eelco},
+	year = {2004},
+	pages = {14}
+}
+
+@inproceedings{capit_batch_2005,
+	address = {Cardiff, Wales, UK},
+	title = {A batch scheduler with high level components},
+	isbn = {978-0-7803-9074-4},
+	url = {http://ieeexplore.ieee.org/document/1558641/},
+	doi = {10.1109/CCGRID.2005.1558641},
+	abstract = {In this article we present the design choices and the evaluation of a batch scheduler for large clusters, named OAR. This batch scheduler is based upon an original design that emphasizes on low software complexity by using high level tools. The global architecture is built upon the scripting language Perl and the relational database engine Mysql. The goal of the project OAR is to prove that it is possible today to build a complex system for ressource management using such tools without sacriﬁcing efﬁciency and scalability. Currently, our system offers most of the important features implemented by other batch schedulers such as priority scheduling (by queues), reservations, backﬁlling and some global computing support. Despite the use of high level tools, our experiments show that our system has performances close to other systems. Furthermore, OAR is currently exploited for the management of 700 nodes (a metropolitan GRID) and has shown good efﬁciency and robustness.},
+	language = {en},
+	urldate = {2020-05-25},
+	booktitle = {{CCGrid} 2005. {IEEE} {International} {Symposium} on {Cluster} {Computing} and the {Grid}, 2005.},
+	publisher = {IEEE},
+	author = {Capit, N. and Da Costa, G. and Georgiou, Y. and Huard, G. and Martin, C. and Mounie, G. and Neyron, P. and Richard, O.},
+	year = {2005},
+	pages = {776--783 Vol. 2}
+}
+
+@article{buchert_survey_2015,
+	title = {A survey of general-purpose experiment management tools for distributed systems},
+	volume = {45},
+	issn = {0167739X},
+	url = {https://linkinghub.elsevier.com/retrieve/pii/S0167739X14002003},
+	doi = {10.1016/j.future.2014.10.007},
+	abstract = {In the ﬁeld of large-scale distributed systems, experimentation is particularly diﬃcult. The studied systems are complex, often nondeterministic and unreliable, software is plagued with bugs, whereas the experiment workﬂows are unclear and hard to reproduce. These obstacles led many independent researchers to design tools to control their experiments, boost productivity and improve quality of scientiﬁc results.},
+	language = {en},
+	urldate = {2020-06-11},
+	journal = {Future Generation Computer Systems},
+	author = {Buchert, Tomasz and Ruiz, Cristian and Nussbaum, Lucas and Richard, Olivier},
+	month = apr,
+	year = {2015},
+	pages = {1--12}
+}
+
+@article{ruiz_reconstructable_2015,
+	title = {Reconstructable {Software} {Appliances} with {Kameleon}},
+	volume = {49},
+	issn = {0163-5980},
+	url = {https://dl.acm.org/doi/10.1145/2723872.2723883},
+	doi = {10.1145/2723872.2723883},
+	abstract = {A software appliance builder bundles together an application with its needed middleware and an operating system to allow easy deployment on Infrastructure as a Service (IaaS) providers. These builders have the potential to address a key need in our community: the ability to reproduce an experiment. This paper reports the experiences on developing a software appliance builder called Kameleon that leverages popular and well tested tools. Kameleon simpliﬁes the creation of complex software appliances that are targeted at research on operating systems, HPC and distributed computing. It does so by proposing a highly modular description format that encourages collaboration and reuse of procedures. Moreover, it provides debugging mechanisms for improving experimenter’s productivity. To justify that our appliance builder stands above others, we compare it with the most known tools used by developers and researchers to automate the construction of software environments for virtual machines and IaaS infrastructures.},
+	language = {en},
+	number = {1},
+	urldate = {2020-06-12},
+	journal = {ACM SIGOPS Operating Systems Review},
+	author = {Ruiz, Cristian and Harrache, Salem and Mercier, Michael and Richard, Olivier},
+	month = jan,
+	year = {2015},
+	pages = {80--89}
+}
+
+@article{mytkowicz_producing_nodate,
+	title = {Producing {Wrong} {Data} {Without} {Doing} {Anything} {Obviously} {Wrong}!},
+	abstract = {This paper presents a surprising result: changing a seemingly innocuous aspect of an experimental setup can cause a systems researcher to draw wrong conclusions from an experiment. What appears to be an innocuous aspect in the experimental setup may in fact introduce a signiﬁcant bias in an evaluation. This phenomenon is called measurement bias in the natural and social sciences.},
+	language = {en},
+	author = {Mytkowicz, Todd and Diwan, Amer and Hauswirth, Matthias and Sweeney, Peter F},
+	pages = {12}
+}
+
+@article{courtes_functional_2013,
+	title = {Functional {Package} {Management} with {Guix}},
+	url = {http://arxiv.org/abs/1305.4584},
+	abstract = {We describe the design and implementation of GNU Guix, a purely functional package manager designed to support a complete GNU/Linux distribution. Guix supports transactional upgrades and roll-backs, unprivileged package management, per-user proﬁles, and garbage collection. It builds upon the low-level build and deployment layer of the Nix package manager. Guix uses Scheme as its programming interface. In particular, we devise an embedded domain-speciﬁc language (EDSL) to describe and compose packages. We demonstrate how it allows us to beneﬁt from the host general-purpose programming language while not compromising on expressiveness. Second, we show the use of Scheme to write build programs, leading to a “two-tier” programming system.},
+	language = {en},
+	urldate = {2020-06-13},
+	journal = {arXiv:1305.4584 [cs]},
+	author = {Courtès, Ludovic},
+	month = may,
+	year = {2013},
+	keywords = {Computer Science - Programming Languages},
+	annote = {arXiv: 1305.4584},
+	annote = {Comment: European Lisp Symposium (2013)}
+}
+
+@incollection{courtes_reproducible_2015,
+	address = {Cham},
+	title = {Reproducible and {User}-{Controlled} {Software} {Environments} in {HPC} with {Guix}},
+	volume = {9523},
+	isbn = {978-3-319-27307-5 978-3-319-27308-2},
+	url = {http://link.springer.com/10.1007/978-3-319-27308-2_47},
+	abstract = {Support teams of high-performance computing (HPC) systems often find themselves between a rock and a hard place: on one hand, they understandably administrate these large systems in a conservative way, but on the other hand, they try to satisfy their users by deploying up-to-date tool chains as well as libraries and scientific software. HPC system users often have no guarantee that they will be able to reproduce results at a later point in time, even on the same system—software may have been upgraded, removed, or recompiled under their feet, and they have little hope of being able to reproduce the same software environment elsewhere. We present GNU Guix and the functional package management paradigm and show how it can improve reproducibility and sharing among researchers with representative use cases.},
+	language = {en},
+	urldate = {2020-06-13},
+	booktitle = {Euro-{Par} 2015: {Parallel} {Processing} {Workshops}},
+	publisher = {Springer International Publishing},
+	author = {Courtes, Ludovic and Wurmus, Ricardo},
+	editor = {Hunold, Sascha and Costan, Alexandru and Giménez, Domingo and Iosup, Alexandru and Ricci, Laura and Gomez Requena, Maria Engracia and Scarano, Vittorio and Varbanescu, Ana Lucia and Scott, Stephen L. and Lankes, Stefan and Weidendorfer, Josef and Alexander, Michael},
+	year = {2015},
+	doi = {10.1007/978-3-319-27308-2_47},
+	pages = {579--591}
+}
+
+@article{van_der_burg_disnix_2014,
+	title = {Disnix: {A} toolset for distributed deployment},
+	volume = {79},
+	issn = {01676423},
+	shorttitle = {Disnix},
+	url = {https://linkinghub.elsevier.com/retrieve/pii/S0167642312000639},
+	doi = {10.1016/j.scico.2012.03.006},
+	abstract = {The process of deploying a distributed system in a network of machines is often very complex, laborious and time-consuming, while it is hard to guarantee that the system will work as expected and that specific non-functional deployment requirements from the domain are supported. In this paper we describe the Disnix toolset, which provides system administrators or developers with automatic deployment of a distributed system in a network of machines from declarative specifications and offers properties such as complete dependencies, atomic upgrades and rollbacks to make this process efficient and reliable. Disnix has an extensible architecture, allowing the integration of custom modules to make the deployment more convenient and suitable for the domain in which the system is to be used. Disnix has been under development for almost four years and has been applied to several types of distributed systems, including an industrial case study.},
+	language = {en},
+	urldate = {2021-11-22},
+	journal = {Science of Computer Programming},
+	author = {van der Burg, Sander and Dolstra, Eelco},
+	month = jan,
+	year = {2014},
+	pages = {52--69},
+	file = {van der Burg and Dolstra - 2014 - Disnix A toolset for distributed deployment.pdf:/home/quentin/Zotero/storage/PFVS2VRK/van der Burg and Dolstra - 2014 - Disnix A toolset for distributed deployment.pdf:application/pdf},
+}
+
+@article{cherrueau_enoslib_2022,
+	title = {{EnosLib}: {A} {Library} for {Experiment}-{Driven} {Research} in {Distributed} {Computing}},
+	volume = {33},
+	issn = {1045-9219, 1558-2183, 2161-9883},
+	shorttitle = {{EnosLib}},
+	url = {https://ieeexplore.ieee.org/document/9534688/},
+	doi = {10.1109/TPDS.2021.3111159},
+	abstract = {Despite the importance of experiment-driven research in the distributed computing community, there has been little progress in helping researchers conduct their experiments. In most cases, they have to achieve tedious and time-consuming development and instrumentation activities to deal with the speciﬁcs of testbeds and the system under study. In order to relieve researchers of the burden of those efforts, we have developed ENOSLIB: a Python library that takes into account best experimentation practices and leverages modern toolkits on automatic deployment and conﬁguration systems. ENOSLIB helps researchers not only in the process of developing their experimental artifacts, but also in running them over different infrastructures. To demonstrate the relevance of our library, we discuss three experimental engines built on top of ENOSLIB, and used to conduct empirical studies on complex software stacks between 2016 and 2019 (database systems, communication buses and OpenStack). By introducing ENOSLIB, our goal is to gather academic and industrial actors of our community around a library that aggregates everyday experiment-driven research operations. A library that has been already adopted by open-source projects and members of the scientiﬁc community thanks to its ease of use and extension.},
+	language = {en},
+	number = {6},
+	urldate = {2021-11-22},
+	journal = {IEEE Transactions on Parallel and Distributed Systems},
+	author = {Cherrueau, Ronan-Alexandre and Delavergne, Marie and van Kempen, Alexandre and Lebre, Adrien and Pertin, Dimitri and Balderrama, Javier Rojas and Simonet, Anthony and Simonin, Matthieu},
+	month = jun,
+	year = {2022},
+	pages = {1464--1477},
+	file = {Cherrueau et al. - 2022 - EnosLib A Library for Experiment-Driven Research .pdf:/home/quentin/Zotero/storage/23JL26WS/Cherrueau et al. - 2022 - EnosLib A Library for Experiment-Driven Research .pdf:application/pdf},
+}
+
+@inproceedings{cherrueau_enosstack_2018,
+	address = {Honolulu, HI, USA},
+	title = {{EnosStack}: {A} {LAMP}-like stack for the experimenter},
+	isbn = {978-1-5386-5979-3},
+	shorttitle = {{EnosStack}},
+	url = {https://ieeexplore.ieee.org/document/8407024/},
+	doi = {10.1109/INFCOMW.2018.8407024},
+	abstract = {Reproducibility and repeatability dramatically increase the value of scientiﬁc experiments, but remain two challenging goals for the experimenters. Similar to the LAMP stack that considerably eased the web developers life, in this paper, we advocate the need of an analogous software stack to help the experimenters making reproducible research. We propose the EnosStack, an open source software stack especially designed for reproducible scientiﬁc experiments. EnosStack enables to easily describe experimental workﬂows meant to be re-used, while abstracting the underlying infrastructure running them. Being able to switch experiments from a local to a real testbed deployment greatly lower code development and validation time. We describe the abstractions that have driven its design, before presenting a real experiment we deployed on Grid’5000 to illustrate its usefulness. We also provide all the experiment code, data and results to the community.},
+	language = {en},
+	urldate = {2021-11-22},
+	booktitle = {{IEEE} {INFOCOM} 2018 - {IEEE} {Conference} on {Computer} {Communications} {Workshops} ({INFOCOM} {WKSHPS})},
+	publisher = {IEEE},
+	author = {Cherrueau, Ronan-Alexandre and Simonin, Matthieu and van Kempen, Alexandre},
+	month = apr,
+	year = {2018},
+	pages = {336--341},
+	file = {Cherrueau et al. - 2018 - EnosStack A LAMP-like stack for the experimenter.pdf:/home/quentin/Zotero/storage/RM9TF5VK/Cherrueau et al. - 2018 - EnosStack A LAMP-like stack for the experimenter.pdf:application/pdf},
+}
+
+@inproceedings{gamblin_spack_2015,
+	address = {Austin Texas},
+	title = {The {Spack} package manager: bringing order to {HPC} software chaos},
+	isbn = {978-1-4503-3723-6},
+	shorttitle = {The {Spack} package manager},
+	url = {https://dl.acm.org/doi/10.1145/2807591.2807623},
+	doi = {10.1145/2807591.2807623},
+	abstract = {Large HPC centers spend considerable time supporting software for thousands of users, but the complexity of HPC software is quickly outpacing the capabilities of existing software management tools. Scientiﬁc applications require speciﬁc versions of compilers, MPI, and other dependency libraries, so using a single, standard software stack is infeasible. However, managing many conﬁgurations is difﬁcult because the conﬁguration space is combinatorial in size.},
+	language = {en},
+	urldate = {2021-11-22},
+	booktitle = {Proceedings of the {International} {Conference} for {High} {Performance} {Computing}, {Networking}, {Storage} and {Analysis}},
+	publisher = {ACM},
+	author = {Gamblin, Todd and LeGendre, Matthew and Collette, Michael R. and Lee, Gregory L. and Moody, Adam and de Supinski, Bronis R. and Futral, Scott},
+	month = nov,
+	year = {2015},
+	pages = {1--12},
+	file = {Gamblin et al. - 2015 - The Spack package manager bringing order to HPC s.pdf:/home/quentin/Zotero/storage/UEHYBBR5/Gamblin et al. - 2015 - The Spack package manager bringing order to HPC s.pdf:application/pdf},
+}
+
+
+
+@inproceedings{mercier2018considering,
+  title={Considering the Development Workflow to Achieve Reproducibility with Variation},
+  author={Mercier, Michael and Faure, Adrien and Richard, Olivier},
+  booktitle={SC 2018-Workshop: ResCuE-HPC},
+  pages={1--5},
+  year={2018}
+}
+
+@inproceedings{software_heritage_2017,
+  TITLE = {{Software Heritage: Why and How to Preserve Software Source Code}},
+  AUTHOR = {Di Cosmo, Roberto and Zacchiroli, Stefano},
+  URL = {https://hal.archives-ouvertes.fr/hal-01590958},
+  BOOKTITLE = {{iPRES 2017 - 14th International Conference on Digital Preservation}},
+  ADDRESS = {Kyoto, Japan},
+  PAGES = {1-10},
+  YEAR = {2017},
+  MONTH = Sep,
+  KEYWORDS = {source code ; digital preservation ; cultural heritage ; open source software ; free software},
+  PDF = {https://hal.archives-ouvertes.fr/hal-01590958/file/ipres-2017-software-heritage.pdf},
+  HAL_ID = {hal-01590958},
+  HAL_VERSION = {v1},
+}
+
+@article{nixos_2008,
+author = {Dolstra, Eelco and L\"{o}h, Andres},
+title = {NixOS: A Purely Functional Linux Distribution},
+year = {2008},
+issue_date = {September 2008},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {43},
+number = {9},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/1411203.1411255},
+doi = {10.1145/1411203.1411255},
+abstract = {Existing package and system configuration management tools suffer from an imperative model, where system administration actions such as upgrading packages or changes to system configuration files are stateful: they destructively update the state of the system. This leads to many problems, such as the inability to roll back changes easily, to run multiple versions of a package side-by-side, to reproduce a configuration deterministically on another machine, or to reliably upgrade a system. In this paper we show that we can overcome these problems by moving to a purely functional system configuration model. This means that all static parts of a system (such as software packages, configuration files and system startup scripts) are built by pure functions and are immutable, stored in a way analogously to a heap in a purely function language. We have implemented this model in NixOS, a non-trivial Linux distribution that uses the Nix package manager to build the entire system configuration from a purely functional specification.},
+journal = {SIGPLAN Not.},
+month = {sep},
+pages = {367–378},
+numpages = {12},
+keywords = {purely functional language, package management, purely functional deployment model, NixOS, nix, system configuration management, software deployment}
+}
+
+@incollection{grid5000,
+   title = {Adding Virtualization Capabilities to the {Grid'5000} Testbed},
+   author = {Balouek, Daniel and Carpen Amarie, Alexandra and Charrier, Ghislain and Desprez, Fr{\'e}d{\'e}ric and Jeannot, Emmanuel and Jeanvoine, Emmanuel and L{\`e}bre, Adrien and Margery, David and Niclausse, Nicolas and Nussbaum, Lucas and Richard, Olivier and P{\'e}rez, Christian and Quesnel, Flavien and Rohr, Cyril and Sarzyniec, Luc},
+   booktitle = {Cloud Computing and Services Science},
+   publisher = {Springer International Publishing},
+   pages = {3-20},
+   volume = {367},
+   editor = {Ivanov, Ivan I. and van Sinderen, Marten and Leymann, Frank and Shan, Tony },
+   series = {Communications in Computer and Information Science },
+   isbn = {978-3-319-04518-4 },
+   doi = {10.1007/978-3-319-04519-1\_1 },
+   year = {2013},
+}
+
+    
+@misc{nixops,
+	title = {{NixOps}},
+	copyright = {LGPL-3.0},
+	url = {https://github.com/NixOS/nixops},
+	abstract = {NixOps is a tool for deploying to NixOS machines in a network or cloud.},
+	urldate = {2022-04-28},
+	publisher = {Nix/Nixpkgs/NixOS},
+	month = apr,
+	year = {2022},
+	note = {original-date: 2011-10-24T15:49:58Z},
+	keywords = {aws, cloud, devops, digialocean, gce, hetzner, libvirt, nix, nixops, nixos, python, virtualbox},
+}
+
+@incollection{chameleon, title={Lessons Learned from the Chameleon Testbed}, author={Kate Keahey and Jason Anderson and Zhuo Zhen and Pierre Riteau and Paul Ruth and Dan Stanzione and Mert Cevik and Jacob Colleran and Haryadi S. Gunawi and Cody Hammock and Joe Mambretti and Alexander Barnes and Fran\c{c}ois Halbach and Alex Rocha and Joe Stubbs}, booktitle={Proceedings of the 2020 USENIX Annual Technical Conference (USENIX ATC '20)}, publisher={USENIX Association}, month={July}, year={2020}}
+
+@inproceedings{guilloteau:nxc,
+  title = {{Painless Transposition of Reproducible Distributed Environments with NixOS Compose}},
+  author = {Guilloteau, Quentin and Bleuzen, Jonathan and Poquet, Millian and Richard, Olivier},
+  url = {https://hal.science/hal-03723771},
+  booktitle = {{CLUSTER 2022 - IEEE International Conference on Cluster Computing}},
+  address = {Heidelberg, Germany},
+  volume = {CLUSTER 2022 - IEEE International Conference on Cluster Computing},
+  pages = {1-12},
+  year = {2022},
+  month = Sep,
+  keywords = {Reproducibility ; Distributed Systems ; System Image ; Deployment ; Nix},
+  pdf = {https://hal.science/hal-03723771v2/file/painless_transposition_repro_distributed_env_with_nxc_camera_ready_fixed.pdf},
+  hal_id = {hal-03723771},
+  hal_version = {v2},
+}
+
+@inproceedings{cloudlab,
+    title     = "The Design and Operation of {CloudLab}",
+    author    = "Dmitry Duplyakin and Robert Ricci and Aleksander Maricq and Gary Wong and Jonathon Duerig and Eric Eide and Leigh Stoller and Mike Hibler and David Johnson and Kirk Webb and Aditya Akella and Kuangching Wang and Glenn Ricart and Larry Landweber and Chip Elliott and Michael Zink and Emmanuel Cecchet and Snigdhaswin Kar and Prabodh Mishra",
+    booktitle = "Proceedings of the {USENIX} Annual Technical Conference (ATC)",
+    pages     = "1--14",
+    year      = 2019,
+    month     = jul,
+    url       = "https://www.flux.utah.edu/paper/duplyakin-atc19"
+}
+
+@misc{zenodo,
+  author = {zenodo},
+  title = {Zenodo},
+  howpublished = {\url{https://zenodo.org/}},
+  note = {Accessed: 2023-03-30}
+}
+
+@misc{figshare,
+  author = {figshare},
+  title = {Figshare},
+  howpublished = {\url{https://figshare.com/}},
+  note = {Accessed: 2024-01-23}
+}
+
+@software{anonymous_github,
+    name = {anonymous_github},
+    author = {tdurieux},
+    url = {https://github.com/tdurieux/anonymous_github},
+    year = {2024},
+    swhid = {swh:1:dir:9239038ce7c56d17b6b3ee3acd6d5ef86da038c1;origin=https://github.com/tdurieux/anonymous_github}
+}
+
+@software{modules,
+    name = {modules},
+    author = {cea-hpc},
+    url = {https://github.com/cea-hpc/modules},
+    year = {2024},
+    swhid = {swh:1:dir:a83ee4b9f7d1a2f6377326dd16ac839450a6e6fc;origin=https://github.com/cea-hpc/modules;}
+}
+
+@misc{swheritage,
+  author = {Software Heritage},
+  title = {Software Heritage},
+  howpublished = {\url{https://www.softwareheritage.org/}},
+  note = {Accessed: 2023-03-30}
+}
+
+@misc{tgz-g5k,
+  author = {Grid'5000},
+  title = {Creating an environment images using tgz-g5k},
+  howpublished = {\url{https://grid5000.fr/w/Environment_creation\#Creating_an_environment_images_using_tgz-g5k}},
+  note = {Accessed: 2023-04-03}
+}
+
+@misc{cc-snapshot,
+  author = {Chameleon Cloud},
+  title = {The cc-snapshot utility},
+  howpublished = {\url{https://chameleoncloud.readthedocs.io/en/latest/technical/images.html\#the-cc-snapshot-utility}},
+  note = {Accessed: 2023-04-03}
+}
+
+@book{randallIrreproducibilityCrisisModern2018,
+	address = {New York},
+	title = {The {Irreproducibility} {Crisis} of {Modern} {Science}. {Causes}, {Consequences}, and the {Road} to {Reform}},
+	url = {https://www.nas.org/reports/the-irreproducibility-crisis-of-modern-science},
+	language = {en},
+	publisher = {National Association of Scholars},
+	author = {Randall, David and Welser, Christopher},
+	year = {2018},
+	keywords = {lu},
+	file = {NAS_irreproducibilityReport.pdf:C\:\\Users\\sgranger\\Zotero\\storage\\BX5BVUIS\\NAS_irreproducibilityReport.pdf:application/pdf}
+}
+
+@article{baker500ScientistsLift2016,
+	title = {1,500 scientists lift the lid on reproducibility},
+	volume = {533},
+	issn = {0028-0836, 1476-4687},
+	url = {http://www.nature.com/doifinder/10.1038/533452a},
+	doi = {10.1038/533452a},
+	number = {7604},
+	urldate = {2019-05-03},
+	journal = {Nature},
+	author = {Baker, Monya},
+	month = may,
+	year = {2016},
+	pages = {452--454}
+}
+
+@misc{flakes,
+	author = {Tweag.io},
+	title = {What problems do flakes solve?},
+	howpublished = {\url{https://www.tweag.io/blog/2020-05-25-flakes/}},
+	note = {Accessed: 2023-04-04}
+}
+
+@article{mytkowicz2009producing,
+  title={Producing wrong data without doing anything obviously wrong!},
+  author={Mytkowicz, Todd and Diwan, Amer and Hauswirth, Matthias and Sweeney, Peter F},
+  journal={ACM Sigplan Notices},
+  volume={44},
+  number={3},
+  pages={265--276},
+  year={2009},
+  publisher={ACM New York, NY, USA}
+}
+
+@software{kapack,
+	author = {OAR-Team},
+	title = {NUR-Kapack},
+	swhid = {swh:1:dir:1a6970dbce78a86062648a7c76978f674f136607;
+	         origin=https://github.com/oar-team/nur-kapack},
+	url = {https://github.com/oar-team/nur-kapack},
+	year = {2023},
+}
+
+@software{ciment_channel,
+	author = {Gricad},
+	title = {Nix Ciment Channel},
+	swhid = {swh:1:dir:dec8c22b23ba51650f65352fa2fc2640f1532bea;
+	         origin=https://github.com/Gricad/nix-ciment-channel},
+	url = {https://github.com/Gricad/nix-ciment-channel},
+	year = {2023},
+}
+
+@software{guix-hpc,
+	author = {Guix-HPC},
+	title = {Guix-HPC},
+	swhid = {swh:1:dir:aabd69b989444999630729faf0184f4d68ff13fa;
+	         origin=https://gitlab.inria.fr/guix-hpc/guix-hpc},
+	url = {https://gitlab.inria.fr/guix-hpc/guix-hpc},
+	year = {2023},
+}
+
+@article{brammer2011paper,
+  title={Paper m{\^a}ch{\'e}: Creating dynamic reproducible science},
+  author={Brammer, Grant R and Crosby, Ralph W and Matthews, Suzanne J and Williams, Tiffani L},
+  journal={Procedia Computer Science},
+  volume={4},
+  pages={658--667},
+  year={2011},
+  publisher={Elsevier}
+}
+
+@article{brinckman2019computing,
+  title={Computing environments for reproducibility: Capturing the “Whole Tale”},
+  author={Brinckman, Adam and Chard, Kyle and Gaffney, Niall and Hategan, Mihael and Jones, Matthew B and Kowalik, Kacper and Kulasekaran, Sivakumar and Lud{\"a}scher, Bertram and Mecum, Bryce D and Nabrzyski, Jarek and others},
+  journal={Future Generation Computer Systems},
+  volume={94},
+  pages={854--867},
+  year={2019},
+  publisher={Elsevier}
+}
+
+@article{ivie2018reproducibility,
+  title={Reproducibility in scientific computing},
+  author={Ivie, Peter and Thain, Douglas},
+  journal={ACM Computing Surveys (CSUR)},
+  volume={51},
+  number={3},
+  pages={1--36},
+  year={2018},
+  publisher={ACM New York, NY, USA}
+}
+
+@misc{acm-badges,
+	author = {ACM},
+	title = {Artefact review badging},
+	howpublished = {\url{https://www.acm.org/publications/policies/artifact-review-badging}},
+	note = {Accessed: 2023-04-04}
+}
+
+@misc{nixpkgs,
+	author = {NixOS},
+	title = {nixpkgs},
+	howpublished = {\url{https://github.com/nixos/nixpkgs}},
+	note = {Accessed: 2023-04-04}
+}
+
+@inproceedings{stodden2018assessing,
+  title={Assessing reproducibility: An astrophysical example of computational uncertainty in the HPC context},
+  author={Stodden, Victoria and Krafczyk, Matthew S},
+  booktitle={Proceedings of the 1st Workshop on Reproducible, Customizable and Portable Workflows for HPC at SC},
+  volume={18},
+  year={2018}
+}
+
+@misc{github_zenodo,
+	author = {Github},
+	title = {Issuing a persistent identifier for your repository with Zenodo},
+	howpublished = {\url{https://docs.github.com/en/repositories/archiving-a-github-repository/referencing-and-citing-content}},
+	note = {Accessed: 2024-01-24}
+}
+
+@misc{blinry,
+	author = {blinry},
+	title = {Building 15-year-old software with Nix},
+	howpublished = {\url{https://blinry.org/nix-time-travel/}},
+	note = {Accessed: 2023-04-16}
+}
+@inproceedings{rosendo2020e2clab,
+  TITLE = {{E2Clab: Exploring the Computing Continuum through Repeatable, Replicable and Reproducible Edge-to-Cloud Experiments}},
+  AUTHOR = {Rosendo, Daniel and Silva, Pedro and Simonin, Matthieu and Costan, Alexandru and Antoniu, Gabriel},
+  URL = {https://hal.science/hal-02916032},
+  BOOKTITLE = {{Cluster 2020 - IEEE International Conference on Cluster Computing}},
+  ADDRESS = {Kobe, Japan},
+  PAGES = {1-11},
+  YEAR = {2020},
+  MONTH = Sep,
+  DOI = {10.1109/CLUSTER49012.2020.00028},
+  KEYWORDS = {Reproducibility ; Methodology ; Computing Continuum ; Edge Intelligence},
+  PDF = {https://hal.science/hal-02916032/file/Cluster_2020_E2Clab_HAL_v1.pdf},
+  HAL_ID = {hal-02916032},
+  HAL_VERSION = {v1},
+}
+@article{koster2012snakemake,
+  title={Snakemake—a scalable bioinformatics workflow engine},
+  author={K{\"o}ster, Johannes and Rahmann, Sven},
+  journal={Bioinformatics},
+  volume={28},
+  number={19},
+  pages={2520--2522},
+  year={2012},
+  publisher={Oxford University Press}
+}
+
+@article{wratten2021reproducible,
+  title={Reproducible, scalable, and shareable analysis pipelines with bioinformatics workflow managers},
+  author={Wratten, Laura and Wilm, Andreas and G{\"o}ke, Jonathan},
+  journal={Nature methods},
+  volume={18},
+  number={10},
+  pages={1161--1168},
+  year={2021},
+  publisher={Nature Publishing Group US New York}
+}
+
+@article{di2017nextflow,
+  title={Nextflow enables reproducible computational workflows},
+  author={Di Tommaso, Paolo and Chatzou, Maria and Floden, Evan W and Barja, Pablo Prieto and Palumbo, Emilio and Notredame, Cedric},
+  journal={Nature biotechnology},
+  volume={35},
+  number={4},
+  pages={316--319},
+  year={2017},
+  publisher={Nature Publishing Group}
+}
+
+@misc{amstutz2016common,
+  title={Common workflow language, v1. 0},
+  author={Amstutz, Peter and Crusoe, Michael R and Tijani{\'c}, Neboj{\v{s}}a and Chapman, Brad and Chilton, John and Heuer, Michael and Kartashov, Andrey and Leehr, Dan and M{\'e}nager, Herv{\'e} and Nedeljkovich, Maya and others},
+  year={2016},
+  publisher={eScholarship, University of California}
+}
+
+@article{vivian2017toil,
+  title={Toil enables reproducible, open source, big biomedical data analyses},
+  author={Vivian, John and Rao, Arjun Arkal and Nothaft, Frank Austin and Ketchum, Christopher and Armstrong, Joel and Novak, Adam and Pfeil, Jacob and Narkizian, Jake and Deran, Alden D and Musselman-Brown, Audrey and others},
+  journal={Nature biotechnology},
+  volume={35},
+  number={4},
+  pages={314--316},
+  year={2017},
+  publisher={Nature Publishing Group US New York}
+}
+
+@article{strozzi2019scalable,
+  title={Scalable workflows and reproducible data analysis for genomics},
+  author={Strozzi, Francesco and Janssen, Roel and Wurmus, Ricardo and Crusoe, Michael R and Githinji, George and Di Tommaso, Paolo and Belhachemi, Dominique and M{\"o}ller, Steffen and Smant, Geert and de Ligt, Joep and others},
+  journal={Evolutionary Genomics: Statistical and Computational Methods},
+  pages={723--745},
+  year={2019},
+  publisher={Springer}
+}
+
+@inproceedings{di2017software,
+  title={Software heritage: Why and how to preserve software source code},
+  author={Di Cosmo, Roberto and Zacchiroli, Stefano},
+  booktitle={iPRES 2017-14th International Conference on Digital Preservation},
+  pages={1--10},
+  year={2017}
+}
+
+@inproceedings{nussbaum2017testbeds,
+  title={Testbeds support for reproducible research},
+  author={Nussbaum, Lucas},
+  booktitle={Proceedings of the reproducibility workshop},
+  pages={24--26},
+  year={2017}
+}
+
+@misc{nvidia_cuda_lifetime,
+	author = {Nvidia},
+	title = {Container Support Policy},
+	howpublished = {\url{https://archive.softwareheritage.org/swh:1:cnt:167b243e20f4f7e38efcd1c9d1696f291de6c5e0;origin=https://gitlab.com/nvidia/container-images/cuda;visit=swh:1:snp:62fbbe6c6441981445c19b0632f4bc0c69736d12;anchor=swh:1:rev:e3ff10eab3a1424fe394899df0e0f8ca5a410f0f;path=/doc/support-policy.md}},
+	note = {Accessed: 2024-01-24}
+}
+
+@article{guerrera2019reproducible,
+  title={Reproducible stencil compiler benchmarks using prova!},
+  author={Guerrera, Danilo and Maffia, Antonio and Burkhart, Helmar},
+  journal={Future Generation Computer Systems},
+  volume={92},
+  pages={933--946},
+  year={2019},
+  publisher={Elsevier}
+}
+
+@inproceedings{colom2015ipol,
+  title={IPOL: a new journal for fully reproducible research; analysis of four years development},
+  author={Colom, Miguel and Kerautret, Bertrand and Limare, Nicolas and Monasse, Pascal and Morel, Jean-Michel},
+  booktitle={2015 7th International Conference on New Technologies, Mobility and Security (NTMS)},
+  pages={1--5},
+  year={2015},
+  organization={IEEE}
+}
+
+@inproceedings{rougier2019rescience,
+  title={ReScience C: a journal for reproducible replications in computational science},
+  author={Rougier, Nicolas P and Hinsen, Konrad},
+  booktitle={Reproducible Research in Pattern Recognition: Second International Workshop, RRPR 2018, Beijing, China, August 20, 2018, Revised Selected Papers 2},
+  pages={150--156},
+  year={2019},
+  organization={Springer}
+}
+
+@article{moreau2022benchopt,
+  title={Benchopt: Reproducible, efficient and collaborative optimization benchmarks},
+  author={Moreau, Thomas and Massias, Mathurin and Gramfort, Alexandre and Ablin, Pierre and Bannier, Pierre-Antoine and Charlier, Benjamin and Dagr{\'e}ou, Mathieu and Dupre la Tour, Tom and Durif, Ghislain and Dantas, Cassio F and others},
+  journal={Advances in Neural Information Processing Systems},
+  volume={35},
+  pages={25404--25421},
+  year={2022}
+}
+
+@article{smith2018journal,
+  title={Journal of Open Source Software (JOSS): design and first-year review},
+  author={Smith, Arfon M and Niemeyer, Kyle E and Katz, Daniel S and Barba, Lorena A and Githinji, George and Gymrek, Melissa and Huff, Kathryn D and Madan, Christopher R and Mayes, Abigail Cabunoc and Moerman, Kevin M and others},
+  journal={PeerJ Computer Science},
+  volume={4},
+  pages={e147},
+  year={2018},
+  publisher={PeerJ Inc.}
+}
+
+@software{umlaut,
+    name = {End-to-end-ML-System-Benchmark},
+    author = {hpides},
+    url = {https://github.com/hpides/End-to-end-ML-System-Benchmark},
+    year = {2023},
+    swhid = {swh:1:dir:c9eeb60b0be2a1bd41b8277d2f894da35275bccc;origin=https://github.com/hpides/End-to-end-ML-System-Benchmark}
+}
+
+@article{van2018benchmarking,
+  title={Benchmarking crimes: an emerging threat in systems security},
+  author={van der Kouwe, Erik and Andriesse, Dennis and Bos, Herbert and Giuffrida, Cristiano and Heiser, Gernot},
+  journal={arXiv preprint arXiv:1801.02381},
+  year={2018}
+}
+
+@inproceedings{rosendo2023kheops,
+  title={KheOps: Cost-effective Repeatability, Reproducibility, and Replicability of Edge-to-Cloud Experiments},
+  author={Rosendo, Daniel and Keahey, Kate and Costan, Alexandru and Simonin, Matthieu and Valduriez, Patrick and Antoniu, Gabriel},
+  booktitle={Proceedings of the 2023 ACM Conference on Reproducibility and Replicability},
+  pages={62--73},
+  year={2023}
+}
+
+@misc{paperswithcode,
+	author = {paperswithcode},
+	title = {Papers with code},
+	howpublished = {\url{https://paperswithcode.com/}},
+	note = {Accessed: 2024-01-24}
+}
+
+@article{kang2023papers,
+  title={Papers with code or without code? Impact of GitHub repository usability on the diffusion of machine learning research},
+  author={Kang, Donghyun and Kang, TaeYoung and Jang, Junkyu},
+  journal={Information Processing \& Management},
+  volume={60},
+  number={6},
+  pages={103477},
+  year={2023},
+  publisher={Elsevier}
+}
+
+@article{hunold2015survey,
+  title={A survey on reproducibility in parallel computing},
+  author={Hunold, Sascha},
+  journal={arXiv preprint arXiv:1511.04217},
+  year={2015}
+}
+
+@article{castell2024towards,
+  title={Towards a Quality Indicator for Research Data publications and Research Software publications--A vision from the Helmholtz Association},
+  author={Castell, Wolfgang zu and Dransch, Doris and Juckeland, Guido and Meistring, Marcel and Fritzsch, Bernadette and Gey, Ronny and H{\"o}pfner, Britta and K{\"o}hler, Martin and Mee{\ss}en, Christian and Mehrtens, Hela and others},
+  journal={arXiv preprint arXiv:2401.08804},
+  year={2024}
+}
+
+@article{hernandez2023repeatability,
+  title={Repeatability, Reproducibility, Replicability, Reusability (4R) in Journals' Policies and Software/Data Management in Scientific Publications: A Survey, Discussion, and Perspectives},
+  author={Hern{\'a}ndez, Jos{\'e} Armando and Colom, Miguel},
+  journal={arXiv preprint arXiv:2312.11028},
+  year={2023}
+}
+
+@article{perignon2019certify,
+  title={Certify reproducibility with confidential data},
+  author={P{\'e}rignon, Christophe and Gadouche, Kamel and Hurlin, Christophe and Silberman, Roxane and Debonnel, Eric},
+  journal={Science},
+  volume={365},
+  number={6449},
+  pages={127--128},
+  year={2019},
+  publisher={American Association for the Advancement of Science}
+}
+
+@inproceedings{nxc,
+  title={Painless transposition of reproducible distributed environments with NixOS compose},
+  author={Guilloteau, Quentin and Bleuzen, Jonathan and Poquet, Millian and Richard, Olivier},
+  booktitle={2022 IEEE International Conference on Cluster Computing (CLUSTER)},
+  pages={1--12},
+  year={2022},
+  organization={IEEE}
+}
+
+@inproceedings{winter2022retrospective,
+  title={A retrospective study of one decade of artifact evaluations},
+  author={Winter, Stefan and Timperley, Christopher S and Hermann, Ben and Cito, J{\"u}rgen and Bell, Jonathan and Hilton, Michael and Beyer, Dirk},
+  booktitle={Proceedings of the 30th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering},
+  pages={145--156},
+  year={2022}
+}
+
+
+@article{hermann2022has,
+  title={What Has Artifact Evaluation Ever Done for Us?},
+  author={Hermann, Ben},
+  journal={IEEE Security \& Privacy},
+  volume={20},
+  number={5},
+  pages={96--99},
+  year={2022},
+  publisher={IEEE}
+}
+
+@inproceedings{hermann2020community,
+  title={Community expectations for research artifacts and evaluation processes},
+  author={Hermann, Ben and Winter, Stefan and Siegmund, Janet},
+  booktitle={Proceedings of the 28th ACM joint meeting on european software engineering conference and symposium on the foundations of software engineering},
+  pages={469--480},
+  year={2020}
+}
+
+@article{beller2020will,
+  title={Why I will never join an Artifacts Evaluation Committee Again},
+  author={Beller, Moritz},
+  journal={Inventitech. com. https://inventitech. com/blog/why-i-will-never-review-artifacts-again/(Accessed: Feb. 9, 2022)},
+  year={2020}
+}
+
+@article{rougier2017sustainable,
+  title={Sustainable computational science: the ReScience initiative},
+  author={Rougier, Nicolas P and Hinsen, Konrad and Alexandre, Fr{\'e}d{\'e}ric and Arildsen, Thomas and Barba, Lorena A and Benureau, Fabien CY and Brown, C Titus and De Buyl, Pierre and Caglayan, Ozan and Davison, Andrew P and others},
+  journal={PeerJ Computer Science},
+  volume={3},
+  pages={e142},
+  year={2017},
+  publisher={PeerJ Inc.}
+}
+
+@article{alliez2019attributing,
+  title={Attributing and referencing (research) software: Best practices and outlook from Inria},
+  author={Alliez, Pierre and Di Cosmo, Roberto and Guedj, Benjamin and Girault, Alain and Hacid, Mohand-Said and Legrand, Arnaud and Rougier, Nicolas},
+  journal={Computing in Science \& Engineering},
+  volume={22},
+  number={1},
+  pages={39--52},
+  year={2019},
+  publisher={IEEE}
+}
+
+@software{snakemake-executor-plugin-slurm,
+    name = {snakemake-executor-plugin-slurm},
+    author = {snakemake},
+    url = {https://github.com/snakemake/snakemake-executor-plugin-slurm},
+    year = {2024},
+    swhid = {swh:1:dir:f5456f2673aa18d101bfa9eaeb75cf1ff98c2630;origin=https://github.com/snakemake/snakemake-executor-plugin-slurm}
+}
+
+@article{hong2013software,
+  title={Software papers: improving the reusability and sustainability of scientific software},
+  author={Hong, Neil Chue and Hole, Brian and Moore, Samuel},
+  journal={URL},
+  volume={10},
+  number={6084},
+  pages={m9},
+  year={2013}
+}
+
+@incollection{prabhu2011survey,
+  title={A survey of the practice of computational science},
+  author={Prabhu, Prakash and Jablin, Thomas B and Raman, Arun and Zhang, Yun and Huang, Jialu and Kim, Hanjun and Johnson, Nick P and Liu, Feng and Ghosh, Soumyadeep and Beard, Stephen and others},
+  booktitle={State of the practice reports},
+  pages={1--12},
+  year={2011}
+}
+
+@article{mendez2019artefacts,
+  title={Artefacts in software engineering: a fundamental positioning},
+  author={M{\'e}ndez Fern{\'a}ndez, Daniel and B{\"o}hm, Wolfgang and Vogelsang, Andreas and Mund, Jakob and Broy, Manfred and Kuhrmann, Marco and Weyer, Thorsten},
+  journal={Software \& Systems Modeling},
+  volume={18},
+  pages={2777--2786},
+  year={2019},
+  publisher={Springer}
+}
+
+@article{rowhani2017incentives,
+  title={What incentives increase data sharing in health and medical research? A systematic review},
+  author={Rowhani-Farid, Anisa and Allen, Michelle and Barnett, Adrian G},
+  journal={Research integrity and peer review},
+  volume={2},
+  number={1},
+  pages={1--10},
+  year={2017},
+  publisher={BioMed Central}
+}
+
+@article{kidwell2016badges,
+  title={Badges to acknowledge open practices: A simple, low-cost, effective method for increasing transparency},
+  author={Kidwell, Mallory C and Lazarevi{\'c}, Ljiljana B and Baranski, Erica and Hardwicke, Tom E and Piechowski, Sarah and Falkenberg, Lina-Sophia and Kennett, Curtis and Slowik, Agnieszka and Sonnleitner, Carina and Hess-Holden, Chelsey and others},
+  journal={PLoS biology},
+  volume={14},
+  number={5},
+  pages={e1002456},
+  year={2016},
+  publisher={Public Library of Science San Francisco, CA USA}
+}
+
+@misc{globus,
+	author = {Globus},
+	title = {Globus website},
+	howpublished = {\url{https://globus.org/}},
+	note = {Accessed: 2024-01-28}
+}
+
+@misc{docker_cache,
+	author = {Docker},
+	title = {Optimizing builds with cache management},
+	howpublished = {\url{https://docs.docker.com/build/cache/}},
+	note = {Accessed: 2023-06-20},
+}
+
+
+@inproceedings{guilloteau2024longevity,
+  TITLE = {{Longevity of Artifacts in Leading Parallel and Distributed Systems Conferences: a Review of the State of the Practice in 2023}},
+  AUTHOR = {Guilloteau, Quentin and Ciorba, Florina M and Poquet, Millian and Goepp, Dorian and Richard, Olivier},
+  URL = {https://hal.science/hal-04562691},
+  BOOKTITLE = {{REP 2024 - ACM Conference on Reproducibility and Replicability}},
+  ADDRESS = {Rennes, France},
+  ORGANIZATION = {{ACM}},
+  PAGES = {1-14},
+  YEAR = {2024},
+  MONTH = Jun,
+  DOI = {10.1145/3641525.3663631},
+  KEYWORDS = {Empirical studies Reproducibility ; Artifact Evaluation ; Badges ; Longevity},
+  PDF = {https://hal.science/hal-04562691v1/file/rep24_longevity_artifacts.pdf},
+  HAL_ID = {hal-04562691},
+  HAL_VERSION = {v1},
+}
+
+@inproceedings{guilloteau2024frustrations,
+  TITLE = {{Artifact Evaluations as Authors and Reviewers : Lessons, Questions, and Frustrations}},
+  AUTHOR = {Guilloteau, Quentin and Poquet, Millian and M{\"u}ller Kornd{\"o}rfer, Jonas H and Ciorba, Florina M},
+  URL = {https://hal.science/hal-04764265},
+  BOOKTITLE = {{Community Workshop on Practical Reproducibility in HPC}},
+  ADDRESS = {Atlanta (GA), United States},
+  YEAR = {2024},
+  MONTH = Nov,
+  PDF = {https://hal.science/hal-04764265v1/file/proposal.pdf},
+  HAL_ID = {hal-04764265},
+  HAL_VERSION = {v1},
+}
+
+@misc{nickel,
+	author = {Tweag},
+	title = {Nickel},
+	howpublished = {\url{https://github.com/tweag/nickel}},
+	note = {Accessed: 2024-03-14},
+}
+
+@inproceedings{courtes2024source,
+  title={Source Code Archiving to the Rescue of Reproducible Deployment},
+  author={Court{\`e}s, Ludovic and Sample, Timothy and Zacchiroli, Stefano and Tournier, Simon},
+  booktitle={Proceedings of the 2nd ACM Conference on Reproducibility and Replicability},
+  pages={36--45},
+  year={2024}
+}
