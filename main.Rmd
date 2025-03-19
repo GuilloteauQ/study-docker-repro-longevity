@@ -195,8 +195,8 @@ df %>%
     ggplot(aes(x = factor(date), y = 100 * total / total_pkgs, fill = is_same_as_first_date)) +
     #ggplot(aes(x = factor(date), y = total, fill = is_same_as_first_date)) +
     geom_col() +
-    geom_text(data = .%>% filter(is_same_as_first_date), aes(y = 100*(total/total_pkgs) - 6, label = total), angle=0, size=2.0) +
-    geom_text(data = .%>% filter(is_same_as_first_date), aes(y = 100*(total/total_pkgs) + 6, label = total_pkgs - total), angle=0, size=2.0) +
+    #geom_text(data = .%>% filter(is_same_as_first_date), aes(y = 100*(total/total_pkgs) - 6, label = total), angle=0, size=2.0) +
+    #geom_text(data = .%>% filter(is_same_as_first_date), aes(y = 100*(total/total_pkgs) + 6, label = total_pkgs - total), angle=0, size=2.0) +
     xlab("Dates of builds (YYYY-MM-DD)") + 
     ylab("Percentage of the packages") +
     scale_fill_discrete("Are the versions of the packages the same as the initial build?", breaks = c(TRUE, FALSE), labels = c("Yes", "No")) +
@@ -205,6 +205,51 @@ df %>%
     theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")
 ```
 
+```{r}
+# xx %>%
+#     #left_join(first_date_versions) %>%
+#     #mutate(is_same_as_first_date = version == first_version) %>%
+#     #select(date, pkg, artifact, tool, is_same_as_first_date) %>%
+#     group_by(tool, date, rank) %>%
+#     mutate(total_pkgs = n()) %>%
+#     group_by(artifact, date, tool, is_same_as_first_date, total_pkgs) %>%
+#     summarize(total = n()) %>%
+#     ggplot(aes(x = factor(date), y = 100 * total / total_pkgs, fill = is_same_as_first_date)) +
+#     geom_col() +
+#     ylab("Percentage of the packages") +
+#     facet_wrap(~tool) +
+#     scale_fill_grey("Month when the package version was introduced in the environment", labels=rev(append(c("Initial"), seq(length(dates)-1))))+
+#     scale_x_discrete("Months after initial build", labels=append(c("Initial"), seq(length(dates)-1))) +
+#     theme_bw() +
+#     theme(legend.position = "bottom")
+
+
+xx %>%
+  group_by(tool, date) %>%
+    mutate(total_pkgs = n()) %>%
+    group_by(tool, date, rank, total_pkgs) %>%
+    summarize(total = n()) %>%
+    mutate(rank = factor(rank)) %>%
+    mutate(rank = factor(rank, levels=rev(levels(rank)))) %>%
+    ggplot(aes(x = factor(date), y = 100 * total / total_pkgs, fill = rank)) +
+    geom_col() +
+    # geom_text(data = .%>% filter(is_same_as_first_date), aes(y = (100 * total/total_pkgs) - 1.5, label = paste(round(100*total/total_pkgs, digits=1), "%",sep="")), angle=0, size=1.6) +
+    #geom_hline(yintercept = 85, linetype="dashed") +
+    geom_text(data = . %>% filter(as.character(rank) == dates[1]), aes(y = (100 * total/total_pkgs) - 8, label = total), angle=0, size=2.5) +
+    geom_text(data = . %>% filter(as.character(rank) == dates[1]), aes(y = (100 * total/total_pkgs) - 24, label = paste("(",round(100*total/total_pkgs, digits = 1), "%)",sep="")), angle=0, size=2) +
+    #xlab("Dates of builds (YYYY-MM-DD)") + 
+    ylab("Packages in environment [%]") +
+    facet_wrap(~tool, ncol = 2) +
+    ggtitle("Evolution of the packages versions through time") +
+    scale_fill_grey("Month when the package version was introduced in the environment", labels=rev(append(c("Initial"), seq(length(dates)-1))))+
+    scale_x_discrete("Months after initial build", labels=append(c("Initial"), seq(length(dates)-1))) +
+    #scale_fill_grey() +
+    theme_bw() +
+    theme(legend.position = "bottom", strip.background = element_blank())
+    #theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom", strip.background = element_blank())
+
+ggsave("rep24/fig2.pdf", width=5, height=3.5)
+```
 ## Most volatile packages 
 
 
@@ -215,6 +260,14 @@ df %>%
     ungroup() %>%
     slice_max(different_versions, n=10) %>%
     knitr::kable()
+
+df %>%
+    group_by(pkg, artifact, tool) %>%
+    summarize(different_versions = n_distinct(version)) %>%
+    ggplot(aes(x = different_versions, color = tool)) +
+    stat_ecdf() + 
+  xlim(0, 6) +
+  theme_bw()
 ```
 
 ```{r}
