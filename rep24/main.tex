@@ -109,7 +109,8 @@
 \begin{document}
 
 \title{%
-  (Very) Preliminary Study of the Longevity of Docker Images from Research Artifacts
+  % (Very) Preliminary Study of the Longevity of Docker Images from Research Artifacts
+  Longitudinal Study of the Software Environment Produced by Dockerfiles from Research Artifacts: Initial Design and Results
 }
 
 \author{Quentin Guilloteau}
@@ -226,30 +227,24 @@ Having the opportunity to extend previous scientific work \todo{...}
 
 A better solution would be to use tools such as Nix~\cite{dolstra_nix_2004} or Guix~\cite{courtes_functional_2013} which are focused on reproducibility and which are able to rebuild the \emph{exact same} software environment from a textual description and with longevity properties~\cite{courtes2024source}, but these tools are unfortunately poorly adopted by the community~\cite{guilloteau2024longevity}.
 
-\subsection{Research Questions}
+
+In this paper, we propose our \textbf{inital design of a longitudinal study of the variations through time of the software environment produced by \df s from research artifacts.}
+We show initial results from five \df s extracted from the EuroPar'24 conference reproducibility artifacts built every month for six months.
+\todo{The goal is not to dunk on authors or conferences, but simply to exhibit the potential issues with \df s.}
+
+% We aim to answer the following questions:
+% 
+% \begin{enumerate}
+% \item How does the packages evolve through time when captured in a \texttt{Dockerfile}?
+% \item Which packaging tool is the most victim to variation in its resulting software environment?
+% \item Which are the most volatile packages?
+% \item Which practices in \df s are the most damaging to reproducibility?
+% \end{enumerate}
 
 
-This paper proposes a framework to evaluate the variations in resulting software environment produced by \texttt{Dockerfile}s from research artifacts.
-We show initial results from five \texttt{Dockerfile}s built every month for six months.
-
-In this paper, we build Docker images coming from five artifacts of the EuroPar'24 conference.
-We built each image on 6 dates.
-
-
-We aim to answer the following questions:
-
-\begin{enumerate}
-\item How does the packages evolve through time when captured in a \texttt{Dockerfile}?
-\item Which packaging tool is the most victim to variation in its resulting software environment?
-\item Which are the most volatile packages?
-\item Which practices in \df s are the most damaging to reproducibility?
-\end{enumerate}
-
-
-The goal is not to dunk on authors or conferences, but simply to exhibit the potential issues with \texttt{Dockerfile}s.
 
 % \newpage
-\section{Framework}
+\section{The \ecg\ Framework}
 
 %% \begin{itemize}
 %% \item `ecg`, Python tool, Licence, lines of code
@@ -365,11 +360,34 @@ We make sure to use an empty local Docker cache before building the containers.
 The workflow itself is ruled by a Snakemake~\cite{koster2012snakemake} description, where the software environment is managed with Nix~\cite{dolstra_nix_2004}.
 
 
-\subsection{Ambition}
+\section{Protocole}
 
-The goal is to capture the evolution of multiple conferences artifacts and building them for periodically for 1 year and observe the evolution of the produced software environment.
-We hope to gather the community around this project in order to get help to write the descriptions of the artifacts.
-The ambition is to prove the lack of longevity of \df s as mean to provide reproducible software environment for research artifacts.
+In this section, we present the initial protocole of our longitudinal study.
+
+For each conference with an artifact evaluation process, we look at all the artifacts and consider only the artifacts using a \df\ to share their software environment.
+From the artifact and the \df, we write the associated Nickel file: where is stored the artifact? how to extract the \df\ out of the artifact? which package managers are used?
+Once all the Nickel descriptions for the artifacts of a conference have been written, we use \ecg\ to build the download, build, and extract the information out of each of them.
+We run \ecg\ the closer to the start of each month as possible.
+\ecg\ is executed on the (x86) machines of the \grid\ platform~\cite{grid5000} on the \texttt{dahu} cluster of the Grenoble site.
+The local Docker cache of these machine is cleaned before the building of each container.
+Each container has an allocated time of 10 minutes to build.
+
+We will execute \ecg\ on each artifact every month for a full year (13 months).
+
+\paragraph{Contributions}
+
+This protocol leaves a lot of room for contributions on the writing of the Nickel descriptions files.
+
+% \todo{}
+% 
+% \begin{itemize}
+% \item we convert the dockerfiles to nickel description
+% \item periodic rebuild of the dockerfiles
+% \item g5k
+% \item empty cache
+% \item max 10 mins
+% \item contributions
+% \end{itemize}
 
 % \newpage
 \section{Preliminary Results}
@@ -383,15 +401,13 @@ We wrote the description in Nickel (see Section \todo{}) for the five artifacts 
 The initial build was October 1$^{st}$ 2024, then the following builds were on November 4$^{th}$ 2024, December 2$^{nd}$ 2024, January 2$^{nd}$ 2025, February 5$^{th}$ 2025, and March 12$^{th}$ 2025.
 \todo{when was the artifact submission, and publicaiton of the papers for europar?}
 
-
-
 \subsection{Hash of Artifacts}
 
 No variation of the artifact sources, via the computation of their cryptographic hash, was observed.
 
 \subsection{Build Status}
 
-All the artifacts managed to produce a container.
+All the artifacts managed to successfully produce a container.
 
 \subsection{Software Environment}
 
@@ -400,18 +416,19 @@ All the artifacts managed to produce a container.
   \includegraphics[width=\textwidth]{./fig.pdf}
   \caption{
     Evolution of the packages in the software environment of each container through time.
-    Each container has be rebuilt once a month.
+    Each container has been rebuilt once a month.
     The color of the bar corresponds to the month when a specific version of a package has been introduced in the software environment.
     We can see that the proportion of package versions similar to the versions in the initial build is decreasing throught the months.
   }
   \label{fig:results_per_artifact}
 \end{figure*}
 
-We can see on Figure~\ref{fig:results_per_artifact} that even after one month of the initial build, the software environment is different for all of the studied artifacts.
-This is a severe threat to reproducibility as one month is the timeframe for a artifact evaluation process in conferences.
-Meaning that the \df\ submitted by the authors can generate different software environment between the submission of the artifact and the reproduction attempt of the reviewers.
+Figure~\ref{fig:results_per_artifact} depicts the evolution through time of the software environment produced by the \df\ of each studied artifact.
+We can see that even after \emph{a single month} of the initial build, the software environment is already different for \emph{all} of the studied artifacts.
+This is a severe threat to reproducibility as one month is the time-frame for a artifact evaluation process in conferences.
+This means that the \df\ submitted by the authors can generate different software environment between the submission of the artifact and the reproduction attempt of the reviewers.
 
-\todo{a word on from ubuntu:latest and apt-get update}.
+%\todo{a word on from ubuntu:latest and apt-get update}.
 
 We can see that every month, new versions of packages are being introduced in the software environments of the containers.
 
@@ -425,77 +442,84 @@ We can see that every month, new versions of packages are being introduced in th
   }\label{fig:results_per_tool}
 \end{figure}
 
-Figure~\ref{fig:results_per_tool} depicts the evoluation of the package version managed by each tool: \texttt{dpkg}, \texttt{git}, \texttt{pip} and manual download and build (\texttt{misc}).
+Figure~\ref{fig:results_per_tool} depicts the evolution of the package version managed by each tool: \texttt{dpkg}, \texttt{git}, \texttt{pip} and manual download and build (\texttt{misc}).
 We can see that the tools introducing variation in the software environment are \texttt{dpkg} and \texttt{pip}.
 
 The packages that changed the most in terms of versions are:
 \begin{enumerate}
-\item \texttt{linux-libc-dev:amd64} (via \texttt{dpkg}) with 6 different versions for each artifact (1 per new build attempt)
-\item \texttt{fonttools} (via \texttt{pip}) with 5 different versions for the artifacts \texttt{geijer\_how} and \texttt{wolff\_fast}
-\item \texttt{numpy} (via \texttt{pip}) with 5 different versions for the artifact \texttt{wolff\_fast}
+\item \texttt{linux-libc-dev:amd64} (installed via \texttt{dpkg}) with 6 different versions for each artifact (1 per new build attempt)
+\item \texttt{fonttools} (installed via \texttt{pip}) with 5 different versions for the artifacts \texttt{geijer\_how} and \texttt{wolff\_fast}
+\item \texttt{numpy} (installed via \texttt{pip}) with 5 different versions for the artifact \texttt{wolff\_fast}
 \end{enumerate}
 
 
 % \newpage
 \section{Conclusion and Perspectives}
 
-\subsection{Threats to validity}
-Very small sample, only Docker.
+% \subsection{Conclusion}
+% 
+% In this paper, we presented an initial version of \ecg, and its workflow, a tool to study the variations through time of containers from research artifacts.
+% We evaluated the evolution of the software environment produced by \df\ from five artifacts from the EuroPar'24 conference.
+% We observe that, even at this small scale, after only one month, there were variations in the produced software environments.
+% Out of the popular tools to manage the software environment in a container, we have seen that \texttt{dpkg} and \texttt{pip} were the ones that introducing more undesired variations.
+% 
+% \df s are not solutions to capture on the \emph{long term} the software environment.
+% There is a trade-off between storing the Docker images built by the authors and their recipe.
+% Use Nix/Guix + Software Heritage.
+% 
+% Even if we only looked at \df s, this study could be extended to other technologies (Apptainer, virtual machines), but it was shown in \cite{guilloteau2024longevity} that \df s was the main solution to provided virtualized software environments.
+% 
+% In this paper, we presented the initial design of our framework to evaluate the longevity of the software environments generated with \df s from research artifacts.
+% 
+% We propose three possible scenarios for the longevity of the sharing of software environment:
+% 
+% \paragraph{Scenario 1: ``Business as usual''}
+% Authors keep submitting non-reproducible \df s and conferences keep accepting them
+% 
+% \paragraph{Scenario 2: Storing everything forever}
+% Authors store their version of the built container onto long-term storage (\eg\ Zenodo, Figshare), and artifact reviewers do not try to rebuild the \df\ but simply download the container.
+% While this solution would allow the artifact reviewers and the future researchers to use the exact same software environment as the authors, it also raises \emph{sustainability questions}.
+% Indeed, with the increase of scientific publications and the increase in artifact sharing in publications, can we community continue to store the built containers which ``weight'' orders of magnitude more than the recipe to generate them?
+% Services such as Zenodo and Figshare are free, and backed up by public funding.
+% Can these services run out of storage? or ask for a financial participation to archive data?
+% 
+% 
+% \paragraph{Scenario 3: Change of practice}
+% In this scenario, the community, \ie\ the conferences and the authors, change their practices related to reproducibility and software environment sharing.
+% The community starts adopting solutions made for reproducibility of software environment (\ie\ Nix and Guix).
+% Authors then simply have to share the recipe (text files) of their software environment for the artifact reviewers and future researchers to reproduce the results of their article.
+% Moreover, Nix and Guix allow for the precise introduction of variation in the software environment, which is a crucial feature (not present in container technologies) in order to build upon previous artifact for future publications~\cite{mercier2018considering}.
+% 
+% 
+% \subsection{Perspectives}
+% 
+% This paper aims to be an initial version of the design of a future larger study around the longevity of containers.
+% We will thus write the descriptions of more artifact from more conferences, aiming for around a hundreds total containers, from conferences of various fields of Computer Science with various ``technical'' levels.
+% 
+% This initial work also raised more questions:
+% \begin{itemize}
+% \item Does the reduction of the proportion of package versions similar to the initial build will continue decreasing or will it eventually reach a ``stable state''? (for example 50\%)
+% \item ...
+% \end{itemize}
 
-\subsection{Conclusion}
+% -----------------------------------------------------------------
 
-In this paper, we presented an initial version of \ecg, and its workflow, a tool to study the variations through time of containers from research artifacts.
-We evaluated the evolution of the software environment produced by \df\ from five artifacts from the EuroPar'24 conference.
-We observe that, even at this small scale, after only one month, there were variations in the produced software environments.
-Out of the popular tools to manage the software environment in a container, we have seen that \texttt{dpkg} and \texttt{pip} were the ones that introducing more undesired variations.
+This paper presented the initial design of our longitudinal study of the evolution of the software environments produced by \df s.
+We presented in Section \todo{ecg} \ecg, and its workflow (Section \todo{}), a tool to download, build and extract information from research artifacts \df.
+Section \todo{protocole} presented the protocol to answer our scientific questions.
+We showed initial results in Section \todo{expes} on five artifacts from the EuroPar'24 conference built every months for six months.
+This initial study releaved that the software environments produced by the considered \df s variate \emph{every month} which highlights the lack of reproducibility of such practices.
 
-\texttt{Dockerfile}s are not solutions to capture on the long term the software environment.
-There is a trade-off between storing the Docker images built by the authors and their recipe.
-Use Nix/Guix + Software Heritage.
-
-Even if we only looked at \df s, this study could be extended to other technologies (Apptainer, virtual machines), but it was shown in \cite{guilloteau2024longevity} that \df s was the main solution to provided virtualized software environments.
-
-In this paper, we presented the initial design of our framework to evaluate the longevity of the software environments generated with \df s from research artifacts.
-
-
-
-We propose three possible scenarios for the longevity of the sharing of software environment:
-
-\paragraph{Scenario 1: ``Business as usual''}
-Authors keep submitting non-reproducible \df s and conferences keep accepting them
-
-\paragraph{Scenario 2: Storing everything forever}
-Authors store their version of the built container onto long-term storage (\eg\ Zenodo, Figshare), and artifact reviewers do not try to rebuild the \df\ but simply download the container.
-While this solution would allow the artifact reviewers and the future researchers to use the exact same software environment as the authors, it also raises \emph{sustainability questions}.
-Indeed, with the increase of scientific publications and the increase in artifact sharing in publications, can we community continue to store the built containers which ``weight'' orders of magnitude more than the recipe to generate them?
-Services such as Zenodo and Figshare are free, and backed up by public funding.
-Can these services run out of storage? or ask for a financial participation to archive data?
-
-
-\paragraph{Scenario 3: Change of practice}
-In this scenario, the community, \ie\ the conferences and the authors, change their practices related to reproducibility and software environment sharing.
-The community starts adopting solutions made for reproducibility of software environment (\ie\ Nix and Guix).
-Authors then simply have to share the recipe (text files) of their software environment for the artifact reviewers and future researchers to reproduce the results of their article.
-Moreover, Nix and Guix allow for the precise introduction of variation in the software environment, which is a crucial feature (not present in container technologies) in order to build upon previous artifact for future publications~\cite{mercier2018considering}.
-
-
-\subsection{Perspectives}
-
-This paper aims to be an initial version of the design of a future larger study around the longevity of containers.
-We will thus write the descriptions of more artifact from more conferences, aiming for around a hundreds total containers, from conferences of various fields of Computer Science with various ``technical'' levels.
-
-This initial work also raised more questions:
-\begin{itemize}
-\item Does the reduction of the proportion of package versions similar to the initial build will continue decreasing or will it eventually reach a ``stable state''? (for example 50\%)
-\item ...
-\end{itemize}
+A practice to deal with the lack of reproducibility of the \df s is for the authors to store the built container onto some long-time storage such as Zenodo.
+However, this practice raises serious questions in terms of scalability and sustainability in terms of storage.
+The lack of reproducibility of \df s shoud not be hidden with long-term storage: the practices from the conferences, journals, and the authors need to change.
 
 %
 % /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 \section*{Acknowledgments}
 
-TODO
+G5K, Antoine?
 
 %% PAPER ENDS HERE -----------------------------------------------------------------------------------------------
 
