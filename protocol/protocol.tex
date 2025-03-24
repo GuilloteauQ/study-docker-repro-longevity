@@ -43,7 +43,7 @@ breaklines=true
 
 \begin{itemize}
   \item \href{https://orcid.org/0009-0003-7645-5044}{Quentin \textsc{Guilloteau}}: Conceptualization, Methodology, Software, Data Curation, Supervision, Project administration
-  \item Antoine Waehren
+  \item Antoine \textsc{Waehren}: Conceptualization, Software, Data Curation
 \end{itemize}
 
 
@@ -51,7 +51,7 @@ breaklines=true
 
 This project aims to show the limitations of using Docker containers as a reliable reproducibility tool.
 In particular, as Docker relies on non-reproducible tools, it is difficult to construct a \dfile\ that will rebuild the \emph{exact} same software environment in the future.
-In this project, we will collect research artifacts coming from various scientific conferences containing \dfile s, rebuild them periodically, and observe the variation in the resulting software environments.
+In this project, we will collect research artifacts coming from various scientific conferences containing \dfile s, rebuild the \dfile s periodically, and observe the variation in the resulting software environments.
 We will also catch any error that could occur during the building of the image.
 
 \subsection{Related work from contributors}
@@ -125,11 +125,11 @@ This allows us to also have information about the stability/longevity of the art
   \item \texttt{baseimage\_unavailable}: the base image of the \dfile\ (\texttt{FROM} image) is not available.
   \item \texttt{job\_time\_exceeded}: when running on a batch system such as OAR, this error indicates that the \dfile\ did not build under \emph{1 hour}
   \item \texttt{success}: the \dfile\ has been built successfully
-  \item \texttt{package_install_failed}: a command requested the installation of a package that failed
-  \item \texttt{artifact_unavailable}: the artifact could not be downloaded
-  \item \texttt{dockerfile_not_found}: no \dfile\ has been found in the location specified in the configuration file
-  \item \texttt{script_crash}: an error has occurred with the script itself
-  \item \texttt{unknown_error}: the \dfile\ could not be built for an unknown reason
+  \item \texttt{package\_install\_failed}: a command requested the installation of a package that failed
+  \item \texttt{artifact\_unavailable}: the artifact could not be downloaded
+  \item \texttt{dockerfile\_not\_found}: no \dfile\ has been found in the location specified in the configuration file
+  \item \texttt{script\_crash}: an error has occurred with the script itself
+  \item \texttt{unknown\_error}: the \dfile\ could not be built for an unknown reason
 \end{itemize}
 
 \subsubsection{Information from the Package Manager}\label{sec:package_managers}
@@ -203,6 +203,7 @@ No.
     \midrule
     EuroPar 2024        & March 2024      & September 2024\\
     SuperComputing 2024 & April 2024      & November 2024 \\
+    TBD                 & TBD             & TBD           \\
     \bottomrule
 \end{tabular}
   \caption{Considered Conferences and associated important dates}
@@ -292,6 +293,26 @@ The software environment will be managed by Nix \cite{dolstra2004nix}.
 
 The collected data will be stored on Zenodo.
 The Source code will be archived on Software-Heritage.
+
+\section{Collaborator Guide}
+
+This section aims to guide the collaborators for the creation of the configuration files describing the artifact and \dfile.
+
+
+\subsection{Download the artifact}
+
+The first step to create the Nickel configuration file is to download the artifact.
+
+Note the path from the root of the downloaded artifact to the \dfile.
+
+\subsection{Open the \dfile}
+
+Now open the \dfile\ in a text editor.
+
+If the \dfile\ uses any of the supported package management tools (\texttt{apt/dpkg}, \texttt{pip}, \texttt{git}, \texttt{misc}), add it to the Nickel description.
+
+
+\subsection{How to name the }
 
 \printbibliography
 

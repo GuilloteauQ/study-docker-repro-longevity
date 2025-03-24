@@ -1,0 +1,322 @@
+---
+title: "(Very) Preliminary Study of the Longevity of Docker Images from Research Artifacts"
+author: Quentin Guilloteau
+geometry: margin=20mm
+numbersections: true
+bibliography: references.bib
+---
+
+
+```{r, include=F}
+#
+library(tidyverse)
+library(slider)
+```
+
+```{r}
+df <- read_csv("./outputs/aggregated/europar24/pkgs.csv", col_names = c("pkg", "version", "tool", "artifact", "date")) %>%
+    mutate(date = date(as_datetime(date))) %>%
+    drop_na()
+df
+```
+
+
+# Introduction
+
+
+- Reproducibility crisis
+
+- Artifact evaluation in conferences
+
+- Software environment is a problem/difficul aspect
+
+- conferences recommand to use containers to share the software environmnent
+
+- but container recipes are based on non-reproducibile tools (package managers and bad practices) @guilloteau:hal-04562691
+
+- trade-off between storing the result of the image builts by the authors and the recipe
+
+
+This paper proposes a framework to evaluate the variations in resulting software environment produced by `Dockerfile`s from research artifacts.
+We show initial results from five `Dockerfile`s built every month for six months.
+
+# Methodology
+
+In this paper, we build Docker images coming from `r length(unique(df$artifact))` artifacts of the EuroPar'24 conference.
+We built each image on `r length(unique(df$date))` dates roughtly one month apart (`r unique(df$date)`).
+
+
+We aim to answer the following questions:
+
+1. How does the packages evolve through time when captured in a `Dockerfile`?
+
+2. Which packaging tool is the most victim to variation in its resulting software environment?
+
+3. Which are the most volatile packages?
+
+
+The goal is not to dunk on authors or conferences, but simply to exhibit the potential issues with `Dockerfile`s.
+
+# Framework
+
+- `ecg`
+
+- architecture (nickel, what is supported)
+
+- process (submit new artifacts)
+
+- end goal of the project
+
+# Results
+
+This section presents the information we would like to extract from the data gathered.
+
+
+```{r}
+df %>%
+    group_by(pkg, tool, artifact) %>%
+    summarize(n = n_distinct(version)) %>%
+    arrange(desc(n)) %>%
+    ggplot(aes(x = n, color = tool)) +
+    stat_ecdf() +
+    xlim(1, NA) +
+    xlab("Number of different versions") +
+    facet_wrap(~artifact) +
+    theme_bw()
+```
+
+```{r}
+first_dates <- df %>%
+    group_by(artifact) %>%
+    summarize(first_date = min(date))
+
+first_date_versions <- df %>%
+    left_join(first_dates) %>%
+    filter(first_date == date) %>%
+    rename(first_version = version) %>%
+    select(first_date, pkg, first_version, artifact)
+
+df %>%
+    left_join(first_date_versions) %>%
+    mutate(is_same_as_first_date = version == first_version) %>%
+    select(date, pkg, artifact, tool, is_same_as_first_date) %>%
+    group_by(artifact, date) %>%
+    mutate(total_pkgs = n()) %>%
+    group_by(artifact, date, is_same_as_first_date, total_pkgs) %>%
+    summarize(total = n()) %>%
+    ggplot(aes(x = factor(date), y = 100 * total / total_pkgs, fill = is_same_as_first_date)) +
+    geom_col() +
+    # geom_text(data = .%>% filter(is_same_as_first_date), aes(y = (100 * total/total_pkgs) - 1.5, label = paste(round(100*total/total_pkgs, digits=1), "%",sep="")), angle=0, size=1.6) +
+    geom_text(data = .%>% filter(is_same_as_first_date), aes(y = (100 * total/total_pkgs) - 2, label = total), angle=0, size=2.0) +
+    geom_text(data = .%>% filter(is_same_as_first_date), aes(y = (100 * total/total_pkgs) + 2, label = total_pkgs - total), angle=0, size=2.0) +
+    #geom_hline(yintercept = 85, linetype="dashed") +
+    xlab("Dates of builds (YYYY-MM-DD)") + 
+    ylab("Percentage of the packages [%]") +
+    scale_fill_discrete("Are the versions of the packages the same as the initial build?", breaks = c(TRUE, FALSE), labels = c("Yes", "No")) +
+    facet_wrap(~artifact, ncol = 5) +
+    ggtitle("Evolution of the packages versions through time") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")
+```
+```{r}
+ndf <- df %>% 
+  group_by(artifact, tool, pkg) %>%
+  arrange(date) %>%
+  nest()
+
+xx <- ndf %>%
+  rowwise() %>%
+  mutate(data2 = list(data %>% arrange(date) %>% mutate(rank = .$date[match(version, .$version)]))) %>%
+  select(-data) %>%
+  unnest_wider(data2) %>%
+  unnest_longer(c("version", "date", "rank"))
+
+dates <- xx %>% pull(date) %>% unique()
+xx %>%
+  group_by(artifact, date) %>%
+    mutate(total_pkgs = n()) %>%
+    group_by(artifact, date, rank, total_pkgs) %>%
+    summarize(total = n()) %>%
+    mutate(rank = factor(rank)) %>%
+    mutate(rank = factor(rank, levels=rev(levels(rank)))) %>%
+    ggplot(aes(x = factor(date), y = 100 * total / total_pkgs, fill = rank)) +
+    geom_col() +
+    # geom_text(data = .%>% filter(is_same_as_first_date), aes(y = (100 * total/total_pkgs) - 1.5, label = paste(round(100*total/total_pkgs, digits=1), "%",sep="")), angle=0, size=1.6) +
+    #geom_hline(yintercept = 85, linetype="dashed") +
+    geom_text(data = . %>% filter(as.character(rank) == dates[1]), aes(y = (100 * total/total_pkgs) - 5, label = total), angle=0, size=2.0) +
+    geom_text(data = . %>% filter(as.character(rank) == dates[1]), aes(y = (100 * total/total_pkgs) - 10, label = paste("(",round(100*total/total_pkgs, digits = 1), "%)",sep="")), angle=0, size=1.5) +
+    #xlab("Dates of builds (YYYY-MM-DD)") + 
+    ylab("Packages in environment [%]") +
+    facet_wrap(~artifact, ncol = 5) +
+    ggtitle("Evolution of the packages versions through time") +
+    scale_fill_grey("Month when the package version was introduced in the environment", labels=rev(append(c("Initial"), seq(length(dates)-1))))+
+    scale_x_discrete("Months after initial build", labels=append(c("Initial"), seq(length(dates)-1))) +
+    #scale_fill_grey() +
+    theme_bw() +
+    theme(legend.position = "bottom", strip.background = element_blank())
+    #theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom", strip.background = element_blank())
+
+ggsave("rep24/fig.png", width=8, height=3.5)
+```
+
+```{r}
+ps <- df %>%
+    left_join(first_date_versions) %>%
+    mutate(is_same_as_first_date = version == first_version) %>%
+    select(date, pkg, artifact, tool, is_same_as_first_date) %>%
+    group_by(artifact, date) %>%
+    mutate(total_pkgs = n()) %>%
+    group_by(artifact, date, is_same_as_first_date, total_pkgs) %>%
+    summarize(total = n()) %>%
+    mutate(r = total / total_pkgs) %>%
+    filter(is_same_as_first_date) %>%
+    select(-total_pkgs, -total, -is_same_as_first_date) %>%
+    ungroup() %>%
+    group_by(artifact) %>%
+    mutate(p = r / lag(r)) %>%
+    drop_na() %>%
+    select(artifact, p)
+
+qqnorm(ps$p, main='Normal')
+qqline(ps$p)
+ks.test(ps$p, 'pnorm')
+summary(ps$p)
+```
+
+```{r}
+df %>%
+    left_join(first_date_versions) %>%
+    mutate(is_same_as_first_date = version == first_version) %>%
+    select(date, pkg, artifact, tool, is_same_as_first_date) %>%
+    group_by(artifact, tool, date) %>%
+    mutate(total_pkgs = n()) %>%
+    group_by(artifact, date, tool, is_same_as_first_date, total_pkgs) %>%
+    summarize(total = n()) %>%
+    ggplot(aes(x = factor(date), y = 100 * total / total_pkgs, fill = is_same_as_first_date)) +
+    #ggplot(aes(x = factor(date), y = total, fill = is_same_as_first_date)) +
+    geom_col() +
+    #geom_text(data = .%>% filter(is_same_as_first_date), aes(y = 100*(total/total_pkgs) - 6, label = total), angle=0, size=2.0) +
+    #geom_text(data = .%>% filter(is_same_as_first_date), aes(y = 100*(total/total_pkgs) + 6, label = total_pkgs - total), angle=0, size=2.0) +
+    xlab("Dates of builds (YYYY-MM-DD)") + 
+    ylab("Percentage of the packages") +
+    scale_fill_discrete("Are the versions of the packages the same as the initial build?", breaks = c(TRUE, FALSE), labels = c("Yes", "No")) +
+    facet_grid(tool~artifact, scales="free_y") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")
+```
+
+```{r}
+# xx %>%
+#     #left_join(first_date_versions) %>%
+#     #mutate(is_same_as_first_date = version == first_version) %>%
+#     #select(date, pkg, artifact, tool, is_same_as_first_date) %>%
+#     group_by(tool, date, rank) %>%
+#     mutate(total_pkgs = n()) %>%
+#     group_by(artifact, date, tool, is_same_as_first_date, total_pkgs) %>%
+#     summarize(total = n()) %>%
+#     ggplot(aes(x = factor(date), y = 100 * total / total_pkgs, fill = is_same_as_first_date)) +
+#     geom_col() +
+#     ylab("Percentage of the packages") +
+#     facet_wrap(~tool) +
+#     scale_fill_grey("Month when the package version was introduced in the environment", labels=rev(append(c("Initial"), seq(length(dates)-1))))+
+#     scale_x_discrete("Months after initial build", labels=append(c("Initial"), seq(length(dates)-1))) +
+#     theme_bw() +
+#     theme(legend.position = "bottom")
+
+
+xx %>%
+  group_by(tool, date) %>%
+    mutate(total_pkgs = n()) %>%
+    group_by(tool, date, rank, total_pkgs) %>%
+    summarize(total = n()) %>%
+    mutate(rank = factor(rank)) %>%
+    mutate(rank = factor(rank, levels=rev(levels(rank)))) %>%
+    ggplot(aes(x = factor(date), y = 100 * total / total_pkgs, fill = rank)) +
+    geom_col() +
+    # geom_text(data = .%>% filter(is_same_as_first_date), aes(y = (100 * total/total_pkgs) - 1.5, label = paste(round(100*total/total_pkgs, digits=1), "%",sep="")), angle=0, size=1.6) +
+    #geom_hline(yintercept = 85, linetype="dashed") +
+    geom_text(data = . %>% filter(as.character(rank) == dates[1]), aes(y = (100 * total/total_pkgs) - 8, label = total), angle=0, size=2.5) +
+    geom_text(data = . %>% filter(as.character(rank) == dates[1]), aes(y = (100 * total/total_pkgs) - 24, label = paste("(",round(100*total/total_pkgs, digits = 1), "%)",sep="")), angle=0, size=2) +
+    #xlab("Dates of builds (YYYY-MM-DD)") + 
+    ylab("Packages in environment [%]") +
+    facet_wrap(~tool, ncol = 2) +
+    ggtitle("Evolution of the packages versions through time") +
+    scale_fill_grey("Month when the package version was introduced in the environment", labels=rev(append(c("Initial"), seq(length(dates)-1))))+
+    scale_x_discrete("Months after initial build", labels=append(c("Initial"), seq(length(dates)-1))) +
+    #scale_fill_grey() +
+    theme_bw() +
+    theme(legend.position = "bottom", strip.background = element_blank())
+    #theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom", strip.background = element_blank())
+
+ggsave("rep24/fig2.pdf", width=5, height=3.5)
+```
+## Most volatile packages 
+
+
+```{r}
+df %>%
+    group_by(pkg, artifact, tool) %>%
+    summarize(different_versions = n_distinct(version)) %>%
+    ungroup() %>%
+    slice_max(different_versions, n=10) %>%
+    knitr::kable()
+
+df %>%
+    group_by(pkg, artifact, tool) %>%
+    summarize(different_versions = n_distinct(version)) %>%
+    ggplot(aes(x = different_versions, color = tool)) +
+    stat_ecdf() + 
+  xlim(0, 6) +
+  theme_bw()
+```
+
+```{r}
+pname = "linux-libc-dev:amd64"
+
+libc_versions <- df %>%
+    filter(pkg == pname) %>%
+    pull(version) %>%
+    unique()
+```
+
+
+```{r}
+df_libc <- read_delim("./ubuntu_linux-libc-dev_changelogs/all_versions.csv", delim=";;", col_names=c("version", "date")) %>%
+    mutate(date = as_date(date))
+
+build_dates <- tibble(bdate = unique(df$date))
+
+df_libc %>%
+    filter(date >= min(df$date) - months(6)) %>%
+    print() %>%
+    mutate(was_built = if_else(version %in% libc_versions, "built", "not built")) %>%
+    ggplot() +
+    geom_point(aes(x = date, y = 0, color = was_built)) +
+    geom_vline(data = build_dates, aes(xintercept = bdate), linetype = "dashed", color = "gray") +
+    theme_bw()
+#libc_versions
+unique(df_libc %>% filter(date >= min(df$date) - months(6)) %>% pull(version))
+```
+
+# Threats to validity
+
+Very small sample, only Docker.
+
+# Conclusion
+
+`Dockerfile`s are not solutions to capture on the long term the software environment.
+There is a trade-off between storing the Docker images built by the authors and their recipe.
+Use Nix/Guix + Software Heritage.
+
+
+
+
+
+
+
+
+
+
+
+
+

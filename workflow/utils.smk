@@ -13,11 +13,14 @@ def get_blacklisted(blacklist_dir_path):
                         blacklisted.add(row[0])
     return blacklisted
 
-def get_artifacts_to_build(artifacts_folder, blacklist_dir_path):
-    blacklisted = get_blacklisted(blacklist_dir_path)
-    all_artifacts = set([os.path.splitext(a)[0] for a in os.listdir(artifacts_folder) if not os.path.isdir(os.path.join(artifacts_folder, a))])
-    artifacts_to_build = list(all_artifacts.difference(blacklisted))
-    if artifacts_to_build != []:
-        return list(all_artifacts.difference(blacklisted))
-    else:
-        raise(Exception(f"There is no artifact to build! Either no artifact configuration files have been found, or they have all been blacklisted."))
+#def get_artifacts_to_build(artifacts_folder, blacklist_dir_path):
+#    blacklisted = get_blacklisted(blacklist_dir_path)
+#    all_artifacts = set([os.path.splitext(a)[0] for a in os.listdir(artifacts_folder) if not os.path.isdir(os.path.join(artifacts_folder, a))])
+#    artifacts_to_build = list(all_artifacts.difference(blacklisted))
+#    if artifacts_to_build != []:
+#        return list(all_artifacts.difference(blacklisted))
+#    else:
+#        raise(Exception(f"There is no artifact to build! Either no artifact configuration files have been found, or they have all been blacklisted."))
+
+def get_artifacts_to_build(artifacts_folder):
+    return [os.path.splitext(a)[0] for a in os.listdir(artifacts_folder) if not os.path.isdir(os.path.join(artifacts_folder, a)) and os.path.splitext(a)[-1] == ".ncl"]

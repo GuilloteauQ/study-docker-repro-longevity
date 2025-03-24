@@ -78,6 +78,15 @@ in
     buildfile_dir
       | doc "Path to the directory containing the file used to build the container in the artifact"
       | FilePath,
+    dockerfile_path
+      | doc "Path to the Dockerfile from the build directory"
+      | FilePath
+      | default = "Dockerfile",
+    build_args
+      | doc "Build arguments for Docker ('--build-arg')"
+      | optional
+      | Array String
+      | default = [],
     package_managers
       | doc "Package Managers used in the container. Possible values: dpkg, rpm, pacman, pip, conda"
       | optional

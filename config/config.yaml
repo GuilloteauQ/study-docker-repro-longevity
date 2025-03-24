@@ -1,7 +1,7 @@
 folder_artifacts_nickel: "artifacts/nickel"
 folder_artifacts_json: "artifacts/json"
 folder_blacklists: "blacklists"
-system: "local"
+system: "g5k"
 prefix: "outputs"
 analysis_dir: "outputs/analysis"
 plot_dir: "outputs/analysis/plot"
@@ -12,3 +12,5 @@ max_duration: 60
 checkpoint: 1
 besteffort: True
 sleep_time: 30
+
+conference: "europar24"
